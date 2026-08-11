@@ -1,0 +1,45 @@
+import { Link } from "react-router-dom";
+import type { Trip } from "../../types/domain";
+import { AvatarGroup } from "../ui/AvatarGroup";
+import { DetailIndicator } from "../ui/Button";
+import { Icon } from "../ui/Icon";
+import { StatusPill } from "../ui/StatusPill";
+import { useCityImage } from "../../hooks/useCityImage";
+
+export function FutureTripCard({ trip }: { trip: Trip }) {
+  const date = new Intl.DateTimeFormat("es-AR", { day: "numeric", month: "short" });
+  const start = new Date(`${trip.startDate}T12:00:00`);
+  const end = new Date(`${trip.endDate}T12:00:00`);
+  const days = Math.max(0, Math.ceil((start.getTime() - Date.now()) / 86_400_000));
+  const firstDestination = trip.destinations[0];
+  const { data: automaticCover } = useCityImage(firstDestination?.city, firstDestination?.country, !trip.coverUrl);
+  const coverUrl = trip.coverUrl || automaticCover?.url;
+
+  return (
+    <Link className="future-trip-card" to={`/viaje/${trip.id}`}>
+      <div
+        className={`future-trip-cover ${coverUrl ? "" : "cover-placeholder"}`}
+        style={coverUrl ? { backgroundImage: `url("${coverUrl}")` } : undefined}
+      >
+        <div className="future-trip-overlay" />
+        <div className="future-trip-badges">
+          <StatusPill tone="mint">{days === 0 ? "Empieza hoy" : `Faltan ${days} días`}</StatusPill>
+          {trip.syncStatus !== "synced" && <StatusPill>Solo local</StatusPill>}
+        </div>
+      </div>
+      <div className="future-trip-body">
+        <div className="future-trip-heading">
+          <div>
+            <p>{date.format(start)} — {date.format(end)}</p>
+            <h2>{trip.name}</h2>
+          </div>
+          <DetailIndicator label={`Ver detalle de ${trip.name}`} />
+        </div>
+        <div className="future-trip-meta">
+          <span><Icon name="location" size={15} /> {trip.destinations.length || "Sin"} destinos</span>
+          <AvatarGroup participants={trip.participants} />
+        </div>
+      </div>
+    </Link>
+  );
+}

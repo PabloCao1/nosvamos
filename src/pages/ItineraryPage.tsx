@@ -1,0 +1,62 @@
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { ActivityCard } from "../components/itinerary/ActivityCard";
+import { PageHeader } from "../components/layout/PageHeader";
+import { Icon } from "../components/ui/Icon";
+import { IconButton } from "../components/ui/Button";
+import { ErrorState, LoadingState } from "../components/ui/PageState";
+import { useTrip } from "../hooks/useTrips";
+
+export function ItineraryPage() {
+  const { tripId } = useParams();
+  const navigate = useNavigate();
+  const { data: trip, isLoading, isError, refetch } = useTrip(tripId);
+  const [selectedDay, setSelectedDay] = useState(0);
+  if (isLoading) return <LoadingState />;
+  if (isError || !trip) return <ErrorState onRetry={() => void refetch()} />;
+
+  const day = trip.itinerary[selectedDay];
+  return (
+    <>
+      <PageHeader
+        eyebrow={trip.name}
+        title="Itinerario"
+        action={<IconButton icon="search" label="Buscar" />}
+      />
+      <div className="date-strip" role="tablist" aria-label="Días del itinerario">
+        {trip.itinerary.map((item, index) => (
+          <button
+            role="tab"
+            aria-selected={selectedDay === index}
+            className={selectedDay === index ? "active" : ""}
+            key={item.id}
+            onClick={() => setSelectedDay(index)}
+          >
+            <span>{new Intl.DateTimeFormat("es-AR", { weekday: "short" }).format(new Date(`${item.date}T12:00:00`))}</span>
+            <strong>{new Date(`${item.date}T12:00:00`).getDate()}</strong>
+          </button>
+        ))}
+      </div>
+
+      <section className="day-overview">
+        <div>
+          <p className="eyebrow">{new Intl.DateTimeFormat("es-AR", { day: "numeric", month: "long" }).format(new Date(`${day.date}T12:00:00`))}</p>
+          <h2>{day.city}</h2>
+        </div>
+        <div className="weather-placeholder" title="Clima de demostración">
+          <span>☀︎</span>
+          <div><strong>{day.weatherTemperature}</strong><small>{day.weatherLabel}</small></div>
+        </div>
+      </section>
+
+      <div className="timeline">
+        {day.activities.map((item) => <ActivityCard key={item.id} activity={item} onEdit={() => navigate(`/viaje/${trip.id}/editar/activity/${item.id}`)} />)}
+      </div>
+      <button className="download-card">
+        <span><Icon name="cloudCheck" size={22} /></span>
+        <div><strong>Disponible sin conexión</strong><p>Itinerario actualizado hace 2 min</p></div>
+        <Icon name="chevronRight" size={18} />
+      </button>
+    </>
+  );
+}
