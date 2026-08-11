@@ -1346,13 +1346,16 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 /* Supabase authentication */
 .auth-page { display: grid; place-items: center; width: 100%; min-height: 100dvh; padding: calc(28px + env(safe-area-inset-top)) 18px calc(28px + env(safe-area-inset-bottom)); background: radial-gradient(circle at 80% 8%, rgba(167,139,250,.2), transparent 30%), radial-gradient(circle at 10% 92%, rgba(184,247,228,.16), transparent 34%), #1e2024; }
-.auth-card { width: min(100%, 410px); padding: 28px 22px 24px; border: 1px solid var(--line); border-radius: 30px; background: rgba(48,50,56,.9); box-shadow: var(--shadow); backdrop-filter: blur(22px); }
-.auth-logo { width: 68px; height: 68px; margin-bottom: 22px; border-radius: 19px; box-shadow: 0 12px 28px rgba(0,0,0,.28); }
-.auth-card h1 { font-size: clamp(1.75rem, 7vw, 2.2rem); line-height: 1.05; letter-spacing: -.04em; }
+.auth-layout { display: grid; justify-items: center; width: min(100%, 410px); gap: 22px; }
+.auth-card { width: 100%; padding: 28px 22px 24px; border: 1px solid var(--line); border-radius: 30px; background: rgba(48,50,56,.9); box-shadow: var(--shadow); backdrop-filter: blur(22px); }
+.auth-logo { width: 82px; height: 82px; border-radius: 23px; box-shadow: 0 12px 28px rgba(0,0,0,.28); }
+.auth-card h1 { font-size: clamp(1.75rem, 7vw, 2.2rem); line-height: 1.05; letter-spacing: -.04em; text-align: center; }
 .auth-description { margin-top: 10px; color: var(--muted); font-size: .79rem; }
 .auth-form { display: grid; gap: 15px; margin-top: 25px; }
-.auth-form .form-field { color: var(--text); }
-.auth-form .form-field input { min-height: 50px; background: #282a2f; color: var(--text); }
+.auth-input { display: flex; align-items: center; min-height: 52px; gap: 11px; padding: 0 15px; border: 1px solid rgba(184,247,228,.13); border-radius: 15px; background: #282a2f; color: var(--muted); transition: border-color .16s ease, box-shadow .16s ease; }
+.auth-input:focus-within { border-color: #6dbba4; box-shadow: 0 0 0 3px rgba(111,197,171,.15); color: var(--mint); }
+.auth-input input { width: 100%; min-width: 0; height: 50px; padding: 0; border: 0; outline: 0; background: transparent; color: var(--text); font-size: 16px; }
+.auth-input input::placeholder { color: #7f8783; }
 .auth-alert { padding: 11px 13px; border-radius: 13px; font-size: .72rem; font-weight: 650; }
 .auth-error { border: 1px solid rgba(255,119,119,.25); background: rgba(255,119,119,.1); color: #ffaaa0; }
 .auth-success { border: 1px solid rgba(184,247,228,.22); background: rgba(184,247,228,.1); color: var(--mint); }

@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { Button } from "../components/ui/Button";
+import { Icon } from "../components/ui/Icon";
 import { supabase } from "../lib/supabase";
 
 export type AuthMode = "login" | "register" | "forgot" | "update";
@@ -96,34 +97,37 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
 
   return (
     <main className="auth-page">
-      <section className="auth-card">
+      <div className="auth-layout">
         <img src="/icons/pwa-192x192.png" alt="" className="auth-logo" />
-        <p className="eyebrow">{copy[mode].eyebrow}</p>
-        <h1>{copy[mode].title}</h1>
-        <p className="auth-description">
-          {mode === "forgot" ? "Ingresá tu correo y te enviaremos un enlace seguro."
-            : mode === "update" ? "Usá al menos 8 caracteres para proteger tu cuenta."
-              : "Organizá viajes, reservas, gastos y recordatorios en un solo lugar."}
-        </p>
+        <section className="auth-card">
+        {mode !== "login" && <p className="eyebrow">{copy[mode].eyebrow}</p>}
+        <h1>{mode === "login" ? "NosVamos" : copy[mode].title}</h1>
+        {mode !== "login" && (
+          <p className="auth-description">
+            {mode === "forgot" ? "Ingresá tu correo y te enviaremos un enlace seguro."
+              : mode === "update" ? "Usá al menos 8 caracteres para proteger tu cuenta."
+                : "Organizá viajes, reservas, gastos y recordatorios en un solo lugar."}
+          </p>
+        )}
 
         <form className="auth-form" onSubmit={submit}>
           {mode === "register" && (
-            <label className="form-field">Nombre
+            <label className="auth-input"><span className="sr-only">Nombre</span><Icon name="user" size={20} />
               <input autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Tu nombre" required />
             </label>
           )}
           {mode !== "update" && (
-            <label className="form-field">Correo electrónico
+            <label className="auth-input"><span className="sr-only">Correo electrónico</span><Icon name="user" size={20} />
               <input type="email" inputMode="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="nombre@correo.com" required />
             </label>
           )}
           {mode !== "forgot" && (
-            <label className="form-field">Contraseña
+            <label className="auth-input"><span className="sr-only">Contraseña</span><Icon name="lock" size={20} />
               <input type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Mínimo 8 caracteres" minLength={mode === "login" ? undefined : 8} required />
             </label>
           )}
           {(mode === "register" || mode === "update") && (
-            <label className="form-field">Repetir contraseña
+            <label className="auth-input"><span className="sr-only">Repetir contraseña</span><Icon name="lock" size={20} />
               <input type="password" autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="Repetí tu contraseña" minLength={8} required />
             </label>
           )}
@@ -139,6 +143,7 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
           {mode === "forgot" && <Link to="/ingresar">Volver a ingresar</Link>}
         </nav>
       </section>
+      </div>
     </main>
   );
 }
