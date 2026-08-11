@@ -80,7 +80,8 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
         const { error: authError } = await supabase.auth.updateUser({ password });
         if (authError) throw authError;
         setMessage("Tu contraseña fue actualizada correctamente.");
-        window.setTimeout(() => navigate("/perfil", { replace: true }), 900);
+        const returnTo = (location.state as { from?: string } | null)?.from ?? "/";
+        window.setTimeout(() => navigate(returnTo, { replace: true }), 900);
       }
     } catch (caught) {
       const authMessage = caught instanceof Error ? caught.message : "No pudimos completar la operación.";
@@ -141,6 +142,7 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
           {mode === "login" && <><Link to="/recuperar-clave">¿Olvidaste tu contraseña?</Link><p>¿No tenés cuenta? <Link to="/crear-cuenta">Creala gratis</Link></p></>}
           {mode === "register" && <p>¿Ya tenés cuenta? <Link to="/ingresar">Ingresá</Link></p>}
           {mode === "forgot" && <Link to="/ingresar">Volver a ingresar</Link>}
+          {mode === "update" && <button type="button" className="auth-cancel" onClick={() => navigate((location.state as { from?: string } | null)?.from ?? "/", { replace: true })}>Cancelar</button>}
         </nav>
       </section>
       </div>

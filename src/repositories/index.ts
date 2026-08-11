@@ -1,3 +1,3 @@
-import { LocalTripRepository } from "./LocalTripRepository";
+import { SupabaseTripRepository } from "./SupabaseTripRepository";
 
-export const tripRepository = new LocalTripRepository();
+export const tripRepository = new SupabaseTripRepository();

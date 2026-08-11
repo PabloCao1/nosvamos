@@ -4,6 +4,7 @@ import {
   enablePushNotifications,
   getCurrentPushSubscription,
   getPushAvailability,
+  registerPushSubscription,
   type PushAvailability,
 } from "../lib/push/pushNotifications";
 
@@ -15,7 +16,15 @@ export function usePushNotifications() {
 
   useEffect(() => {
     getCurrentPushSubscription()
-      .then((subscription) => setEnabled(Boolean(subscription)))
+      .then(async (subscription) => {
+        if (!subscription) return setEnabled(false);
+        await registerPushSubscription(subscription);
+        setEnabled(true);
+      })
+      .catch((reason) => {
+        setEnabled(false);
+        setError(reason instanceof Error ? reason.message : "No se pudo registrar este dispositivo.");
+      })
       .finally(() => setPending(false));
   }, []);
 

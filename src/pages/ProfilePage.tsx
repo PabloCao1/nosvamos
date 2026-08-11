@@ -76,7 +76,7 @@ export function ProfilePage() {
             <span><strong>{label}</strong><small>{description}</small></span>
             <input
               type="checkbox"
-              checked={notificationPreferences.preferences[key]}
+              checked={Boolean(notificationPreferences.preferences[key])}
               onChange={(event) => notificationPreferences.update(key, event.target.checked)}
             />
           </label>

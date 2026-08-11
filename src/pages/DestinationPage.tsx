@@ -5,6 +5,7 @@ import { DetailIndicator } from "../components/ui/Button";
 import { ErrorState, LoadingState } from "../components/ui/PageState";
 import { useTrip } from "../hooks/useTrips";
 import { formatUsd } from "../lib/currency/exchangeRates";
+import { formatTripDateTime } from "../lib/dates/tripDateTime";
 
 const date = (value: string) =>
   new Intl.DateTimeFormat("es-AR", { day: "numeric", month: "long", year: "numeric" })
@@ -106,7 +107,7 @@ export function DestinationPage() {
                     })}
                   </div>
                   <div className="destination-event-side">
-                    <strong>{new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(new Date(transport.startAt))}</strong>
+                    <strong>{formatTripDateTime(transport.startAt, trip.timezone, { hour: "2-digit", minute: "2-digit" })}</strong>
                     <DetailIndicator />
                   </div>
                 </Link>

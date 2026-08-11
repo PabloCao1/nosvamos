@@ -2,14 +2,10 @@ import type { Reservation } from "../../types/domain";
 import { Icon } from "../ui/Icon";
 import { StatusPill } from "../ui/StatusPill";
 import { reservationIcon } from "../../lib/icons/entityIcons";
+import { formatTripDateTime } from "../../lib/dates/tripDateTime";
 
-export function ReservationCard({ reservation, onEdit }: { reservation: Reservation; onEdit?: () => void }) {
-  const date = new Intl.DateTimeFormat("es-AR", {
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(reservation.startAt));
+export function ReservationCard({ reservation, timezone, onEdit }: { reservation: Reservation; timezone: string; onEdit?: () => void }) {
+  const date = formatTripDateTime(reservation.startAt, timezone);
   return (
     <button className="reservation-card" onClick={onEdit} disabled={!onEdit} aria-label={onEdit ? `Editar ${reservation.title}` : undefined}>
       <span className={`reservation-icon reservation-${reservation.type}`}><Icon name={reservationIcon[reservation.type]} size={22} /></span>

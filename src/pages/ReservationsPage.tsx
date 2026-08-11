@@ -43,7 +43,7 @@ export function ReservationsPage() {
       <section className="section-block">
         <div className="section-heading"><div><p className="eyebrow">Vista cronológica</p><h2>Próximas reservas</h2></div><span>{reservations.length}</span></div>
         <div className="card-stack">
-          {reservations.map((item) => <ReservationCard key={item.id} reservation={item} onEdit={() => navigate(`/viaje/${trip.id}/editar/reservation/${item.id}`)} />)}
+          {reservations.map((item) => <ReservationCard key={item.id} reservation={item} timezone={trip.timezone} onEdit={() => navigate(`/viaje/${trip.id}/editar/reservation/${item.id}`)} />)}
           {reservations.length === 0 && <p className="no-results">No encontramos reservas con esos filtros.</p>}
         </div>
       </section>

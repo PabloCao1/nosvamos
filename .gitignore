@@ -8,3 +8,4 @@ dev-dist
 .vite
 coverage
 supabase/private/
+supabase/.temp/

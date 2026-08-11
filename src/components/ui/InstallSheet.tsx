@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useInstallStore } from "../../stores/installStore";
 import { BottomSheet } from "./BottomSheet";
 import { Button } from "./Button";
@@ -9,6 +9,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 type MobilePlatform = "ios" | "android" | "other";
+const INSTALL_INVITE_SEEN_KEY = "nosvamos:install-invite-seen";
 
 function isInstalled() {
   return window.matchMedia("(display-mode: standalone)").matches
@@ -48,7 +49,6 @@ export function InstallSheet() {
   const setOpen = useInstallStore((state) => state.setInstallOpen);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent>();
   const [platform] = useState(getMobilePlatform);
-  const autoOpened = useRef(false);
 
   useEffect(() => {
     const capturePrompt = (event: Event) => {
@@ -60,18 +60,22 @@ export function InstallSheet() {
   }, []);
 
   useEffect(() => {
-    if (autoOpened.current || isInstalled() || platform === "other") return;
-    autoOpened.current = true;
+    if (isInstalled() || window.localStorage.getItem(INSTALL_INVITE_SEEN_KEY) === "true") return;
     const timer = window.setTimeout(() => setOpen(true), 700);
     return () => window.clearTimeout(timer);
   }, [platform, setOpen]);
+
+  const close = () => {
+    window.localStorage.setItem(INSTALL_INVITE_SEEN_KEY, "true");
+    setOpen(false);
+  };
 
   const install = async () => {
     if (!installPrompt) return;
     await installPrompt.prompt();
     const choice = await installPrompt.userChoice;
     setInstallPrompt(undefined);
-    if (choice.outcome === "accepted") setOpen(false);
+    if (choice.outcome === "accepted") close();
   };
 
   const steps = platform === "android" && !installPrompt
@@ -86,7 +90,7 @@ export function InstallSheet() {
     : "Instalala para abrirla como una app, recibir avisos y usar tus viajes sin conexión.";
 
   return (
-    <BottomSheet open={open && !isInstalled()} onClose={() => setOpen(false)} title="Instalá NosVamos">
+    <BottomSheet open={open && !isInstalled()} onClose={close} title="Instalá NosVamos">
       <img className="install-app-icon" src={`${import.meta.env.BASE_URL}icons/pwa-192x192.png`} alt="Ícono de NosVamos" />
       <p className="sheet-copy">{copy}</p>
       <ol className="install-steps">
@@ -94,10 +98,10 @@ export function InstallSheet() {
           <li key={number}><span>{number}</span><p>{text}</p></li>
         ))}
       </ol>
-      {platform === "android" && installPrompt ? (
+      {installPrompt ? (
         <Button variant="primary" fullWidth onClick={() => void install()}>Instalar ahora</Button>
       ) : (
-        <Button variant="primary" fullWidth onClick={() => setOpen(false)}>Entendido</Button>
+        <Button variant="primary" fullWidth onClick={close}>Entendido</Button>
       )}
     </BottomSheet>
   );

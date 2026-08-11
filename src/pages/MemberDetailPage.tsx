@@ -137,6 +137,7 @@ export function MemberDetailPage() {
             <ReservationCard
               key={reservation.id}
               reservation={reservation}
+              timezone={trip.timezone}
               onEdit={() => navigate(`/viaje/${trip.id}/evento/reservation/${reservation.id}`)}
             />
           ))}

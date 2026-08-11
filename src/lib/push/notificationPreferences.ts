@@ -7,7 +7,18 @@ export interface NotificationPreferences {
   expenses: boolean;
   dayBefore: boolean;
   shortlyBefore: boolean;
+  reminderTimings: Record<ScheduledNotificationCategory, ReminderTimingPreferences>;
 }
+
+export type ScheduledNotificationCategory = "flights" | "transport" | "lodging" | "activities";
+export interface ReminderTimingPreferences { twoDays: boolean; dayBefore: boolean; shortlyBefore: boolean }
+
+const defaultTimings = (): NotificationPreferences["reminderTimings"] => ({
+  flights: { twoDays: false, dayBefore: true, shortlyBefore: true },
+  transport: { twoDays: false, dayBefore: true, shortlyBefore: true },
+  lodging: { twoDays: false, dayBefore: true, shortlyBefore: true },
+  activities: { twoDays: false, dayBefore: true, shortlyBefore: true },
+});
 
 export const defaultNotificationPreferences: NotificationPreferences = {
   groupChanges: true,
@@ -18,6 +29,7 @@ export const defaultNotificationPreferences: NotificationPreferences = {
   expenses: true,
   dayBefore: true,
   shortlyBefore: true,
+  reminderTimings: defaultTimings(),
 };
 
 const storageKey = "brujula:notification-preferences:v1";
@@ -25,7 +37,16 @@ const storageKey = "brujula:notification-preferences:v1";
 export function getNotificationPreferences(): NotificationPreferences {
   try {
     const saved = JSON.parse(localStorage.getItem(storageKey) ?? "{}") as Partial<NotificationPreferences>;
-    return { ...defaultNotificationPreferences, ...saved };
+    const timings = defaultTimings();
+    for (const category of Object.keys(timings) as ScheduledNotificationCategory[]) {
+      timings[category] = {
+        ...timings[category],
+        dayBefore: saved.dayBefore ?? defaultNotificationPreferences.dayBefore,
+        shortlyBefore: saved.shortlyBefore ?? defaultNotificationPreferences.shortlyBefore,
+        ...saved.reminderTimings?.[category],
+      };
+    }
+    return { ...defaultNotificationPreferences, ...saved, reminderTimings: timings };
   } catch {
     return defaultNotificationPreferences;
   }

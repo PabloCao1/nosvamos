@@ -25,6 +25,13 @@ function isEnabled(type: ReservationType, preferences: NotificationPreferences) 
   return preferences.activities;
 }
 
+function categoryFor(type: ReservationType): keyof NotificationPreferences["reminderTimings"] {
+  if (type === "flight") return "flights";
+  if (type === "hotel" || type === "apartment") return "lodging";
+  if (["train", "bus", "ferry", "car"].includes(type)) return "transport";
+  return "activities";
+}
+
 function kindFor(type: ReservationType): NotificationKind {
   if (type === "hotel" || type === "apartment") return "lodging";
   if (["flight", "train", "bus", "ferry", "car"].includes(type)) return "transport";
@@ -34,7 +41,7 @@ function kindFor(type: ReservationType): NotificationKind {
 function reminder(
   trip: Trip,
   reservation: Reservation,
-  offset: "dayBefore" | "shortlyBefore",
+  offset: "twoDays" | "dayBefore" | "shortlyBefore",
   hours: number,
   now: number,
 ): AppNotification | null {
@@ -46,8 +53,8 @@ function reminder(
     id,
     tripId: trip.id,
     kind: kindFor(reservation.type),
-    title: offset === "dayBefore" ? `Mañana: ${reservation.title}` : `Próximo: ${reservation.title}`,
-    body: offset === "dayBefore"
+    title: offset === "twoDays" ? `En 2 días: ${reservation.title}` : offset === "dayBefore" ? `Mañana: ${reservation.title}` : `Próximo: ${reservation.title}`,
+    body: offset === "twoDays" ? `Empieza en aproximadamente 48 horas · ${reservation.city}` : offset === "dayBefore"
       ? `Empieza en aproximadamente 24 horas · ${reservation.city}`
       : `Empieza en ${hours} ${hours === 1 ? "hora" : "horas"} · ${reservation.city}`,
     createdAt: new Date(dueAt).toISOString(),
@@ -62,9 +69,11 @@ export async function syncLocalReminders(trips: Trip[], now = Date.now()) {
     if (reservation.status === "cancelled" || reservation.status === "completed") return [];
     if (!isEnabled(reservation.type, preferences)) return [];
     const rule = rules[reservation.type] ?? rules.other!;
+    const timing = preferences.reminderTimings[categoryFor(reservation.type)];
     return [
-      preferences.dayBefore ? reminder(trip, reservation, "dayBefore", rule.dayBefore, now) : null,
-      preferences.shortlyBefore ? reminder(trip, reservation, "shortlyBefore", rule.shortlyBefore, now) : null,
+      timing.twoDays ? reminder(trip, reservation, "twoDays", 48, now) : null,
+      timing.dayBefore ? reminder(trip, reservation, "dayBefore", rule.dayBefore, now) : null,
+      timing.shortlyBefore ? reminder(trip, reservation, "shortlyBefore", rule.shortlyBefore, now) : null,
     ].filter((item): item is AppNotification => item !== null);
   }));
   if (!reminders.length) return reminders;

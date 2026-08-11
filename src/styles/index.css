@@ -525,6 +525,29 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .privacy-note strong { font-size: .76rem; }
 .privacy-note p { margin-top: 4px; font-size: .65rem; line-height: 1.45; }
 .version-label { margin-top: 24px; color: #9a9e9b; font-size: .63rem; text-align: center; }
+.tab-button { border: 0; background: transparent; font: inherit; cursor: pointer; }
+.profile-drawer-layer { position: fixed; z-index: 80; inset: 0; visibility: hidden; pointer-events: none; }
+.profile-drawer-layer.open { visibility: visible; pointer-events: auto; }
+.profile-drawer-backdrop { position: absolute; inset: 0; width: 100%; border: 0; background: rgba(8,9,11,.68); opacity: 0; transition: opacity .24s ease; }
+.profile-drawer-layer.open .profile-drawer-backdrop { opacity: 1; }
+.profile-drawer { position: absolute; top: 0; bottom: 0; left: 0; display: flex; width: min(86vw, 360px); flex-direction: column; padding: calc(30px + env(safe-area-inset-top)) 20px calc(22px + env(safe-area-inset-bottom)); border-right: 1px solid var(--line); background: #292b30; box-shadow: 24px 0 70px rgba(0,0,0,.48); transform: translateX(-102%); transition: transform .28s cubic-bezier(.2,.8,.2,1); }
+.profile-drawer-layer.open .profile-drawer { transform: translateX(0); }
+.profile-drawer-user { display: flex; align-items: center; gap: 13px; padding: 8px 4px 24px; border-bottom: 1px solid var(--line); }
+.profile-drawer-user > div:last-child { min-width: 0; }
+.profile-drawer-user h2 { overflow: hidden; font-size: 1rem; text-overflow: ellipsis; white-space: nowrap; }
+.profile-drawer-user p { margin-top: 5px; overflow: hidden; color: var(--muted); font-size: .67rem; text-overflow: ellipsis; white-space: nowrap; }
+.profile-drawer-menu { display: grid; gap: 8px; margin-top: 22px; }
+.profile-drawer-menu button { display: grid; grid-template-columns: 42px 1fr 18px; align-items: center; min-height: 62px; gap: 11px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 17px; background: var(--surface); color: var(--text); text-align: left; cursor: pointer; }
+.profile-drawer-menu button > span:first-child { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; background: rgba(184,247,228,.12); color: var(--mint); }
+.profile-drawer-menu strong { font-size: .78rem; }
+.profile-drawer-menu button > :last-child { color: var(--muted); }
+.profile-drawer-signout { min-height: 49px; margin-top: auto; border: 1px solid rgba(255,119,119,.45); border-radius: 15px; background: rgba(231,53,53,.1); color: #ff8585; font-weight: 800; cursor: pointer; }
+.personal-data-form, .password-action-card { display: grid; gap: 15px; }
+.password-action-card p { margin: 5px 0 15px; color: var(--muted); font-size: .7rem; }
+.push-test-card { display: grid; gap: 13px; }
+.push-test-card > div p { margin-top: 5px; color: var(--muted); font-size: .7rem; line-height: 1.4; }
+.form-success { color: var(--mint); font-size: .7rem; font-weight: 650; }
+.auth-cancel { border: 0; background: transparent; color: var(--mint); font: inherit; font-weight: 750; cursor: pointer; }
 
 .search-field { display: flex; align-items: center; gap: 9px; height: 49px; padding: 0 14px; border: 1px solid var(--line); border-radius: 16px; background: white; color: #8b8f91; }
 .search-field input { min-width: 0; flex: 1; border: 0; outline: none; background: transparent; color: var(--graphite); font-size: 16px; }
@@ -945,6 +968,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   display: grid;
   gap: 0;
 }
+.notification-schedules { display: grid; gap: 8px; }
+.notification-schedule { overflow: hidden; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); }
+.notification-schedule .notification-preference { padding: 0 13px; border: 0; }
+.timing-options { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 13px 13px; }
+.timing-options label { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: .65rem; cursor: pointer; }
+.timing-options input { width: 16px; height: 16px; accent-color: var(--mint); }
 
 .notification-preference {
   min-height: 64px;

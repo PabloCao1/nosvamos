@@ -4,6 +4,7 @@ import type { Trip } from "../../types/domain";
 import type { IconName } from "../ui/Icon";
 import { Icon } from "../ui/Icon";
 import { DetailIndicator } from "../ui/Button";
+import { dateInTripZone, timeInTripZone } from "../../lib/dates/tripDateTime";
 
 interface CalendarEvent {
   id: string;
@@ -32,8 +33,8 @@ export function TripCalendar({ trip }: { trip: Trip }) {
         entityId: reservation.id,
         kind: "reservation",
         moment: "start",
-        date: reservation.startAt.slice(0, 10),
-        time: reservation.startAt.slice(11, 16),
+        date: dateInTripZone(reservation.startAt, trip.timezone),
+        time: timeInTripZone(reservation.startAt, trip.timezone),
         title: isLodging ? `Check-in · ${reservation.title}` : reservation.title,
         detail: isTransport
           ? `${reservation.originCity ?? reservation.originPlace ?? "Origen"} → ${reservation.destinationCity ?? reservation.destinationPlace ?? reservation.city}`
@@ -47,8 +48,8 @@ export function TripCalendar({ trip }: { trip: Trip }) {
           entityId: reservation.id,
           kind: "reservation",
           moment: "end",
-          date: reservation.endAt.slice(0, 10),
-          time: reservation.endAt.slice(11, 16),
+          date: dateInTripZone(reservation.endAt, trip.timezone),
+          time: timeInTripZone(reservation.endAt, trip.timezone),
           title: isLodging ? `Check-out · ${reservation.title}` : isTransport ? `Llegada · ${reservation.title}` : `Finaliza · ${reservation.title}`,
           detail: isTransport ? reservation.destinationPlace ?? reservation.destinationCity ?? reservation.city : reservation.city,
           icon: reservation.type === "flight" ? "airplane" : reservation.type === "train" ? "train" : isLodging ? "bed" : "ticket",

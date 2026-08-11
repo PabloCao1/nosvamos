@@ -4,6 +4,7 @@ import { Icon, type IconName } from "../components/ui/Icon";
 import { DetailIndicator } from "../components/ui/Button";
 import { ErrorState, LoadingState } from "../components/ui/PageState";
 import { useTrip } from "../hooks/useTrips";
+import { dateInTripZone, timeInTripZone } from "../lib/dates/tripDateTime";
 
 interface ItineraryMovement {
   id: string;
@@ -58,8 +59,8 @@ export function EditDestinationsPage() {
       id: `reservation-${reservation.id}`,
       entityId: reservation.id,
       kind: "reservation" as const,
-      date: reservation.startAt.slice(0, 10),
-      time: reservation.startAt.slice(11, 16),
+      date: dateInTripZone(reservation.startAt, trip.timezone),
+      time: timeInTripZone(reservation.startAt, trip.timezone),
       title: reservation.title,
       detail: reservation.type === "flight" || reservation.type === "train" || reservation.type === "bus"
         ? `${reservation.originPlace ?? reservation.originCity ?? "Origen"} → ${reservation.destinationPlace ?? reservation.destinationCity ?? "Destino"}`

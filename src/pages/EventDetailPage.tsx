@@ -5,22 +5,15 @@ import { Icon, type IconName } from "../components/ui/Icon";
 import { ErrorState, LoadingState } from "../components/ui/PageState";
 import { useTrip } from "../hooks/useTrips";
 import { formatUsd } from "../lib/currency/exchangeRates";
+import { formatTripDateTime } from "../lib/dates/tripDateTime";
 import type { Activity, Reservation, Trip } from "../types/domain";
 
 const transportTypes = new Set(["flight", "train", "bus", "ferry", "car"]);
 const lodgingTypes = new Set(["hotel", "apartment"]);
 
-const dateTime = (value?: string) => {
+const dateTime = (value: string | undefined, timezone: string) => {
   if (!value) return "Sin definir";
-  const datePart = value.slice(0, 10);
-  const time = value.slice(11, 16);
-  const formattedDate = new Intl.DateTimeFormat("es-AR", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    }).format(new Date(`${datePart}T12:00:00`));
-  return time ? `${formattedDate} · ${time}` : formattedDate;
+  return formatTripDateTime(value, timezone, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 };
 
 const labels = {
@@ -99,8 +92,8 @@ function ReservationDetail({ reservation, trip, moment }: { reservation: Reserva
       <section className="event-detail-section">
         <h2>Fecha y lugar</h2>
         <div className="event-detail-card">
-          <DetailRow label={isLodging ? "Check-in" : "Salida"} value={dateTime(reservation.startAt)} />
-          <DetailRow label={isLodging ? "Check-out" : "Llegada"} value={dateTime(reservation.endAt)} />
+          <DetailRow label={isLodging ? "Check-in" : "Salida"} value={dateTime(reservation.startAt, trip.timezone)} />
+          <DetailRow label={isLodging ? "Check-out" : "Llegada"} value={dateTime(reservation.endAt, trip.timezone)} />
           {isTransport && <DetailRow label="Recorrido" value={`${reservation.originCity ?? reservation.city} → ${reservation.destinationCity ?? reservation.city}`} />}
           <DetailRow label="Desde" value={reservation.originPlace} />
           <DetailRow label="Hasta" value={reservation.destinationPlace} />
@@ -186,8 +179,8 @@ function ActivityDetail({ activity, trip, date }: { activity: Activity; trip: Tr
       <section className="event-detail-section">
         <h2>Detalles</h2>
         <div className="event-detail-card">
-          <DetailRow label="Fecha" value={dateTime(`${date}T${activity.startTime}`)} />
-          <DetailRow label="Finaliza" value={activity.endTime ? dateTime(`${date}T${activity.endTime}`) : undefined} />
+          <DetailRow label="Fecha" value={`${new Intl.DateTimeFormat("es-AR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date(`${date}T12:00:00`))} · ${activity.startTime}`} />
+          <DetailRow label="Finaliza" value={activity.endTime ? `${new Intl.DateTimeFormat("es-AR", { day: "numeric", month: "long" }).format(new Date(`${date}T12:00:00`))} · ${activity.endTime}` : undefined} />
           <DetailRow label="Lugar" value={activity.location} />
           <DetailRow label="Descripción" value={activity.description} />
           <DetailRow label="Categoría" value={labels.activityCategory[activity.category]} />

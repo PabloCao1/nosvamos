@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
 import { LoadingState } from "../components/ui/PageState";
 import { ProtectedRoute } from "../auth/ProtectedRoute";
@@ -10,7 +10,6 @@ const HomePage = lazy(() => import("../pages/HomePage").then((module) => ({ defa
 const ItineraryPage = lazy(() => import("../pages/ItineraryPage").then((module) => ({ default: module.ItineraryPage })));
 const ExpensesPage = lazy(() => import("../pages/ExpensesPage").then((module) => ({ default: module.ExpensesPage })));
 const TripPage = lazy(() => import("../pages/TripPage").then((module) => ({ default: module.TripPage })));
-const ProfilePage = lazy(() => import("../pages/ProfilePage").then((module) => ({ default: module.ProfilePage })));
 const ReservationsPage = lazy(() => import("../pages/ReservationsPage").then((module) => ({ default: module.ReservationsPage })));
 const SyncQueuePage = lazy(() => import("../pages/SyncQueuePage").then((module) => ({ default: module.SyncQueuePage })));
 const PastTripsPage = lazy(() => import("../pages/PastTripsPage").then((module) => ({ default: module.PastTripsPage })));
@@ -26,6 +25,8 @@ const NewTripPage = lazy(() => import("../pages/NewTripPage").then((module) => (
 const EntityFormPage = lazy(() => import("../pages/EntityFormPage").then((module) => ({ default: module.EntityFormPage })));
 const MemberFormPage = lazy(() => import("../pages/MemberFormPage").then((module) => ({ default: module.MemberFormPage })));
 const NotFoundPage = lazy(() => import("../pages/NotFoundPage").then((module) => ({ default: module.NotFoundPage })));
+const PersonalDataPage = lazy(() => import("../pages/PersonalDataPage").then((module) => ({ default: module.PersonalDataPage })));
+const NotificationSettingsPage = lazy(() => import("../pages/NotificationSettingsPage").then((module) => ({ default: module.NotificationSettingsPage })));
 
 const page = (element: React.ReactNode) => <Suspense fallback={<LoadingState />}>{element}</Suspense>;
 
@@ -78,7 +79,9 @@ export const router = createBrowserRouter([
       { path: "/viaje/:tripId/integrantes/:memberId", element: page(<MemberDetailPage />) },
       { path: "/viaje/:tripId/integrantes/:memberId/editar", element: page(<MemberFormPage />) },
       { path: "/viaje/:tripId/evento/:eventType/:eventId", element: page(<EventDetailPage />) },
-      { path: "/perfil", element: page(<ProfilePage />) },
+      { path: "/perfil", element: <Navigate to="/" replace /> },
+      { path: "/datos-personales", element: page(<PersonalDataPage />) },
+      { path: "/ajustes-notificaciones", element: page(<NotificationSettingsPage />) },
       { path: "/reservas", element: page(<ReservationsPage />) },
       { path: "/sincronizacion", element: page(<SyncQueuePage />) },
       { path: "/viajes/pasados", element: page(<PastTripsPage />) },

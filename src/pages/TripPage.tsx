@@ -12,14 +12,9 @@ import { ErrorState, LoadingState } from "../components/ui/PageState";
 import { useTrip } from "../hooks/useTrips";
 import { formatUsd } from "../lib/currency/exchangeRates";
 import { reservationIcon } from "../lib/icons/entityIcons";
+import { formatTripDateTime } from "../lib/dates/tripDateTime";
 
-const transportDateTime = (value: string) => {
-  const datePart = value.slice(0, 10);
-  const time = value.slice(11, 16);
-  const day = new Intl.DateTimeFormat("es-AR", { day: "numeric", month: "short" })
-    .format(new Date(`${datePart}T12:00:00`));
-  return `${day} · ${time}`;
-};
+const transportDateTime = (value: string, timezone: string) => formatTripDateTime(value, timezone);
 
 export function TripPage() {
   const { tripId } = useParams();
@@ -80,7 +75,7 @@ export function TripPage() {
               <span><Icon name="airplane" size={32} weight="Filled" /></span>
               <strong>Ida · tramo {index + 1}</strong>
               <small>{flight.originPlace ?? flight.originCity} → {flight.destinationPlace ?? flight.destinationCity}</small>
-              <small>{transportDateTime(flight.startAt)}</small>
+              <small>{transportDateTime(flight.startAt, trip.timezone)}</small>
               <small>{flight.serviceNumber}</small>
             </Link>
           ))}
@@ -108,7 +103,7 @@ export function TripPage() {
                   >
                     <span><Icon name={reservationIcon[transport.type]} size={32} weight="Filled" /></span>
                     <strong>{transport.type === "flight" ? "Vuelo" : transport.type === "train" ? "Tren" : transport.type === "bus" ? "Bus" : transport.type === "car" ? "Auto" : "Ferry"}</strong>
-                    <small>{transportDateTime(transport.startAt)}</small>
+                    <small>{transportDateTime(transport.startAt, trip.timezone)}</small>
                   </Link>
                 )}
               </Fragment>
@@ -124,7 +119,7 @@ export function TripPage() {
                 <span><Icon name="airplane" size={32} weight="Filled" /></span>
                 <strong>Regreso{travelers ? ` · ${travelers}` : ""}</strong>
                 <small>{flight.originPlace ?? flight.originCity} → {flight.destinationPlace ?? flight.destinationCity}</small>
-                <small>{transportDateTime(flight.startAt)}</small>
+                <small>{transportDateTime(flight.startAt, trip.timezone)}</small>
                 <small>{flight.serviceNumber}</small>
               </Link>
             );

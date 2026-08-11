@@ -16,5 +16,22 @@ export function useNotificationPreferences() {
     void updatePushPreferences(next);
   };
 
-  return { preferences, update };
+  const updateTiming = (
+    category: keyof NotificationPreferences["reminderTimings"],
+    timing: keyof NotificationPreferences["reminderTimings"][typeof category],
+    value: boolean,
+  ) => {
+    const next = {
+      ...preferences,
+      reminderTimings: {
+        ...preferences.reminderTimings,
+        [category]: { ...preferences.reminderTimings[category], [timing]: value },
+      },
+    };
+    setPreferences(next);
+    saveNotificationPreferences(next);
+    void updatePushPreferences(next);
+  };
+
+  return { preferences, update, updateTiming };
 }

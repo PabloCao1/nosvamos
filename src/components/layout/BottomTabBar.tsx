@@ -5,10 +5,9 @@ import { Icon } from "../ui/Icon";
 const tabs: { to: string; label: string; icon: IconName }[] = [
   { to: "/", label: "Viajes", icon: "suitcase" },
   { to: "/notificaciones", label: "Avisos", icon: "bell" },
-  { to: "/perfil", label: "Perfil", icon: "user" },
 ];
 
-export function BottomTabBar() {
+export function BottomTabBar({ onOpenProfile }: { onOpenProfile: () => void }) {
   return (
     <nav className="bottom-nav" aria-label="Navegación principal">
       <div className="bottom-nav-inner">
@@ -29,6 +28,9 @@ export function BottomTabBar() {
             )}
           </NavLink>
         ))}
+        <button type="button" className="tab-link tab-button" onClick={onOpenProfile}>
+          <span className="tab-icon"><Icon name="user" size={22} /></span><span>Perfil</span>
+        </button>
       </div>
     </nav>
   );
