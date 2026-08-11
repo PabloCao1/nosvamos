@@ -18,5 +18,6 @@ export const dateTimeLocalInTripZone = (value: string, timeZone: string) => `${d
 
 export const formatTripDateTime = (value: string, timeZone: string, options: Intl.DateTimeFormatOptions = {}) =>
   new Intl.DateTimeFormat("es-AR", {
-    timeZone, day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", ...options,
+    ...(value.endsWith("Z") || /[+-]\d{2}:?\d{2}$/.test(value) ? { timeZone } : {}),
+    day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", ...options,
   }).format(new Date(value));

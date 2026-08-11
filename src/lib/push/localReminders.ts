@@ -5,17 +5,17 @@ import { getNotificationPreferences, type NotificationPreferences } from "./noti
 const HOUR = 60 * 60 * 1000;
 
 const rules: Partial<Record<ReservationType, { dayBefore: number; shortlyBefore: number }>> = {
-  flight: { dayBefore: 24, shortlyBefore: 3 },
-  train: { dayBefore: 24, shortlyBefore: 2 },
-  bus: { dayBefore: 24, shortlyBefore: 2 },
-  ferry: { dayBefore: 24, shortlyBefore: 2 },
-  hotel: { dayBefore: 24, shortlyBefore: 3 },
-  apartment: { dayBefore: 24, shortlyBefore: 3 },
-  restaurant: { dayBefore: 24, shortlyBefore: 2 },
+  flight: { dayBefore: 24, shortlyBefore: 1 },
+  train: { dayBefore: 24, shortlyBefore: 1 },
+  bus: { dayBefore: 24, shortlyBefore: 1 },
+  ferry: { dayBefore: 24, shortlyBefore: 1 },
+  hotel: { dayBefore: 24, shortlyBefore: 1 },
+  apartment: { dayBefore: 24, shortlyBefore: 1 },
+  restaurant: { dayBefore: 24, shortlyBefore: 1 },
   activity: { dayBefore: 24, shortlyBefore: 1 },
-  car: { dayBefore: 24, shortlyBefore: 2 },
-  insurance: { dayBefore: 24, shortlyBefore: 3 },
-  other: { dayBefore: 24, shortlyBefore: 2 },
+  car: { dayBefore: 24, shortlyBefore: 1 },
+  insurance: { dayBefore: 24, shortlyBefore: 1 },
+  other: { dayBefore: 24, shortlyBefore: 1 },
 };
 
 function isEnabled(type: ReservationType, preferences: NotificationPreferences) {

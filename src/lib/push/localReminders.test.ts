@@ -13,7 +13,7 @@ describe("syncLocalReminders", () => {
   });
 
   it("crea recordatorios sin volver a marcar como no leído uno existente", async () => {
-    const now = new Date("2026-08-10T10:00:00Z").getTime();
+    const now = new Date("2026-08-10T11:00:00Z").getTime();
     const reservation: Reservation = {
       ...createSyncableFields(),
       id: "flight-1",
