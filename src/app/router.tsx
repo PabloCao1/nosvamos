@@ -2,6 +2,9 @@ import { lazy, Suspense } from "react";
 import { createBrowserRouter } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell";
 import { LoadingState } from "../components/ui/PageState";
+import { ProtectedRoute } from "../auth/ProtectedRoute";
+import { AuthPage } from "../pages/AuthPage";
+import { AuthCallbackPage } from "../pages/AuthCallbackPage";
 
 const HomePage = lazy(() => import("../pages/HomePage").then((module) => ({ default: module.HomePage })));
 const ItineraryPage = lazy(() => import("../pages/ItineraryPage").then((module) => ({ default: module.ItineraryPage })));
@@ -28,8 +31,31 @@ const page = (element: React.ReactNode) => <Suspense fallback={<LoadingState />}
 
 export const router = createBrowserRouter([
   {
-    element: <AppShell />,
+    path: "/ingresar",
+    element: <AuthPage mode="login" />,
+  },
+  {
+    path: "/crear-cuenta",
+    element: <AuthPage mode="register" />,
+  },
+  {
+    path: "/recuperar-clave",
+    element: <AuthPage mode="forgot" />,
+  },
+  {
+    path: "/actualizar-clave",
+    element: <AuthPage mode="update" />,
+  },
+  {
+    path: "/auth/callback",
+    element: <AuthCallbackPage />,
+  },
+  {
+    element: <ProtectedRoute />,
     children: [
+      {
+        element: <AppShell />,
+        children: [
       { path: "/", element: page(<HomePage />) },
       { path: "/viajes/nuevo", element: page(<NewTripPage />) },
       { path: "/nuevo/:formType", element: page(<EntityFormPage />) },
@@ -58,6 +84,8 @@ export const router = createBrowserRouter([
       { path: "/viajes/pasados", element: page(<PastTripsPage />) },
       { path: "/notificaciones", element: page(<NotificationsPage />) },
       { path: "*", element: page(<NotFoundPage />) },
+        ],
+      },
     ],
   },
 ], {

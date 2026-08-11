@@ -5,6 +5,9 @@ import { usePushNotifications } from "../hooks/usePushNotifications";
 import { useNotificationPreferences } from "../hooks/useNotificationPreferences";
 import type { NotificationPreferences } from "../lib/push/notificationPreferences";
 import { useInstallStore } from "../stores/installStore";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/AuthProvider";
 
 const isStandalone = () =>
   window.matchMedia("(display-mode: standalone)").matches ||
@@ -18,6 +21,9 @@ const settings: { icon: IconName; label: string; value: string }[] = [
 ];
 
 export function ProfilePage() {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const [signingOut, setSigningOut] = useState(false);
   const setInstallOpen = useInstallStore((state) => state.setInstallOpen);
   const push = usePushNotifications();
   const notificationPreferences = useNotificationPreferences();
@@ -30,14 +36,28 @@ export function ProfilePage() {
     blocked: "El permiso está bloqueado. Activá NosVamos desde Ajustes > Notificaciones.",
     "not-configured": "Falta conectar el servicio de envío push.",
   }[push.availability];
+  const fullName = typeof user?.user_metadata.full_name === "string" && user.user_metadata.full_name.trim()
+    ? user.user_metadata.full_name.trim()
+    : "Tu perfil";
+  const initials = fullName.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "NV";
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    try {
+      await signOut();
+      navigate("/ingresar", { replace: true });
+    } finally {
+      setSigningOut(false);
+    }
+  };
 
   return (
     <>
       <PageHeader eyebrow="Cuenta personal" title="Perfil" />
       <section className="profile-card">
-        <div className="large-avatar">NV</div>
-        <div><h2>Tu perfil</h2><p>Iniciá sesión para sincronizar tus datos</p></div>
-        <IconButton icon="edit" label="Editar perfil" size="small" />
+        <div className="large-avatar">{initials}</div>
+        <div><h2>{fullName}</h2><p>{user?.email}</p></div>
+        <IconButton icon="edit" label="Cambiar contraseña" size="small" onClick={() => navigate("/actualizar-clave")} />
       </section>
 
       <section className="section-block notification-preferences">
@@ -110,8 +130,12 @@ export function ProfilePage() {
 
       <section className="privacy-note">
         <Icon name="lock" size={21} />
-        <div><strong>Tus datos son privados</strong><p>En la próxima fase, Supabase aplicará permisos por viaje y almacenamiento privado.</p></div>
+        <div><strong>Tu cuenta está protegida</strong><p>La sesión y la contraseña se administran de forma segura con Supabase.</p></div>
       </section>
+      <div className="profile-account-actions">
+        <Button variant="secondary" fullWidth onClick={() => navigate("/actualizar-clave")}>Cambiar contraseña</Button>
+        <Button variant="danger" fullWidth disabled={signingOut} onClick={() => void handleSignOut()}>{signingOut ? "Cerrando..." : "Cerrar sesión"}</Button>
+      </div>
       <p className="version-label">NosVamos · versión 0.1.0</p>
     </>
   );
