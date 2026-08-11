@@ -27,6 +27,7 @@ const MemberFormPage = lazy(() => import("../pages/MemberFormPage").then((module
 const NotFoundPage = lazy(() => import("../pages/NotFoundPage").then((module) => ({ default: module.NotFoundPage })));
 const PersonalDataPage = lazy(() => import("../pages/PersonalDataPage").then((module) => ({ default: module.PersonalDataPage })));
 const NotificationSettingsPage = lazy(() => import("../pages/NotificationSettingsPage").then((module) => ({ default: module.NotificationSettingsPage })));
+const TodayPage = lazy(() => import("../pages/TodayPage").then((module) => ({ default: module.TodayPage })));
 
 const page = (element: React.ReactNode) => <Suspense fallback={<LoadingState />}>{element}</Suspense>;
 
@@ -86,6 +87,7 @@ export const router = createBrowserRouter([
       { path: "/sincronizacion", element: page(<SyncQueuePage />) },
       { path: "/viajes/pasados", element: page(<PastTripsPage />) },
       { path: "/notificaciones", element: page(<NotificationsPage />) },
+      { path: "/hoy", element: page(<TodayPage />) },
       { path: "*", element: page(<NotFoundPage />) },
         ],
       },

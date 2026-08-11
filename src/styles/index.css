@@ -546,6 +546,17 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .password-action-card p { margin: 5px 0 15px; color: var(--muted); font-size: .7rem; }
 .push-test-card { display: grid; gap: 13px; }
 .push-test-card > div p { margin-top: 5px; color: var(--muted); font-size: .7rem; line-height: 1.4; }
+.today-list { display: grid; gap: 9px; }
+.today-item { display: grid; grid-template-columns: 48px 46px minmax(0,1fr) 18px; align-items: center; min-height: 82px; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 19px; background: var(--surface); color: var(--text); text-decoration: none; }
+.today-item > time { color: var(--mint); font-size: .76rem; font-weight: 850; text-align: center; }
+.today-item-icon { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; background: rgba(184,247,228,.12); color: var(--mint); }
+.today-item div { min-width: 0; }
+.today-item small { display: block; overflow: hidden; color: var(--muted); font-size: .58rem; text-overflow: ellipsis; white-space: nowrap; }
+.today-item h2 { margin-top: 3px; overflow: hidden; font-size: .82rem; text-overflow: ellipsis; white-space: nowrap; }
+.today-item p { margin-top: 4px; overflow: hidden; color: var(--muted); font-size: .65rem; text-overflow: ellipsis; white-space: nowrap; }
+.today-item > :last-child { color: var(--muted); }
+.today-item.cancelled { opacity: .5; }
+.today-item.cancelled h2 { text-decoration: line-through; }
 .form-success { color: var(--mint); font-size: .7rem; font-weight: 650; }
 .auth-cancel { border: 0; background: transparent; color: var(--mint); font: inherit; font-weight: 750; cursor: pointer; }
 
