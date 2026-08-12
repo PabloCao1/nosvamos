@@ -16,6 +16,7 @@ const titles: Record<string, string> = {
   reservation: "Nueva reserva",
   lodging: "Nuevo alojamiento",
   transport: "Nuevo traslado",
+  car: "Nuevo alquiler de auto",
   invite: "Invitar integrante",
 };
 
@@ -59,6 +60,7 @@ export function EntityFormPage() {
         {formType === "reservation" && <ReservationForm close={close} entity={reservation} trip={trip} importDraft={importDraft} />}
         {formType === "lodging" && <ReservationForm close={close} variant="lodging" trip={trip} importDraft={importDraft} />}
         {formType === "transport" && <ReservationForm close={close} variant="transport" trip={trip} importDraft={importDraft} />}
+        {formType === "car" && <ReservationForm close={close} variant="car" trip={trip} importDraft={importDraft} />}
         {formType === "invite" && <InviteForm close={close} trip={trip} />}
       </section>
     </>

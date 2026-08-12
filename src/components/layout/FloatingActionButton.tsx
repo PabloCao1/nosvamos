@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import type { IconName } from "../ui/Icon";
 import { Icon } from "../ui/Icon";
 
-type CreateMode = "trip" | "activity" | "expense" | "reservation" | "lodging" | "transport" | "invite" | "import";
+type CreateMode = "trip" | "activity" | "expense" | "reservation" | "lodging" | "transport" | "car" | "invite" | "import";
 
 interface FabAction {
   label: string;
@@ -16,6 +16,7 @@ const tripDetailActions: FabAction[] = [
   { label: "Escanear documento", icon: "receipt", mode: "import" },
   { label: "Invitar integrante", icon: "users", mode: "invite" },
   { label: "Agregar traslado", icon: "airplane", mode: "transport" },
+  { label: "Alquiler de auto", icon: "suitcase", mode: "car" },
   { label: "Agregar alojamiento", icon: "bed", mode: "lodging" },
   { label: "Agregar actividad", icon: "calendar", mode: "activity" },
   { label: "Agregar gasto", icon: "wallet", mode: "expense" },
