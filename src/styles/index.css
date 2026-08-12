@@ -1702,3 +1702,39 @@ body .member-balance-debt-icon { display: inline-block; transform: rotate(180deg
 @media (min-width: 700px) {
   body .page-content { padding-right: 24px; padding-left: 24px; }
 }
+
+.app-update-indicator {
+  position: fixed;
+  z-index: 200;
+  top: calc(14px + env(safe-area-inset-top));
+  left: 50%;
+  display: flex;
+  align-items: center;
+  width: min(calc(100% - 28px), 440px);
+  gap: 12px;
+  padding: 13px 15px;
+  border: 1px solid rgba(184,247,228,.22);
+  border-radius: 15px;
+  background: rgba(43,46,51,.94);
+  box-shadow: 0 16px 42px rgba(0,0,0,.4);
+  color: var(--text);
+  transform: translateX(-50%);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  animation: app-update-in .22s ease-out;
+}
+.app-update-indicator > span:last-child { min-width: 0; }
+.app-update-indicator strong,
+.app-update-indicator small { display: block; }
+.app-update-indicator strong { font-size: .78rem; }
+.app-update-indicator small { margin-top: 3px; color: var(--muted); font-size: .63rem; }
+.app-update-spinner {
+  width: 25px;
+  height: 25px;
+  flex: 0 0 25px;
+  border: 3px solid rgba(184,247,228,.18);
+  border-top-color: var(--mint);
+  border-radius: 50%;
+  animation: city-spin .75s linear infinite;
+}
+@keyframes app-update-in { from { opacity: 0; transform: translate(-50%, -12px); } }
