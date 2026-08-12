@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useActiveTrip } from "../../hooks/useActiveTrip";
 import { createSyncableFields } from "../../lib/indexed-db/database";
@@ -13,7 +13,6 @@ import { supabase } from "../../lib/supabase";
 import type { Activity, Expense, Reservation, Trip } from "../../types/domain";
 import type { DocumentImportDraft } from "../../types/documentImport";
 import { Button } from "../ui/Button";
-import { CityAutocomplete } from "../ui/CityAutocomplete";
 
 const activitySchema = z.object({
   title: z.string().trim().min(2, "Ingresá un título"),
@@ -384,7 +383,7 @@ export function ReservationForm({
     seat: string;
     baggage: string;
   }>>({});
-  const { register, control, handleSubmit, setError, watch, formState: { errors } } = useForm<ReservationInput, unknown, ReservationValues>({
+  const { register, handleSubmit, setError, watch, formState: { errors } } = useForm<ReservationInput, unknown, ReservationValues>({
     resolver: zodResolver(reservationSchema),
     defaultValues: entity ? {
       title: entity.title, type: entity.type, providerName: entity.providerName,
@@ -581,8 +580,8 @@ export function ReservationForm({
       {isTransport && !carRental && (
         <>
           <div className="form-row">
-            <Field label="Ciudad de origen" required><Controller control={control} name="originCity" render={({ field }) => <CityAutocomplete required value={field.value ?? ""} onChange={field.onChange} />} /></Field>
-            <Field label="Ciudad de destino" required><Controller control={control} name="destinationCity" render={({ field }) => <CityAutocomplete required value={field.value ?? ""} onChange={field.onChange} />} /></Field>
+            <Field label="Ciudad de origen" required error={errors.originCity?.message}><input {...register("originCity")} placeholder="Ej. Buenos Aires" /></Field>
+            <Field label="Ciudad de destino" required error={errors.destinationCity?.message}><input {...register("destinationCity")} placeholder="Ej. París" /></Field>
           </div>
           <div className="form-row">
             <Field label={reservationType === "flight" ? "Aeropuerto de salida" : reservationType === "car" ? "Lugar de retiro" : "Terminal o estación de salida"}><input {...register("originPlace")} /></Field>
