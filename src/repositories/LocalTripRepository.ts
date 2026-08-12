@@ -126,8 +126,12 @@ export class LocalTripRepository implements TripRepository {
   }
 
   async deleteActivity(activity: Activity) {
+    await this.deleteActivityPermanently(activity);
+  }
+
+  async deleteActivityPermanently(activity: Activity, deletedAt = new Date().toISOString()) {
     await db.transaction("rw", [db.activities, db.syncQueue], async () => {
-      await db.activities.put({ ...activity, deletedAt: new Date().toISOString(), syncStatus: "pending_delete", version: activity.version + 1 });
+      await db.activities.put({ ...activity, deletedAt, syncStatus: "pending_delete", version: activity.version + 1 });
       await enqueueCompacted("activity", activity.id, { id: activity.id }, "delete");
     });
   }
@@ -147,16 +151,20 @@ export class LocalTripRepository implements TripRepository {
   }
 
   async deleteReservation(reservation: Reservation) {
+    await this.deleteReservationPermanently(reservation);
+  }
+
+  async deleteReservationPermanently(reservation: Reservation, deletedAt = new Date().toISOString()) {
     await db.transaction("rw", [db.reservations, db.syncQueue], async () => {
       const value: Reservation = {
         ...reservation,
-        status: "cancelled",
+        deletedAt,
         updatedAt: new Date().toISOString(),
-        syncStatus: reservation.syncStatus === "pending_create" ? "pending_create" : "pending_update",
+        syncStatus: "pending_delete",
         version: reservation.version + 1,
       };
       await db.reservations.put(value);
-      await enqueueCompacted("reservation", reservation.id, value, "update");
+      await enqueueCompacted("reservation", reservation.id, { id: reservation.id }, "delete");
     });
   }
 

@@ -133,4 +133,18 @@ export class SupabaseTripRepository extends LocalTripRepository {
   override async getById(id: string) {
     return (await this.getAll()).find((trip) => trip.id === id) ?? super.getById(id);
   }
+
+  override async deleteReservation(reservation: Reservation) {
+    const deletedAt = new Date().toISOString();
+    const { error } = await supabase.from("reservations").update({ deleted_at: deletedAt }).eq("id", reservation.id);
+    if (error) throw error;
+    await super.deleteReservationPermanently(reservation, deletedAt);
+  }
+
+  override async deleteActivity(activity: Activity) {
+    const deletedAt = new Date().toISOString();
+    const { error } = await supabase.from("activities").update({ deleted_at: deletedAt }).eq("id", activity.id);
+    if (error) throw error;
+    await super.deleteActivityPermanently(activity, deletedAt);
+  }
 }

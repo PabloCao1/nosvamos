@@ -598,9 +598,9 @@ export function ReservationForm({
         pending={mutation.isPending}
         editing={Boolean(entity)}
         entityLabel="reserva"
-        destructiveLabel="Anular reserva"
-        confirmTitle="¿Anular reserva?"
-        confirmDescription="La reserva quedará guardada con estado cancelado."
+        destructiveLabel="Eliminar reserva"
+        confirmTitle="¿Eliminar reserva?"
+        confirmDescription="La reserva se eliminará del viaje. Esta acción no se puede deshacer."
         onDelete={() => entity && mutation.mutate(() => tripRepository.deleteReservation(entity))}
       />
     </form>

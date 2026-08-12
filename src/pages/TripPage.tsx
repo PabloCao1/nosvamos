@@ -40,8 +40,10 @@ export function TripPage() {
       return totals;
     }, {}),
   ).sort(([, first], [, second]) => second - first);
-  const firstDestination = trip.destinations[0];
-  const lastDestination = trip.destinations.at(-1);
+  const sortedDestinations = [...trip.destinations].sort((first, second) =>
+    first.arrivalDate.localeCompare(second.arrivalDate) || first.departureDate.localeCompare(second.departureDate));
+  const firstDestination = sortedDestinations[0];
+  const lastDestination = sortedDestinations.at(-1);
   const outboundFlights = firstDestination
     ? trip.reservations
         .filter((item) =>
@@ -79,8 +81,8 @@ export function TripPage() {
               <small>{flight.serviceNumber}</small>
             </Link>
           ))}
-          {trip.destinations.map((destination, index) => {
-            const next = trip.destinations[index + 1];
+          {sortedDestinations.map((destination, index) => {
+            const next = sortedDestinations[index + 1];
             const transport = next
               ? trip.reservations.find((item) =>
                   ["flight", "train", "bus", "ferry", "car"].includes(item.type) &&

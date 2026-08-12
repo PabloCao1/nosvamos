@@ -1,11 +1,14 @@
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { PageHeader } from "../components/layout/PageHeader";
-import { IconButton } from "../components/ui/Button";
+import { Button, IconButton } from "../components/ui/Button";
 import { Icon, type IconName } from "../components/ui/Icon";
 import { ErrorState, LoadingState } from "../components/ui/PageState";
 import { useTrip } from "../hooks/useTrips";
 import { formatUsd } from "../lib/currency/exchangeRates";
 import { formatTripDateTime } from "../lib/dates/tripDateTime";
+import { tripRepository } from "../repositories";
 import type { Activity, Reservation, Trip } from "../types/domain";
 
 const transportTypes = new Set(["flight", "train", "bus", "ferry", "car"]);
@@ -198,18 +201,30 @@ export function EventDetailPage() {
   const { tripId, eventType, eventId } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const queryClient = useQueryClient();
   const { data: trip, isLoading, isError, refetch } = useTrip(tripId);
+  const reservation = eventType === "reservation"
+    ? trip?.reservations.find((item) => item.id === eventId)
+    : undefined;
+  const activityEntry = eventType === "activity"
+    ? trip?.itinerary.flatMap((day) => day.activities.map((activity) => ({ activity, date: day.date }))).find(({ activity }) => activity.id === eventId)
+    : undefined;
+
+  const deletion = useMutation({
+    mutationFn: async () => {
+      if (reservation) return tripRepository.deleteReservation(reservation);
+      if (activityEntry) return tripRepository.deleteActivity(activityEntry.activity);
+      throw new Error("Evento no encontrado");
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["trips"] });
+      navigate(`/viaje/${tripId}`);
+    },
+  });
 
   if (isLoading) return <LoadingState />;
   if (isError || !trip) return <ErrorState onRetry={() => void refetch()} />;
-
-  const reservation = eventType === "reservation"
-    ? trip.reservations.find((item) => item.id === eventId)
-    : undefined;
-  const activityEntry = eventType === "activity"
-    ? trip.itinerary.flatMap((day) => day.activities.map((activity) => ({ activity, date: day.date }))).find(({ activity }) => activity.id === eventId)
-    : undefined;
-
   if (!reservation && !activityEntry) return <ErrorState onRetry={() => void refetch()} />;
 
   return (
@@ -229,6 +244,28 @@ export function EventDetailPage() {
       />
       {reservation && <ReservationDetail reservation={reservation} trip={trip} moment={searchParams.get("momento") ?? undefined} />}
       {activityEntry && <ActivityDetail activity={activityEntry.activity} date={activityEntry.date} trip={trip} />}
+      <section className="section-block">
+        <Button variant="danger" icon="trash" fullWidth onClick={() => setConfirmingDelete(true)}>
+          {reservation ? "Eliminar reserva" : "Eliminar actividad"}
+        </Button>
+      </section>
+      {confirmingDelete && (
+        <div className="confirm-layer" role="presentation">
+          <button type="button" className="confirm-backdrop" onClick={() => setConfirmingDelete(false)} aria-label="Cancelar eliminación" />
+          <section className="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="delete-event-title">
+            <div className="confirm-icon">!</div>
+            <h2 id="delete-event-title">¿Eliminar {reservation ? "reserva" : "actividad"}?</h2>
+            <p>Se eliminará del viaje. Esta acción no se puede deshacer.</p>
+            {deletion.error && <p className="form-error">No pudimos eliminarlo. Probá nuevamente.</p>}
+            <div className="confirm-actions">
+              <Button variant="secondary" onClick={() => setConfirmingDelete(false)}>Cancelar</Button>
+              <Button variant="danger" icon="trash" disabled={deletion.isPending} onClick={() => deletion.mutate()}>
+                {deletion.isPending ? "Eliminando…" : "Eliminar"}
+              </Button>
+            </div>
+          </section>
+        </div>
+      )}
     </>
   );
 }
