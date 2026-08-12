@@ -25,6 +25,15 @@ const timeInZone = (iso: string, timezone: string) => new Intl.DateTimeFormat("e
   hourCycle: "h23",
 }).format(new Date(iso));
 
+const wallClockFromIso = (iso: string, timezone: string) => {
+  const values = Object.fromEntries(new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+  }).formatToParts(new Date(iso)).map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}T${values.hour}:${values.minute}`;
+};
+
 async function selectRows(table: string, tripIds: string[]) {
   const { data, error } = await supabase.from(table).select("*").in("trip_id", tripIds);
   if (error) throw error;
@@ -223,8 +232,10 @@ export class SupabaseTripRepository extends LocalTripRepository {
       const tripReservations: Reservation[] = reservationRows.filter((row) => row.trip_id === tripRow.id && !row.deleted_at).map((row) => ({
         ...synced(row), tripId: tripRow.id, destinationId: row.destination_id || undefined, type: row.type, title: row.title,
         provider: row.provider || "generic", providerName: row.provider_name || "", providerReference: row.provider_reference || "",
-        confirmationCode: row.confirmation_code || undefined, externalUrl: row.external_url || undefined, startAt: row.start_at,
-        endAt: row.end_at || undefined, city: row.city || "", originCity: row.origin_city || undefined,
+        confirmationCode: row.confirmation_code || undefined, externalUrl: row.external_url || undefined,
+        startAt: wallClockFromIso(row.start_at, row.timezone || timezone),
+        endAt: row.end_at ? wallClockFromIso(row.end_at, row.timezone || timezone) : undefined,
+        city: row.city || "", originCity: row.origin_city || undefined,
         destinationCity: row.destination_city || undefined, originPlace: row.origin_place || undefined,
         destinationPlace: row.destination_place || undefined, serviceNumber: row.service_number || undefined, address: row.address || undefined,
         travelerConfirmations: row.traveler_details || [], status: row.status, paymentStatus: row.payment_status,
