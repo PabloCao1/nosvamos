@@ -141,7 +141,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .hero-meta-details { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 7px 13px; }
 .hero-meta-details > span { display: flex; align-items: center; gap: 5px; font-weight: 720; white-space: nowrap; }
 .avatar-group { display: flex; align-items: center; padding-left: 6px; }
-.avatar { display: grid; place-items: center; width: 31px; height: 31px; margin-left: -7px; border: 2px solid rgba(255,255,255,.88); border-radius: 50%; color: white; font-size: .61rem; font-weight: 800; }
+.avatar { display: grid; place-items: center; width: 31px; height: 31px; min-width: 31px; min-height: 31px; flex: 0 0 31px; aspect-ratio: 1; overflow: hidden; box-sizing: border-box; margin-left: -7px; border: 2px solid rgba(255,255,255,.88); border-radius: 50%; color: white; font-size: .61rem; font-weight: 800; }
 .avatar-more { background: #e7e8e6; color: var(--graphite); }
 .status-pill { display: inline-flex; align-items: center; gap: 5px; width: fit-content; min-height: 25px; padding: 4px 9px; border-radius: 999px; background: #edf0ee; color: #62676a; font-size: .66rem; font-weight: 800; white-space: nowrap; }
 .status-mint { background: rgba(184,247,228,.92); color: #214d40; }
@@ -511,12 +511,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .quick-links small, .settings-list small { margin-top: 4px; color: var(--muted); font-size: .64rem; font-weight: 500; }
 
 .profile-card { display: flex; align-items: center; gap: 14px; padding: 18px; border-radius: 23px; background: white; }
-.large-avatar { display: grid; place-items: center; width: 62px; height: 62px; flex: 0 0 62px; border-radius: 21px; background: var(--graphite); color: white; font-size: 1.05rem; font-weight: 800; }
+.large-avatar { display: grid; place-items: center; width: 62px; height: 62px; min-width: 62px; min-height: 62px; flex: 0 0 62px; aspect-ratio: 1; overflow: hidden; box-sizing: border-box; border-radius: 21px; background: var(--graphite); color: white; font-size: 1.05rem; font-weight: 800; }
 .profile-avatar-image { object-fit: cover; }
 .profile-photo-editor { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
 .profile-photo-editor img { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; }
 .profile-photo-button { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 0 16px; border-radius: 14px; background: var(--mint); color: var(--graphite); font-size: .82rem; font-weight: 800; cursor: pointer; }
-.avatar img, .member-avatar img, .member-dashboard-avatar img { width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }
+.avatar img, .large-avatar img, .member-avatar img, .member-dashboard-avatar img { display: block; width: 100%; height: 100%; min-width: 100%; min-height: 100%; border-radius: inherit; object-fit: cover; object-position: center; }
 .avatar-crop-dialog { width: min(100%, 390px); }
 .avatar-crop-preview { width: 230px; height: 230px; margin: 18px auto; overflow: hidden; border-radius: 50%; background: #1f2125; }
 .avatar-crop-preview img { width: 100%; height: 100%; object-fit: cover; transition: transform .08s linear; }
@@ -699,7 +699,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .member-list { display: grid; gap: 10px; }
 .member-card { overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); }
 .member-summary { display: grid; grid-template-columns: 48px minmax(0,1fr) 20px; align-items: center; width: 100%; min-height: 74px; gap: 11px; padding: 12px; border: 0; background: transparent; color: var(--text); text-align: left; cursor: pointer; }
-.member-avatar { width: 48px; height: 48px; font-size: .72rem; }
+.member-avatar { width: 48px; height: 48px; min-width: 48px; min-height: 48px; flex: 0 0 48px; font-size: .72rem; }
 .member-summary h2 { font-size: .88rem; }
 .member-summary p { margin-top: 5px; overflow: hidden; color: var(--muted); font-size: .65rem; text-overflow: ellipsis; white-space: nowrap; }
 .member-summary > :last-child { color: var(--muted); }
@@ -716,7 +716,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .removed-members button { display: flex; justify-content: space-between; width: 100%; padding: 11px 13px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--muted); font-size: .7rem; cursor: pointer; }
 .removed-members small { font-size: .61rem; }
 .member-dashboard-hero { display: flex; align-items: center; gap: 15px; padding: 18px; border: 1px solid var(--line); border-radius: 22px; background: var(--surface); }
-.member-dashboard-avatar { display: grid; place-items: center; width: 68px; height: 68px; flex: 0 0 68px; border-radius: 23px; color: white; font-size: 1rem; font-weight: 850; }
+.member-dashboard-avatar { display: grid; place-items: center; width: 68px; height: 68px; min-width: 68px; min-height: 68px; flex: 0 0 68px; aspect-ratio: 1; overflow: hidden; box-sizing: border-box; border-radius: 23px; color: white; font-size: 1rem; font-weight: 850; }
 .member-dashboard-hero h2 { font-size: 1.15rem; }
 .member-dashboard-hero p { margin-top: 4px; color: var(--muted); font-size: .69rem; }
 .member-dashboard-hero div > span { display: inline-block; margin-top: 8px; padding: 5px 8px; border-radius: 8px; background: rgba(184,247,228,.12); color: var(--mint); font-size: .59rem; font-weight: 800; }
