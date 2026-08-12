@@ -267,7 +267,11 @@ export class SupabaseTripRepository extends LocalTripRepository {
   }
 
   override async getAll() {
-    try { await this.flushPending(); return await this.fetchRemote(); } catch (error) {
+    try {
+      await this.flushPending();
+      if (await db.syncQueue.where("status").equals("pending").count()) return super.getAll();
+      return await this.fetchRemote();
+    } catch (error) {
       console.error("No se pudieron descargar los viajes de Supabase", error);
       return super.getAll();
     }

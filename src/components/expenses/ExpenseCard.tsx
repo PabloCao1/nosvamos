@@ -1,5 +1,6 @@
 import type { Expense, Participant } from "../../types/domain";
 import { Icon } from "../ui/Icon";
+import { EntitySyncStatus } from "../sync/EntitySyncStatus";
 
 export function ExpenseCard({
   expense,
@@ -10,7 +11,7 @@ export function ExpenseCard({
   payer?: Participant;
   onEdit?: () => void;
 }) {
-  return (
+  return <div className="sync-entity-wrap">
     <button className={`expense-card ${expense.status === "cancelled" ? "cancelled" : ""}`} onClick={onEdit} disabled={!onEdit} aria-label={onEdit ? `Editar ${expense.description}` : undefined}>
       <span className={`expense-icon expense-${expense.category}`}>
         <Icon name={expense.category === "transport" ? "airplane" : expense.category === "lodging" ? "bed" : "receipt"} size={20} />
@@ -25,5 +26,6 @@ export function ExpenseCard({
         <strong>{new Intl.NumberFormat("es-AR", { style: "currency", currency: expense.originalCurrency, maximumFractionDigits: 0 }).format(expense.originalAmount)}</strong>
       </div>
     </button>
-  );
+    <EntitySyncStatus entity={expense} />
+  </div>;
 }
