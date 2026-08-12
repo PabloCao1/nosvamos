@@ -60,11 +60,11 @@ export function MemberFormPage() {
       <section className="page-editor entity-form-page">
         <form className="entity-form" onSubmit={(event) => { event.preventDefault(); mutation.mutate(); }}>
           <label className="form-field">
-            <span>Nombre</span>
+            <span>Nombre <b className="required-mark">*</b></span>
             <input autoFocus required minLength={2} value={name} onChange={(event) => setName(event.target.value)} />
           </label>
           <label className="form-field">
-            <span>Email</span>
+            <span>Email <b className="required-mark">*</b></span>
             <input required type="email" inputMode="email" autoCapitalize="none" value={email} onChange={(event) => setEmail(event.target.value)} />
           </label>
           <div className="form-actions">

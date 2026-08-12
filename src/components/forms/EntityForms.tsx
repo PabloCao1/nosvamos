@@ -86,18 +86,17 @@ type ExpenseInput = z.input<typeof expenseSchema>;
 type ReservationInput = z.input<typeof reservationSchema>;
 type TripValues = z.infer<typeof tripSchema>;
 
-function Field({
-  label,
-  error,
-  children,
-}: {
+function Field(props: {
   label: string;
   error?: string;
+  required?: boolean;
   children: React.ReactNode;
 }) {
+  const { label, error, children } = props;
+  const required = Boolean(props.required);
   return (
     <label className="form-field">
-      <span>{label}</span>
+      <span>{label}{required && <b className="required-mark" aria-hidden="true"> *</b>}</span>
       {children}
       {error && <small role="alert">{error}</small>}
     </label>
@@ -163,11 +162,11 @@ export function TripForm({ close, entity }: { close: () => void; entity?: Trip }
 
   return (
     <form className="entity-form" onSubmit={handleSubmit(submit)}>
-      <Field label="Nombre del viaje" error={errors.name?.message}><input autoFocus {...register("name")} placeholder="Ej. Escapada a Mendoza" /></Field>
-      <Field label="Descripción" error={errors.description?.message}><input {...register("description")} placeholder="Una semana de bodegas y montaña" /></Field>
+      <Field label="Nombre del viaje" required error={errors.name?.message}><input autoFocus {...register("name")} placeholder="Ej. Escapada a Mendoza" /></Field>
+      <Field label="Descripción" required error={errors.description?.message}><input {...register("description")} placeholder="Una semana de bodegas y montaña" /></Field>
       <div className="form-row trip-date-row">
-        <Field label="Desde" error={errors.startDate?.message}><input type="date" min={entity ? undefined : minimumDate} disabled={Boolean(automaticRange)} {...register("startDate")} /></Field>
-        <Field label="Hasta" error={errors.endDate?.message}><input type="date" min={entity ? undefined : minimumDate} disabled={Boolean(automaticRange)} {...register("endDate")} /></Field>
+        <Field label="Desde" required error={errors.startDate?.message}><input type="date" min={entity ? undefined : minimumDate} disabled={Boolean(automaticRange)} {...register("startDate")} /></Field>
+        <Field label="Hasta" required error={errors.endDate?.message}><input type="date" min={entity ? undefined : minimumDate} disabled={Boolean(automaticRange)} {...register("endDate")} /></Field>
       </div>
       <input type="hidden" value={BASE_CURRENCY} {...register("baseCurrency")} />
       <FormActions pending={mutation.isPending} editing={Boolean(entity)} entityLabel="viaje" onDelete={() => entity && mutation.mutate(() => tripRepository.deleteTrip(entity))} />
@@ -203,18 +202,18 @@ export function ActivityForm({ close, entity, trip: tripOverride }: { close: () 
 
   return (
     <form className="entity-form" onSubmit={handleSubmit(submit)}>
-      <Field label="Título" error={errors.title?.message}><input autoFocus {...register("title")} placeholder="Ej. Visita a la Torre Eiffel" /></Field>
+      <Field label="Título" required error={errors.title?.message}><input autoFocus {...register("title")} placeholder="Ej. Visita a la Torre Eiffel" /></Field>
       <div className="form-row">
-        <Field label="Día"><select {...register("dayId")}>{trip.itinerary.map((day) => <option key={day.id} value={day.id}>{day.city} · {day.date.slice(5)}</option>)}</select></Field>
-        <Field label="Hora" error={errors.startTime?.message}><input type="time" {...register("startTime")} /></Field>
+        <Field label="Día" required><select {...register("dayId")}>{trip.itinerary.map((day) => <option key={day.id} value={day.id}>{day.city} · {day.date.slice(5)}</option>)}</select></Field>
+        <Field label="Hora" required error={errors.startTime?.message}><input type="time" {...register("startTime")} /></Field>
       </div>
       <Field label="Hora de finalización"><input type="time" {...register("endTime")} /></Field>
-      <Field label="Ubicación" error={errors.location?.message}><input {...register("location")} placeholder="Dirección o punto de encuentro" /></Field>
+      <Field label="Ubicación" required error={errors.location?.message}><input {...register("location")} placeholder="Dirección o punto de encuentro" /></Field>
       <Field label="Descripción"><textarea {...register("description")} placeholder="Información útil, punto de encuentro o indicaciones" /></Field>
-      <Field label="Categoría"><select {...register("category")}><option value="visit">Visita</option><option value="food">Comida</option><option value="transport">Transporte</option><option value="lodging">Alojamiento</option><option value="free_time">Tiempo libre</option><option value="other">Otro</option></select></Field>
-      <Field label="Estado"><select {...register("status")}><option value="planned">Planificada</option><option value="confirmed">Confirmada</option><option value="done">Realizada</option></select></Field>
+      <Field label="Categoría" required><select {...register("category")}><option value="visit">Visita</option><option value="food">Comida</option><option value="transport">Transporte</option><option value="lodging">Alojamiento</option><option value="free_time">Tiempo libre</option><option value="other">Otro</option></select></Field>
+      <Field label="Estado" required><select {...register("status")}><option value="planned">Planificada</option><option value="confirmed">Confirmada</option><option value="done">Realizada</option></select></Field>
       <Field label="Reserva asociada"><select {...register("reservationId")}><option value="">Ninguna</option>{trip.reservations.filter((item) => item.status !== "cancelled").map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select></Field>
-      <div className="form-field"><span>Participan</span><div className="form-check-grid">{trip.participants.filter((person) => person.status !== "removed").map((person) => <label key={person.id}><input type="checkbox" value={person.id} {...register("participantIds")} /> {person.name}</label>)}</div>{errors.participantIds?.message && <small role="alert">{errors.participantIds.message}</small>}</div>
+      <div className="form-field"><span>Participan<b className="required-mark" aria-hidden="true"> *</b></span><div className="form-check-grid">{trip.participants.filter((person) => person.status !== "removed").map((person) => <label key={person.id}><input type="checkbox" value={person.id} {...register("participantIds")} /> {person.name}</label>)}</div>{errors.participantIds?.message && <small role="alert">{errors.participantIds.message}</small>}</div>
       <FormActions pending={mutation.isPending} editing={Boolean(entity)} entityLabel="actividad" onDelete={() => entity && mutation.mutate(() => tripRepository.deleteActivity(entity))} />
     </form>
   );
@@ -299,22 +298,22 @@ export function ExpenseForm({ close, entity, trip: tripOverride, importDraft }: 
 
   return (
     <form className="entity-form" onSubmit={handleSubmit(submit)}>
-      <Field label="Descripción" error={errors.description?.message}><input autoFocus {...register("description")} placeholder="Ej. Cena del grupo" /></Field>
+      <Field label="Descripción" required error={errors.description?.message}><input autoFocus {...register("description")} placeholder="Ej. Cena del grupo" /></Field>
       <div className="form-row">
-        <Field label="Importe" error={errors.amount?.message}><input type="number" inputMode="decimal" step="0.01" {...register("amount")} placeholder="0,00" /></Field>
-        <Field label="Moneda"><select {...register("currency")}>{SUPPORTED_CURRENCIES.map(([code, name]) => <option key={code} value={code}>{code} · {name}</option>)}</select></Field>
+        <Field label="Importe" required error={errors.amount?.message}><input type="number" inputMode="decimal" step="0.01" {...register("amount")} placeholder="0,00" /></Field>
+        <Field label="Moneda" required><select {...register("currency")}>{SUPPORTED_CURRENCIES.map(([code, name]) => <option key={code} value={code}>{code} · {name}</option>)}</select></Field>
       </div>
-      <Field label="Fecha"><input type="date" {...register("date")} /></Field>
-      <Field label="Pagó"><select {...register("paidBy")}>{trip.participants.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select></Field>
-      <Field label="Categoría"><select {...register("category")}>
+      <Field label="Fecha" required><input type="date" {...register("date")} /></Field>
+      <Field label="Pagó" required><select {...register("paidBy")}>{trip.participants.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select></Field>
+      <Field label="Categoría" required><select {...register("category")}>
         <option value="food">Comida</option><option value="transport">Transporte</option><option value="lodging">Alojamiento</option><option value="activities">Actividades</option><option value="shopping">Compras</option><option value="insurance">Seguro</option>
         {(trip.customExpenseCategories ?? []).map((category) => <option key={category} value={`custom:${category}`}>{category}</option>)}
         <option value="other">Otra categoría…</option>
       </select></Field>
       <Field label="Reserva asociada"><select {...register("reservationId")}><option value="">Ninguna</option>{trip.reservations.filter((item) => item.status !== "cancelled").map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select></Field>
-      <div className="form-field"><span>Dividir entre</span><div className="form-check-grid">{trip.participants.filter((person) => person.status !== "removed").map((person) => <label key={person.id}><input type="checkbox" value={person.id} {...register("participantIds")} /> {person.name}</label>)}</div>{errors.participantIds?.message && <small role="alert">{errors.participantIds.message}</small>}</div>
+      <div className="form-field"><span>Dividir entre<b className="required-mark" aria-hidden="true"> *</b></span><div className="form-check-grid">{trip.participants.filter((person) => person.status !== "removed").map((person) => <label key={person.id}><input type="checkbox" value={person.id} {...register("participantIds")} /> {person.name}</label>)}</div>{errors.participantIds?.message && <small role="alert">{errors.participantIds.message}</small>}</div>
       {selectedExpenseCategory === "other" && (
-        <Field label="Nueva categoría" error={errors.customCategory?.message}>
+        <Field label="Nueva categoría" required error={errors.customCategory?.message}>
           <input {...register("customCategory")} placeholder="Ej. Excursiones" />
         </Field>
       )}
@@ -546,11 +545,11 @@ export function ReservationForm({
 
   return (
     <form className="entity-form" onSubmit={handleSubmit(submit)}>
-      <Field label={carRental ? "Nombre de la reserva" : transport ? "Nombre del viaje" : lodging ? "Nombre del alojamiento" : "Nombre"} error={errors.title?.message}>
+      <Field label={carRental ? "Nombre de la reserva" : transport ? "Nombre del viaje" : lodging ? "Nombre del alojamiento" : "Nombre"} required error={errors.title?.message}>
         <input autoFocus {...register("title")} placeholder={carRental ? "Ej. Auto en Madrid" : transport ? "Ej. Vuelo de ida" : lodging ? "Ej. Hotel Central" : "Ej. Reserva"} />
       </Field>
       <div className={lodging ? "" : "form-row"}>
-        <Field label="Tipo"><select {...register("type")}>
+        <Field label="Tipo" required><select {...register("type")}>
           {lodging ? (
             <><option value="hotel">Hotel</option><option value="apartment">Casa o departamento</option></>
           ) : carRental ? (
@@ -561,26 +560,26 @@ export function ReservationForm({
             <><option value="flight">Vuelo</option><option value="hotel">Hotel</option><option value="apartment">Casa o departamento</option><option value="train">Tren</option><option value="bus">Autobús</option><option value="ferry">Ferry</option><option value="restaurant">Restaurante</option><option value="activity">Actividad</option><option value="car">Auto</option><option value="insurance">Seguro</option><option value="other">Otro</option></>
           )}
         </select></Field>
-        {!lodging && <Field label="Estado de pago"><select {...register("paymentStatus")}><option value="unpaid">Sin pagar</option><option value="partially_paid">Pago parcial</option><option value="paid">Pagada</option></select></Field>}
+        {!lodging && <Field label="Estado de pago" required><select {...register("paymentStatus")}><option value="unpaid">Sin pagar</option><option value="partially_paid">Pago parcial</option><option value="paid">Pagada</option></select></Field>}
       </div>
       <div className="form-row">
-        <Field label={reservationType === "flight" ? "Aerolínea" : reservationType === "car" ? "Empresa de alquiler" : lodging ? "Plataforma" : "Empresa"} error={errors.providerName?.message}>
+        <Field label={reservationType === "flight" ? "Aerolínea" : reservationType === "car" ? "Empresa de alquiler" : lodging ? "Plataforma" : "Empresa"} required={!lodging} error={errors.providerName?.message}>
           <input {...register("providerName")} placeholder={reservationType === "flight" ? "Ej. Aerolíneas Argentinas" : lodging ? "Ej. Airbnb o nombre del hotel" : "Nombre de la empresa"} />
         </Field>
-        <Field label="Código de reserva" error={errors.providerReference?.message}><input autoCapitalize="characters" {...register("providerReference")} /></Field>
+        <Field label="Código de reserva" required={!lodging} error={errors.providerReference?.message}><input autoCapitalize="characters" {...register("providerReference")} /></Field>
       </div>
       <div className="form-row">
         <Field label="Código de confirmación"><input autoCapitalize="characters" {...register("confirmationCode")} /></Field>
-        {!lodging && <Field label="Estado"><select {...register("status")}><option value="draft">Borrador</option><option value="pending">Pendiente</option><option value="confirmed">Confirmada</option><option value="completed">Completada</option><option value="cancelled">Anulada</option></select></Field>}
+        {!lodging && <Field label="Estado" required><select {...register("status")}><option value="draft">Borrador</option><option value="pending">Pendiente</option><option value="confirmed">Confirmada</option><option value="completed">Completada</option><option value="cancelled">Anulada</option></select></Field>}
       </div>
-      {isTransport && <Field label={reservationType === "flight" ? "Número de vuelo" : reservationType === "car" ? "Número de reserva" : "Número de servicio"}><input {...register("serviceNumber")} placeholder={reservationType === "flight" ? "Ej. AR1132" : "Opcional"} /></Field>}
-      <Field label={isLodging ? "Check-in" : reservationType === "car" ? "Retiro" : isTransport ? "Salida" : "Fecha y hora"} error={errors.startAt?.message}><input type="datetime-local" {...register("startAt")} /></Field>
-      {(isLodging || isTransport) && <Field label={isLodging ? "Check-out" : reservationType === "car" ? "Devolución" : "Llegada"} error={errors.endAt?.message}><input type="datetime-local" {...register("endAt")} /></Field>}
+      {isTransport && <Field label={reservationType === "flight" ? "Número de vuelo" : reservationType === "car" ? "Número de reserva" : "Número de servicio"}><input {...register("serviceNumber")} placeholder={reservationType === "flight" ? "Ej. AR1132" : ""} /></Field>}
+      <Field label={isLodging ? "Check-in" : reservationType === "car" ? "Retiro" : isTransport ? "Salida" : "Fecha y hora"} required error={errors.startAt?.message}><input type="datetime-local" {...register("startAt")} /></Field>
+      {(isLodging || isTransport) && <Field label={isLodging ? "Check-out" : reservationType === "car" ? "Devolución" : "Llegada"} required={isLodging || carRental} error={errors.endAt?.message}><input type="datetime-local" {...register("endAt")} /></Field>}
       {isTransport && !carRental && (
         <>
           <div className="form-row">
-            <Field label="Ciudad de origen"><Controller control={control} name="originCity" render={({ field }) => <CityAutocomplete required value={field.value ?? ""} onChange={field.onChange} />} /></Field>
-            <Field label="Ciudad de destino"><Controller control={control} name="destinationCity" render={({ field }) => <CityAutocomplete required value={field.value ?? ""} onChange={field.onChange} />} /></Field>
+            <Field label="Ciudad de origen" required><Controller control={control} name="originCity" render={({ field }) => <CityAutocomplete required value={field.value ?? ""} onChange={field.onChange} />} /></Field>
+            <Field label="Ciudad de destino" required><Controller control={control} name="destinationCity" render={({ field }) => <CityAutocomplete required value={field.value ?? ""} onChange={field.onChange} />} /></Field>
           </div>
           <div className="form-row">
             <Field label={reservationType === "flight" ? "Aeropuerto de salida" : reservationType === "car" ? "Lugar de retiro" : "Terminal o estación de salida"}><input {...register("originPlace")} /></Field>
@@ -589,16 +588,16 @@ export function ReservationForm({
         </>
       )}
       {carRental && <>
-        <Field label="Ciudad de retiro" error={errors.originCity?.message}><input {...register("originCity")} placeholder="Ej. Madrid" /></Field>
+        <Field label="Ciudad de retiro" required error={errors.originCity?.message}><input {...register("originCity")} placeholder="Ej. Madrid" /></Field>
         <label className="traveler-toggle"><input type="checkbox" {...register("differentDropoffCity")} /><strong>Se entrega en otra ciudad</strong></label>
-        {watch("differentDropoffCity") && <Field label="Ciudad de entrega" error={errors.destinationCity?.message}><input {...register("destinationCity")} placeholder="Ej. Barcelona" /></Field>}
+        {watch("differentDropoffCity") && <Field label="Ciudad de entrega" required error={errors.destinationCity?.message}><input {...register("destinationCity")} placeholder="Ej. Barcelona" /></Field>}
         <Field label="Dirección de retiro"><input {...register("originPlace")} placeholder="Aeropuerto, estación o dirección" /></Field>
         <Field label="Dirección de entrega"><input {...register("destinationPlace")} placeholder="Aeropuerto, estación o dirección" /></Field>
       </>}
       {isLodging && (
         <>
-          <Field label="Ciudad" error={errors.city?.message}><input {...register("city")} placeholder="Ej. Madrid" /></Field>
-          <Field label="País" error={errors.country?.message}><input {...register("country")} placeholder="Ej. España" /></Field>
+          <Field label="Ciudad" required error={errors.city?.message}><input {...register("city")} placeholder="Ej. Madrid" /></Field>
+          <Field label="País" required error={errors.country?.message}><input {...register("country")} placeholder="Ej. España" /></Field>
           <Field label="Dirección"><input {...register("address")} placeholder="Calle, número o indicaciones" /></Field>
         </>
       )}
@@ -607,11 +606,11 @@ export function ReservationForm({
         <Field label="Total"><input type="number" inputMode="decimal" step="0.01" {...register("totalAmount")} /></Field>
         <Field label="Moneda"><select {...register("currency")}>{SUPPORTED_CURRENCIES.map(([code, name]) => <option key={code} value={code}>{code} · {name}</option>)}</select></Field>
       </div>
-      {carRental && <Field label="Pagado por" error={errors.paidBy?.message}><select {...register("paidBy")}><option value="">Seleccionar integrante</option>{trip.participants.filter((person) => person.status !== "removed").map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select></Field>}
+      {carRental && <Field label="Pagado por" required error={errors.paidBy?.message}><select {...register("paidBy")}><option value="">Seleccionar integrante</option>{trip.participants.filter((person) => person.status !== "removed").map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select></Field>}
       {!lodging && <Field label="Últimos 4 dígitos de la tarjeta"><input inputMode="numeric" maxLength={4} pattern="[0-9]{4}" {...register("paymentMethodLast4")} placeholder="Ej. 9620" /></Field>}
       {lodging && <section className="form-subsection">
         <label className="traveler-toggle"><input type="checkbox" {...register("paid")} /><strong>Pagado</strong></label>
-        {watch("paid") && <Field label="Pagado por" error={errors.paidBy?.message}><select {...register("paidBy")}><option value="">Seleccionar integrante</option>{trip.participants.filter((person) => person.status !== "removed").map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select></Field>}
+        {watch("paid") && <Field label="Pagado por" required error={errors.paidBy?.message}><select {...register("paidBy")}><option value="">Seleccionar integrante</option>{trip.participants.filter((person) => person.status !== "removed").map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select></Field>}
         <label className="traveler-toggle"><input type="checkbox" {...register("payOnArrival")} /><strong>Se paga al llegar</strong></label>
         <label className="traveler-toggle"><input type="checkbox" {...register("confirmed")} /><strong>Reserva confirmada</strong></label>
       </section>}
@@ -751,7 +750,7 @@ export function InviteForm({ close, trip: tripOverride }: { close: () => void; t
   return (
     <form className="entity-form" onSubmit={submit}>
       <label className="form-field">
-        <span>Email del integrante</span>
+        <span>Email del integrante<b className="required-mark" aria-hidden="true"> *</b></span>
         <input
           type="email"
           inputMode="email"

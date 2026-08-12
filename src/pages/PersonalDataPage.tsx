@@ -36,14 +36,18 @@ export function PersonalDataPage() {
   const chooseAvatar = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (cropSource) URL.revokeObjectURL(cropSource);
-    setCropSource(URL.createObjectURL(file));
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropSource(typeof reader.result === "string" ? reader.result : "");
+      requestAnimationFrame(() => document.getElementById("avatar-crop-editor")?.scrollIntoView({ behavior: "smooth", block: "center" }));
+    };
+    reader.onerror = () => setError("No pudimos abrir la foto seleccionada.");
+    reader.readAsDataURL(file);
     setZoom(1); setCropX(0); setCropY(0);
     event.target.value = "";
   };
 
   const closeCropper = () => {
-    if (cropSource) URL.revokeObjectURL(cropSource);
     setCropSource("");
   };
 
@@ -94,21 +98,7 @@ export function PersonalDataPage() {
         {avatarUrl ? <img src={avatarUrl} alt="Foto de perfil" /> : <div className="large-avatar">{initials}</div>}
         <label className="profile-photo-button">Cambiar foto<input type="file" accept="image/*" onChange={chooseAvatar} hidden /></label>
       </div>
-      <label className="form-field"><span>Nombre <small>Opcional</small></span><input value={firstName} onChange={(event) => setFirstName(event.target.value)} /></label>
-      <label className="form-field"><span>Apellido <small>Opcional</small></span><input value={lastName} onChange={(event) => setLastName(event.target.value)} /></label>
-      <label className="form-field"><span>Correo electrónico</span><input value={user?.email ?? ""} disabled /></label>
-      <label className="form-field"><span>Fecha de nacimiento <small>Opcional</small></span><input type="date" value={birthDate} max={new Date().toISOString().slice(0, 10)} onChange={(event) => setBirthDate(event.target.value)} /></label>
-      {error && <p className="form-error" role="alert">{error}</p>}
-      {message && <p className="form-success" role="status">{message}</p>}
-      <Button type="submit" variant="primary" fullWidth disabled={pending}>{pending ? "Guardando..." : "Guardar"}</Button>
-    </form>
-    <section className="section-block password-action-card">
-      <div><strong>Contraseña</strong><p>Actualizá la clave con la que ingresás a NosVamos.</p></div>
-      <Button variant="secondary" fullWidth onClick={() => navigate("/actualizar-clave", { state: { from: "/datos-personales" } })}>Cambiar contraseña</Button>
-    </section>
-    {cropSource && <div className="confirm-layer avatar-crop-layer" role="presentation">
-      <button type="button" className="confirm-backdrop" onClick={closeCropper} aria-label="Cancelar recorte" />
-      <section className="confirm-dialog avatar-crop-dialog" role="dialog" aria-modal="true" aria-labelledby="avatar-crop-title">
+      {cropSource && <section id="avatar-crop-editor" className="avatar-crop-inline" aria-labelledby="avatar-crop-title">
         <h2 id="avatar-crop-title">Ajustar foto</h2>
         <div className="avatar-crop-preview">
           <img src={cropSource} alt="Vista previa" style={{ transform: `scale(${zoom})`, objectPosition: `${(cropX + 100) / 2}% ${(cropY + 100) / 2}%` }} />
@@ -118,9 +108,20 @@ export function PersonalDataPage() {
         <label className="avatar-crop-control"><span>Vertical</span><input type="range" min="-100" max="100" value={cropY} onChange={(event) => setCropY(Number(event.target.value))} /></label>
         <div className="confirm-actions">
           <Button variant="secondary" onClick={closeCropper}>Cancelar</Button>
-          <Button variant="primary" disabled={pending} onClick={() => void saveCroppedAvatar()}>{pending ? "Guardando..." : "Guardar"}</Button>
+          <Button variant="primary" disabled={pending} onClick={() => void saveCroppedAvatar()}>{pending ? "Guardando..." : "Guardar foto"}</Button>
         </div>
-      </section>
-    </div>}
+      </section>}
+      <label className="form-field"><span>Nombre</span><input value={firstName} onChange={(event) => setFirstName(event.target.value)} /></label>
+      <label className="form-field"><span>Apellido</span><input value={lastName} onChange={(event) => setLastName(event.target.value)} /></label>
+      <label className="form-field"><span>Correo electrónico</span><input value={user?.email ?? ""} disabled /></label>
+      <label className="form-field"><span>Fecha de nacimiento</span><input type="date" value={birthDate} max={new Date().toISOString().slice(0, 10)} onChange={(event) => setBirthDate(event.target.value)} /></label>
+      {error && <p className="form-error" role="alert">{error}</p>}
+      {message && <p className="form-success" role="status">{message}</p>}
+      <Button type="submit" variant="primary" fullWidth disabled={pending}>{pending ? "Guardando..." : "Guardar"}</Button>
+    </form>
+    <section className="section-block password-action-card">
+      <div><strong>Contraseña</strong><p>Actualizá la clave con la que ingresás a NosVamos.</p></div>
+      <Button variant="secondary" fullWidth onClick={() => navigate("/actualizar-clave", { state: { from: "/datos-personales" } })}>Cambiar contraseña</Button>
+    </section>
   </>;
 }

@@ -114,22 +114,22 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
         <form className="auth-form" onSubmit={submit}>
           {mode === "register" && (
             <label className="auth-input"><span className="sr-only">Nombre</span><Icon name="user" size={20} />
-              <input autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Tu nombre" required />
+              <input autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Tu nombre *" required />
             </label>
           )}
           {mode !== "update" && (
             <label className="auth-input"><span className="sr-only">Correo electrónico</span><Icon name="user" size={20} />
-              <input type="email" inputMode="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="nombre@correo.com" required />
+              <input type="email" inputMode="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="nombre@correo.com *" required />
             </label>
           )}
           {mode !== "forgot" && (
             <label className="auth-input"><span className="sr-only">Contraseña</span><Icon name="lock" size={20} />
-              <input type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Mínimo 8 caracteres" minLength={mode === "login" ? undefined : 8} required />
+              <input type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Mínimo 8 caracteres *" minLength={mode === "login" ? undefined : 8} required />
             </label>
           )}
           {(mode === "register" || mode === "update") && (
             <label className="auth-input"><span className="sr-only">Repetir contraseña</span><Icon name="lock" size={20} />
-              <input type="password" autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="Repetí tu contraseña" minLength={8} required />
+              <input type="password" autoComplete="new-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="Repetí tu contraseña *" minLength={8} required />
             </label>
           )}
 
