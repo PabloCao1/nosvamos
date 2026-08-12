@@ -30,7 +30,131 @@ async function selectRows(table: string, tripIds: string[]) {
   return (data ?? []) as Row[];
 }
 
+const reservationRow = (reservation: Reservation) => ({
+  id: reservation.id, client_id: reservation.clientId, trip_id: reservation.tripId,
+  destination_id: reservation.destinationId ?? null, type: reservation.type, title: reservation.title,
+  provider: reservation.provider, provider_name: reservation.providerName, provider_reference: reservation.providerReference,
+  confirmation_code: reservation.confirmationCode ?? null, external_url: reservation.externalUrl ?? null,
+  start_at: reservation.startAt, end_at: reservation.endAt || null, city: reservation.city,
+  origin_city: reservation.originCity ?? null, destination_city: reservation.destinationCity ?? null,
+  origin_place: reservation.originPlace ?? null, destination_place: reservation.destinationPlace ?? null,
+  service_number: reservation.serviceNumber ?? null, address: reservation.address ?? null,
+  traveler_details: reservation.travelerConfirmations ?? [], status: reservation.status,
+  payment_status: reservation.paymentStatus, total_amount: reservation.totalAmount, currency: reservation.currency,
+  original_total_amount: reservation.originalTotalAmount ?? null, original_currency: reservation.originalCurrency ?? null,
+  exchange_rate: reservation.exchangeRate ?? null, next_action: reservation.nextAction ?? null,
+  available_offline: reservation.availableOffline, import_source: reservation.importSource,
+  updated_at: new Date().toISOString(), deleted_at: reservation.deletedAt ?? null, version: reservation.version,
+});
+
+const activityRow = (activity: Activity) => ({
+  id: activity.id, client_id: activity.clientId, itinerary_day_id: activity.dayId,
+  reservation_id: activity.reservationId ?? null, title: activity.title, description: activity.description ?? null,
+  location: activity.location, category: activity.category, status: activity.status,
+  updated_at: new Date().toISOString(), deleted_at: activity.deletedAt ?? null, version: activity.version,
+});
+
+const expenseRow = (expense: Expense) => ({
+  id: expense.id, client_id: expense.clientId, trip_id: expense.tripId, reservation_id: expense.reservationId ?? null,
+  description: expense.description, category: expense.category, category_label: expense.categoryLabel ?? null,
+  original_amount: expense.originalAmount, original_currency: expense.originalCurrency, exchange_rate: expense.exchangeRate,
+  converted_amount: expense.convertedAmount, paid_by: expense.paidBy, expense_date: expense.date,
+  status: expense.status ?? "active", updated_at: new Date().toISOString(), deleted_at: expense.deletedAt ?? null,
+  version: expense.version,
+});
+
+const tripRow = (trip: Trip, ownerId?: string) => ({
+  id: trip.id, client_id: trip.clientId, ...(ownerId ? { owner_id: ownerId } : {}), name: trip.name,
+  description: trip.description, cover_path: trip.coverUrl || null, start_date: trip.startDate || null,
+  end_date: trip.endDate || null, base_currency: trip.baseCurrency, timezone: trip.timezone,
+  status: trip.status, updated_at: new Date().toISOString(), deleted_at: trip.deletedAt ?? null, version: trip.version,
+});
+
+const wallClockToIso = (value: string, timezone: string) => {
+  if (value.endsWith("Z") || /[+-]\d{2}:?\d{2}$/.test(value)) return value;
+  const desired = new Date(`${value.length === 16 ? `${value}:00` : value}Z`).getTime();
+  let instant = desired;
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23",
+  });
+  for (let index = 0; index < 2; index += 1) {
+    const parts = Object.fromEntries(formatter.formatToParts(new Date(instant)).map((part) => [part.type, part.value]));
+    const represented = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), Number(parts.hour), Number(parts.minute), Number(parts.second));
+    instant += desired - represented;
+  }
+  return new Date(instant).toISOString();
+};
+
 export class SupabaseTripRepository extends LocalTripRepository {
+  private async replaceLinks(table: "reservation_participants" | "activity_participants", key: "reservation_id" | "activity_id", id: string, participantIds: string[]) {
+    const { error: deleteError } = await supabase.from(table).delete().eq(key, id);
+    if (deleteError) throw deleteError;
+    if (!participantIds.length) return;
+    const { error } = await supabase.from(table).insert(participantIds.map((travelerId) => ({ [key]: id, traveler_id: travelerId })));
+    if (error) throw error;
+  }
+
+  private async persistReservation(reservation: Reservation) {
+    const localTrip = await db.trips.get(reservation.tripId);
+    const timezone = localTrip?.timezone ?? "America/Argentina/Buenos_Aires";
+    const row = { ...reservationRow(reservation), timezone, start_at: wallClockToIso(reservation.startAt, timezone), end_at: reservation.endAt ? wallClockToIso(reservation.endAt, timezone) : null };
+    const { error } = await supabase.from("reservations").upsert(row);
+    if (error) throw error;
+    await this.replaceLinks("reservation_participants", "reservation_id", reservation.id, reservation.participantIds);
+  }
+
+  private async persistActivity(activity: Activity) {
+    const { data: day, error: dayError } = await supabase.from("itinerary_days").select("trip_id, day").eq("id", activity.dayId).single();
+    if (dayError) throw dayError;
+    const localTrip = await db.trips.get(day.trip_id);
+    const timezone = localTrip?.timezone ?? "America/Argentina/Buenos_Aires";
+    const row = { ...activityRow(activity), trip_id: day.trip_id, start_at: wallClockToIso(`${day.day}T${activity.startTime}`, timezone), end_at: activity.endTime ? wallClockToIso(`${day.day}T${activity.endTime}`, timezone) : null };
+    const { error } = await supabase.from("activities").upsert(row);
+    if (error) throw error;
+    await this.replaceLinks("activity_participants", "activity_id", activity.id, activity.participantIds);
+  }
+
+  private async persistExpense(expense: Expense) {
+    const { error } = await supabase.from("expenses").upsert(expenseRow(expense));
+    if (error) throw error;
+    const { error: deleteError } = await supabase.from("expense_splits").delete().eq("expense_id", expense.id);
+    if (deleteError) throw deleteError;
+    if (expense.splits.length) {
+      const { error: splitError } = await supabase.from("expense_splits").insert(expense.splits.map((split) => ({ expense_id: expense.id, traveler_id: split.participantId, amount: split.amount })));
+      if (splitError) throw splitError;
+    }
+  }
+
+  private async clearQueued(localId: string) {
+    await db.syncQueue.where("localId").equals(localId).delete();
+  }
+
+  private async flushPending() {
+    if (!navigator.onLine) return;
+    const pending = await db.syncQueue.where("status").equals("pending").toArray();
+    for (const item of pending) {
+      try {
+        if (item.action === "delete") {
+          const table = item.entityType === "reservation" ? "reservations" : item.entityType === "activity" ? "activities" : item.entityType === "expense" ? "expenses" : "trips";
+          const { error } = await supabase.from(table).update({ deleted_at: new Date().toISOString() }).eq("id", item.localId);
+          if (error) throw error;
+        } else if (item.entityType === "reservation") await this.persistReservation(item.payload as Reservation);
+        else if (item.entityType === "activity") await this.persistActivity(item.payload as Activity);
+        else if (item.entityType === "expense") await this.persistExpense(item.payload as Expense);
+        else {
+          const trip = item.payload as Trip;
+          const { data: auth } = await supabase.auth.getUser();
+          const { error } = await supabase.from("trips").upsert(tripRow(trip, item.action === "create" ? auth.user?.id : undefined));
+          if (error) throw error;
+        }
+        await db.syncQueue.delete(item.id);
+      } catch (error) {
+        console.error("No se pudo sincronizar el cambio pendiente", error);
+      }
+    }
+  }
+
   private async fetchRemote(): Promise<Trip[]> {
     const { data: tripData, error: tripError } = await supabase.from("trips").select("*").is("deleted_at", null).order("start_date");
     if (tripError) throw tripError;
@@ -119,7 +243,7 @@ export class SupabaseTripRepository extends LocalTripRepository {
   }
 
   override async getAll() {
-    try { return await this.fetchRemote(); } catch (error) {
+    try { await this.flushPending(); return await this.fetchRemote(); } catch (error) {
       console.error("No se pudieron descargar los viajes de Supabase", error);
       return super.getAll();
     }
@@ -139,6 +263,7 @@ export class SupabaseTripRepository extends LocalTripRepository {
     const { error } = await supabase.from("reservations").update({ deleted_at: deletedAt }).eq("id", reservation.id);
     if (error) throw error;
     await super.deleteReservationPermanently(reservation, deletedAt);
+    await this.clearQueued(reservation.id);
   }
 
   override async deleteActivity(activity: Activity) {
@@ -146,5 +271,27 @@ export class SupabaseTripRepository extends LocalTripRepository {
     const { error } = await supabase.from("activities").update({ deleted_at: deletedAt }).eq("id", activity.id);
     if (error) throw error;
     await super.deleteActivityPermanently(activity, deletedAt);
+    await this.clearQueued(activity.id);
+  }
+
+  override async addReservation(reservation: Reservation) { await this.persistReservation(reservation); await super.addReservation(reservation); await this.clearQueued(reservation.id); }
+  override async updateReservation(reservation: Reservation) { await this.persistReservation(reservation); await super.updateReservation(reservation); await this.clearQueued(reservation.id); }
+  override async addActivity(activity: Activity) { await this.persistActivity(activity); await super.addActivity(activity); await this.clearQueued(activity.id); }
+  override async updateActivity(activity: Activity) { await this.persistActivity(activity); await super.updateActivity(activity); await this.clearQueued(activity.id); }
+  override async addExpense(expense: Expense) { await this.persistExpense(expense); await super.addExpense(expense); await this.clearQueued(expense.id); }
+  override async updateExpense(expense: Expense) { await this.persistExpense(expense); await super.updateExpense(expense); await this.clearQueued(expense.id); }
+
+  override async addTrip(trip: Trip) {
+    const { data: auth } = await supabase.auth.getUser();
+    if (!auth.user) throw new Error("Tenés que iniciar sesión para guardar el viaje.");
+    const { error } = await supabase.from("trips").insert(tripRow(trip, auth.user.id));
+    if (error) throw error;
+    await super.addTrip(trip); await this.clearQueued(trip.id);
+  }
+
+  override async updateTrip(trip: Trip) {
+    const { error } = await supabase.from("trips").update(tripRow(trip)).eq("id", trip.id);
+    if (error) throw error;
+    await super.updateTrip(trip); await this.clearQueued(trip.id);
   }
 }

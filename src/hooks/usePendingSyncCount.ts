@@ -6,5 +6,6 @@ export function usePendingSyncCount() {
     queryKey: ["sync", "pending-count"],
     queryFn: () => tripRepository.getPendingCount(),
     refetchOnWindowFocus: true,
+    refetchInterval: 3000,
   });
 }
