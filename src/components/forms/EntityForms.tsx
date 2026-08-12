@@ -10,6 +10,7 @@ import { prepareReceiptImage } from "../../lib/images/receiptImage";
 import { deriveTripDateRange } from "../../lib/trips/deriveTripDateRange";
 import { tripRepository } from "../../repositories";
 import type { Activity, Expense, Reservation, Trip } from "../../types/domain";
+import type { DocumentImportDraft } from "../../types/documentImport";
 import { Button } from "../ui/Button";
 import { CityAutocomplete } from "../ui/CityAutocomplete";
 
@@ -223,7 +224,7 @@ export function ActivityForm({ close, entity, trip: tripOverride }: { close: () 
   );
 }
 
-export function ExpenseForm({ close, entity, trip: tripOverride }: { close: () => void; entity?: Expense; trip?: Trip }) {
+export function ExpenseForm({ close, entity, trip: tripOverride, importDraft }: { close: () => void; entity?: Expense; trip?: Trip; importDraft?: DocumentImportDraft }) {
   const { data: activeTrip } = useActiveTrip();
   const trip = tripOverride ?? activeTrip;
   const mutation = useSaveEntity(close);
@@ -236,8 +237,9 @@ export function ExpenseForm({ close, entity, trip: tripOverride }: { close: () =
       customCategory: "", date: entity.date, reservationId: entity.reservationId,
       participantIds: entity.splits.map((split) => split.participantId),
     } : {
-      category: "food", currency: BASE_CURRENCY, paidBy: trip?.participants[0]?.id,
-      date: new Date().toISOString().slice(0, 10),
+      description: importDraft?.title ?? "", amount: importDraft?.amount ?? undefined,
+      category: importDraft?.expenseCategory ?? "food", currency: importDraft?.currency ?? BASE_CURRENCY, paidBy: trip?.participants[0]?.id,
+      date: importDraft?.expenseDate ?? new Date().toISOString().slice(0, 10),
       participantIds: trip?.participants.filter((person) => person.status !== "removed").map((person) => person.id) ?? [],
     },
   });
@@ -364,11 +366,13 @@ export function ReservationForm({
   entity,
   variant = "general",
   trip: tripOverride,
+  importDraft,
 }: {
   close: () => void;
   entity?: Reservation;
   variant?: "general" | "lodging" | "transport";
   trip?: Trip;
+  importDraft?: DocumentImportDraft;
 }) {
   const { data: activeTrip } = useActiveTrip();
   const trip = tripOverride ?? activeTrip;
@@ -399,8 +403,15 @@ export function ReservationForm({
       paid: entity.paymentStatus === "paid", paidBy: entity.paidBy,
       payOnArrival: entity.payOnArrival, confirmed: entity.status === "confirmed",
     } : {
-      type: lodging ? "hotel" : "flight", city: "", paymentStatus: "unpaid",
-      status: "confirmed", totalAmount: 0, currency: BASE_CURRENCY, paid: false,
+      title: importDraft?.title ?? "",
+      type: importDraft && importDraft.kind !== "expense" && importDraft.kind !== "other" ? importDraft.kind : lodging ? "hotel" : "flight",
+      providerName: importDraft?.providerName ?? "", providerReference: importDraft?.providerReference ?? "",
+      confirmationCode: importDraft?.confirmationCode ?? "", startAt: importDraft?.startAt ?? "", endAt: importDraft?.endAt ?? "",
+      city: importDraft?.city ?? "", country: importDraft?.country ?? "", originCity: importDraft?.originCity ?? "",
+      destinationCity: importDraft?.destinationCity ?? "", originPlace: importDraft?.originPlace ?? "",
+      destinationPlace: importDraft?.destinationPlace ?? "", serviceNumber: importDraft?.serviceNumber ?? "", address: importDraft?.address ?? "",
+      paymentStatus: importDraft?.paid ? "paid" : "unpaid",
+      status: "confirmed", totalAmount: importDraft?.amount ?? 0, currency: importDraft?.currency ?? BASE_CURRENCY, paid: Boolean(importDraft?.paid),
       payOnArrival: false, confirmed: true,
     },
   });

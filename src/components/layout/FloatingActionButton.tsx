@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import type { IconName } from "../ui/Icon";
 import { Icon } from "../ui/Icon";
 
-type CreateMode = "trip" | "activity" | "expense" | "reservation" | "lodging" | "transport" | "invite";
+type CreateMode = "trip" | "activity" | "expense" | "reservation" | "lodging" | "transport" | "invite" | "import";
 
 interface FabAction {
   label: string;
@@ -13,6 +13,7 @@ interface FabAction {
 }
 
 const tripDetailActions: FabAction[] = [
+  { label: "Escanear documento", icon: "receipt", mode: "import" },
   { label: "Invitar integrante", icon: "users", mode: "invite" },
   { label: "Agregar traslado", icon: "airplane", mode: "transport" },
   { label: "Agregar alojamiento", icon: "bed", mode: "lodging" },
@@ -53,7 +54,7 @@ export function FloatingActionButton() {
   const isMembersPage = /^\/viaje\/[^/]+\/integrantes$/.test(pathname);
   const tripId = pathname.match(/^\/viaje\/([^/]+)/)?.[1];
   const formPath = (mode: CreateMode) =>
-    tripId ? `/viaje/${tripId}/nuevo/${mode}` : `/nuevo/${mode}`;
+    mode === "import" && tripId ? `/viaje/${tripId}/importar` : tripId ? `/viaje/${tripId}/nuevo/${mode}` : `/nuevo/${mode}`;
 
   useEffect(() => {
     setMenuOpen(false);

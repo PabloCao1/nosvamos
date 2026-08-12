@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   ActivityForm,
   ExpenseForm,
@@ -8,6 +8,7 @@ import {
 import { PageHeader } from "../components/layout/PageHeader";
 import { ErrorState, LoadingState } from "../components/ui/PageState";
 import { useTrip } from "../hooks/useTrips";
+import type { DocumentImportDraft } from "../types/documentImport";
 
 const titles: Record<string, string> = {
   activity: "Nueva actividad",
@@ -21,6 +22,8 @@ const titles: Record<string, string> = {
 export function EntityFormPage() {
   const { tripId, formType, entityId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const importDraft = (location.state as { importDraft?: DocumentImportDraft } | null)?.importDraft;
   const { data: trip, isLoading, isError, refetch } = useTrip(tripId);
 
   if (isLoading) return <LoadingState />;
@@ -52,10 +55,10 @@ export function EntityFormPage() {
       <PageHeader eyebrow={trip.name} title={title ?? "Formulario"} />
       <section className="page-editor entity-form-page">
         {formType === "activity" && <ActivityForm close={close} entity={activity} trip={trip} />}
-        {formType === "expense" && <ExpenseForm close={close} entity={expense} trip={trip} />}
-        {formType === "reservation" && <ReservationForm close={close} entity={reservation} trip={trip} />}
-        {formType === "lodging" && <ReservationForm close={close} variant="lodging" trip={trip} />}
-        {formType === "transport" && <ReservationForm close={close} variant="transport" trip={trip} />}
+        {formType === "expense" && <ExpenseForm close={close} entity={expense} trip={trip} importDraft={importDraft} />}
+        {formType === "reservation" && <ReservationForm close={close} entity={reservation} trip={trip} importDraft={importDraft} />}
+        {formType === "lodging" && <ReservationForm close={close} variant="lodging" trip={trip} importDraft={importDraft} />}
+        {formType === "transport" && <ReservationForm close={close} variant="transport" trip={trip} importDraft={importDraft} />}
         {formType === "invite" && <InviteForm close={close} trip={trip} />}
       </section>
     </>

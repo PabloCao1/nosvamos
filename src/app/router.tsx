@@ -28,6 +28,7 @@ const NotFoundPage = lazy(() => import("../pages/NotFoundPage").then((module) =>
 const PersonalDataPage = lazy(() => import("../pages/PersonalDataPage").then((module) => ({ default: module.PersonalDataPage })));
 const NotificationSettingsPage = lazy(() => import("../pages/NotificationSettingsPage").then((module) => ({ default: module.NotificationSettingsPage })));
 const TodayPage = lazy(() => import("../pages/TodayPage").then((module) => ({ default: module.TodayPage })));
+const DocumentImportPage = lazy(() => import("../pages/DocumentImportPage").then((module) => ({ default: module.DocumentImportPage })));
 
 const page = (element: React.ReactNode) => <Suspense fallback={<LoadingState />}>{element}</Suspense>;
 
@@ -72,6 +73,7 @@ export const router = createBrowserRouter([
       { path: "/viaje/:tripId/gastos", element: page(<ExpensesPage />) },
       { path: "/viaje/:tripId/reservas", element: page(<ReservationsPage />) },
       { path: "/viaje/:tripId/documentos", element: page(<DocumentsPage />) },
+      { path: "/viaje/:tripId/importar", element: page(<DocumentImportPage />) },
       { path: "/viaje/:tripId/destino/:destinationId", element: page(<DestinationPage />) },
       { path: "/viaje/:tripId/destinos/editar", element: page(<EditDestinationsPage />) },
       { path: "/viaje/:tripId/itinerario/editar", element: page(<EditDestinationsPage />) },
