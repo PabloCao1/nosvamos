@@ -15,7 +15,9 @@ export function ItineraryPage() {
   if (isLoading) return <LoadingState />;
   if (isError || !trip) return <ErrorState onRetry={() => void refetch()} />;
 
-  const day = trip.itinerary[selectedDay];
+  const sortedItinerary = [...trip.itinerary].sort((first, second) => first.date.localeCompare(second.date));
+  const day = sortedItinerary[selectedDay];
+  if (!day) return <ErrorState onRetry={() => void refetch()} />;
   return (
     <>
       <PageHeader
@@ -24,7 +26,7 @@ export function ItineraryPage() {
         action={<IconButton icon="search" label="Buscar" />}
       />
       <div className="date-strip" role="tablist" aria-label="Días del itinerario">
-        {trip.itinerary.map((item, index) => (
+        {sortedItinerary.map((item, index) => (
           <button
             role="tab"
             aria-selected={selectedDay === index}

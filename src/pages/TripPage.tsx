@@ -1,4 +1,3 @@
-import { Fragment } from "react";
 import { Link } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import { PageHeader } from "../components/layout/PageHeader";
@@ -42,15 +41,23 @@ export function TripPage() {
   ).sort(([, first], [, second]) => second - first);
   const sortedDestinations = [...trip.destinations].sort((first, second) =>
     (first.arrivalDate || "9999-12-31").localeCompare(second.arrivalDate || "9999-12-31") || first.departureDate.localeCompare(second.departureDate));
-  const outboundFlights = trip.reservations
+  const transports = trip.reservations
     .filter((item) => ["flight", "train", "bus", "ferry", "car"].includes(item.type) && item.status !== "cancelled")
     .sort((a, b) => a.startAt.localeCompare(b.startAt));
-  const returnFlights: typeof outboundFlights = [];
-  const routeDates = [...new Set([
-    ...sortedDestinations.map((destination) => destination.arrivalDate),
-    ...outboundFlights.map((transport) => transport.startAt.slice(0, 10)),
-  ])].filter(Boolean).sort();
-  const routeOrder = (date: string) => routeDates.indexOf(date);
+  const routeItems = [
+    ...sortedDestinations.map((destination) => ({
+      kind: "destination" as const,
+      id: destination.id,
+      dateTime: `${destination.arrivalDate || "9999-12-31"}T23:59`,
+      destination,
+    })),
+    ...transports.map((transport) => ({
+      kind: "transport" as const,
+      id: transport.id,
+      dateTime: transport.startAt,
+      transport,
+    })),
+  ].sort((first, second) => first.dateTime.localeCompare(second.dateTime) || first.id.localeCompare(second.id));
 
   return (
     <>
@@ -63,57 +70,26 @@ export function TripPage() {
           <ButtonLink to={`/viaje/${trip.id}/itinerario/editar`} size="small">Editar</ButtonLink>
         </div>
         <div className="destination-scroll">
-          {outboundFlights.map((flight, index) => (
-            <Link style={{ order: routeOrder(flight.startAt.slice(0, 10)) }} className={`route-connector route-connector-boundary route-${flight.type}`} key={flight.id} to={`/viaje/${trip.id}/evento/reservation/${flight.id}`}>
-              <span><Icon name={reservationIcon[flight.type]} size={32} weight="Filled" /></span>
-              <strong>{flight.title || `Traslado ${index + 1}`}</strong>
-              <small>{flight.originPlace ?? flight.originCity} → {flight.destinationPlace ?? flight.destinationCity}</small>
-              <small>{transportDateTime(flight.startAt, trip.timezone)}</small>
-              <small>{flight.serviceNumber}</small>
-            </Link>
-          ))}
-          {sortedDestinations.map((destination, index) => {
-            const next = sortedDestinations[index + 1];
-            const transport = next
-              ? trip.reservations.find((item) =>
-                  ["flight", "train", "bus", "ferry", "car"].includes(item.type) &&
-                  item.status !== "cancelled" &&
-                  item.originCity?.localeCompare(destination.city, "es", { sensitivity: "base" }) === 0 &&
-                  item.destinationCity?.localeCompare(next.city, "es", { sensitivity: "base" }) === 0)
-              : undefined;
-            return (
-              <Fragment key={destination.id}>
-                <Link style={{ order: routeOrder(destination.arrivalDate) }} className="destination-card" to={`/viaje/${trip.id}/destino/${destination.id}`}>
+          {routeItems.map((item) => {
+            if (item.kind === "destination") {
+              const destination = item.destination;
+              const destinationNumber = sortedDestinations.findIndex((candidate) => candidate.id === destination.id) + 1;
+              return (
+                <Link key={destination.id} className="destination-card" to={`/viaje/${trip.id}/destino/${destination.id}`}>
                   <DestinationImage city={destination.city} country={destination.country} imageUrl={destination.imageUrl} />
-                  <span>{index + 1}</span>
+                  <span>{destinationNumber}</span>
                   <div><h3>{destination.city}</h3><p>{destination.country}</p></div>
                 </Link>
-                {transport && (
-                  <Link
-                    className={`route-connector route-${transport.type}`}
-                    to={`/viaje/${trip.id}/evento/reservation/${transport.id}`}
-                    aria-label={`Ver detalle de ${transport.title}`}
-                  >
-                    <span><Icon name={reservationIcon[transport.type]} size={32} weight="Filled" /></span>
-                    <strong>{transport.type === "flight" ? "Vuelo" : transport.type === "train" ? "Tren" : transport.type === "bus" ? "Bus" : transport.type === "car" ? "Auto" : "Ferry"}</strong>
-                    <small>{transportDateTime(transport.startAt, trip.timezone)}</small>
-                  </Link>
-                )}
-              </Fragment>
-            );
-          })}
-          {returnFlights.map((flight) => {
-            const travelers = flight.travelerConfirmations
-              ?.map((confirmation) => trip.participants.find((person) => person.id === confirmation.participantId)?.name)
-              .filter(Boolean)
-              .join(" y ");
+              );
+            }
+            const transport = item.transport;
             return (
-              <Link className="route-connector route-connector-boundary route-flight" key={flight.id} to={`/viaje/${trip.id}/evento/reservation/${flight.id}`}>
-                <span><Icon name="airplane" size={32} weight="Filled" /></span>
-                <strong>Regreso{travelers ? ` · ${travelers}` : ""}</strong>
-                <small>{flight.originPlace ?? flight.originCity} → {flight.destinationPlace ?? flight.destinationCity}</small>
-                <small>{transportDateTime(flight.startAt, trip.timezone)}</small>
-                <small>{flight.serviceNumber}</small>
+              <Link className={`route-connector route-${transport.type}`} key={transport.id} to={`/viaje/${trip.id}/evento/reservation/${transport.id}`}>
+                <span><Icon name={reservationIcon[transport.type]} size={32} weight="Filled" /></span>
+                <strong>{transport.title}</strong>
+                <small>{transport.originPlace ?? transport.originCity ?? "Origen"} → {transport.destinationPlace ?? transport.destinationCity ?? transport.city}</small>
+                <small>{transportDateTime(transport.startAt, trip.timezone)}</small>
+                {transport.serviceNumber && <small>{transport.serviceNumber}</small>}
               </Link>
             );
           })}
