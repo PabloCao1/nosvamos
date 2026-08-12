@@ -28,17 +28,24 @@ Deno.serve(async (request) => {
   if (!user) return json({ error: "Unauthorized" }, 401);
   const { filename, mimeType, dataUrl } = await request.json();
   if (!filename || !dataUrl || !["application/pdf", "image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"].includes(mimeType)) return json({ error: "Archivo no compatible" }, 400);
-  const openai = new OpenAI({ apiKey: Deno.env.get("OPENAI_API_KEY") });
+  const apiKey = Deno.env.get("OPENAI_API_KEY");
+  if (!apiKey) return json({ error: "El servicio de análisis todavía no está configurado." }, 503);
+  const openai = new OpenAI({ apiKey });
   const fileContent = mimeType === "application/pdf"
     ? { type: "input_file" as const, filename, file_data: dataUrl }
     : { type: "input_image" as const, image_url: dataUrl, detail: "high" as const };
-  const response = await openai.responses.create({
+  try {
+    const response = await openai.responses.create({
     model: "gpt-4o-mini",
     input: [{ role: "user", content: [
       { type: "input_text", text: "Analizá este documento de viaje o comprobante. Extraé sólo datos visibles. Fechas y horas en formato YYYY-MM-DDTHH:mm, sin convertir zona horaria. Si falta un dato usá null. Clasificá con precisión y no inventes." },
       fileContent,
     ] }],
     text: { format: { type: "json_schema", name: "travel_document", strict: true, schema } },
-  });
-  return json(JSON.parse(response.output_text));
+    });
+    return json(JSON.parse(response.output_text));
+  } catch (error) {
+    console.error("Document analysis failed", error);
+    return json({ error: "No pudimos interpretar el documento." }, 502);
+  }
 });

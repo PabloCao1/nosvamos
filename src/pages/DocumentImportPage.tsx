@@ -5,6 +5,7 @@ import { Button } from "../components/ui/Button";
 import { ErrorState, LoadingState } from "../components/ui/PageState";
 import { useTrip } from "../hooks/useTrips";
 import { supabase } from "../lib/supabase";
+import { prepareReceiptImage } from "../lib/images/receiptImage";
 import type { DocumentImportDraft } from "../types/documentImport";
 
 const readDataUrl = (file: File) => new Promise<string>((resolve, reject) => {
@@ -28,13 +29,15 @@ export function DocumentImportPage() {
 
   const analyze = async () => {
     if (!file) return;
-    if (file.size > 8 * 1024 * 1024) { setError("El archivo no puede superar los 8 MB."); return; }
+    if (file.type === "application/pdf" && file.size > 5 * 1024 * 1024) { setError("El PDF no puede superar los 5 MB."); return; }
     setAnalyzing(true); setError(""); setDraft(undefined);
     try {
+      const isImage = file.type.startsWith("image/");
+      const dataUrl = isImage ? await prepareReceiptImage(file) : await readDataUrl(file);
       const { data, error: invokeError } = await supabase.functions.invoke("analyze-document", {
-        body: { filename: file.name, mimeType: file.type, dataUrl: await readDataUrl(file) },
+        body: { filename: file.name, mimeType: isImage ? "image/jpeg" : file.type, dataUrl },
       });
-      if (invokeError) throw invokeError;
+      if (invokeError) throw new Error("No pudimos analizar el archivo. Verificá que el servicio de análisis esté configurado.");
       setDraft(data as DocumentImportDraft);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "No pudimos analizar el documento.");
