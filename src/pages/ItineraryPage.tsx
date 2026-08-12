@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ActivityCard } from "../components/itinerary/ActivityCard";
 import { PageHeader } from "../components/layout/PageHeader";
-import { Icon } from "../components/ui/Icon";
 import { IconButton } from "../components/ui/Button";
 import { ErrorState, LoadingState } from "../components/ui/PageState";
 import { useTrip } from "../hooks/useTrips";
@@ -46,20 +45,11 @@ export function ItineraryPage() {
           <p className="eyebrow">{formatShortDate(day.date)}</p>
           <h2>{day.city}</h2>
         </div>
-        <div className="weather-placeholder" title="Clima de demostración">
-          <span>☀︎</span>
-          <div><strong>{day.weatherTemperature}</strong><small>{day.weatherLabel}</small></div>
-        </div>
       </section>
 
       <div className="timeline">
         {day.activities.map((item) => <ActivityCard key={item.id} activity={item} onEdit={() => navigate(`/viaje/${trip.id}/editar/activity/${item.id}`)} />)}
       </div>
-      <button className="download-card">
-        <span><Icon name="cloudCheck" size={22} /></span>
-        <div><strong>Disponible sin conexión</strong><p>Itinerario actualizado hace 2 min</p></div>
-        <Icon name="chevronRight" size={18} />
-      </button>
     </>
   );
 }
