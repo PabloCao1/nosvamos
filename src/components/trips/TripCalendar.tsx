@@ -5,6 +5,7 @@ import type { IconName } from "../ui/Icon";
 import { Icon } from "../ui/Icon";
 import { DetailIndicator } from "../ui/Button";
 import { dateInTripZone, formatClockTime, localCalendarDate, timeInTripZone } from "../../lib/dates/tripDateTime";
+import { reservationIcon, reservationTone, type EntityTone } from "../../lib/icons/entityIcons";
 
 interface CalendarEvent {
   id: string;
@@ -16,7 +17,7 @@ interface CalendarEvent {
   title: string;
   detail: string;
   icon: IconName;
-  tone: "mint" | "violet" | "amber" | "blue";
+  tone: EntityTone;
 }
 
 const transportTypes = new Set(["flight", "train", "bus", "ferry", "car"]);
@@ -39,8 +40,8 @@ export function TripCalendar({ trip }: { trip: Trip }) {
         detail: isTransport
           ? `${reservation.originCity ?? reservation.originPlace ?? "Origen"} → ${reservation.destinationCity ?? reservation.destinationPlace ?? reservation.city}`
           : reservation.address ?? reservation.city,
-        icon: reservation.type === "flight" ? "airplane" : reservation.type === "train" ? "train" : isLodging ? "bed" : "ticket",
-        tone: reservation.type === "flight" ? "violet" : isLodging ? "blue" : "mint",
+        icon: reservationIcon[reservation.type],
+        tone: reservationTone[reservation.type],
       });
       if (reservation.endAt) {
         items.push({
@@ -52,8 +53,8 @@ export function TripCalendar({ trip }: { trip: Trip }) {
           time: timeInTripZone(reservation.endAt, trip.timezone),
           title: isLodging ? `Check-out · ${reservation.title}` : isTransport ? `Llegada · ${reservation.title}` : `Finaliza · ${reservation.title}`,
           detail: isTransport ? reservation.destinationPlace ?? reservation.destinationCity ?? reservation.city : reservation.city,
-          icon: reservation.type === "flight" ? "airplane" : reservation.type === "train" ? "train" : isLodging ? "bed" : "ticket",
-          tone: reservation.type === "flight" ? "violet" : isLodging ? "blue" : "mint",
+          icon: reservationIcon[reservation.type],
+          tone: reservationTone[reservation.type],
         });
       }
     }
@@ -68,7 +69,7 @@ export function TripCalendar({ trip }: { trip: Trip }) {
           title: activity.title,
           detail: activity.location,
           icon: activity.category === "food" ? "receipt" : activity.category === "transport" ? "airplane" : "calendar",
-          tone: "amber",
+          tone: "activity",
         });
       }
     }

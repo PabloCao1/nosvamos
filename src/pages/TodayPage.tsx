@@ -4,11 +4,12 @@ import { EmptyState, ErrorState, LoadingState } from "../components/ui/PageState
 import { Icon } from "../components/ui/Icon";
 import { useTrips } from "../hooks/useTrips";
 import { dateInTripZone, formatClockTime, localCalendarDate, timeInTripZone } from "../lib/dates/tripDateTime";
-import { activityIcon, reservationIcon } from "../lib/icons/entityIcons";
+import { activityIcon, reservationIcon, reservationTone, type EntityTone } from "../lib/icons/entityIcons";
 
 type TodayItem = {
   id: string; tripId: string; tripName: string; time: string; title: string; detail: string;
   icon: Parameters<typeof Icon>[0]["name"]; href: string; cancelled?: boolean;
+  tone: EntityTone;
 };
 
 export function TodayPage() {
@@ -24,19 +25,19 @@ export function TodayPage() {
         id: `${reservation.id}-start`, tripId: trip.id, tripName: trip.name,
         time: timeInTripZone(reservation.startAt, trip.timezone), title: reservation.title,
         detail: reservation.type === "hotel" || reservation.type === "apartment" ? `Check-in · ${reservation.city}` : reservation.originCity && reservation.destinationCity ? `${reservation.originCity} → ${reservation.destinationCity}` : reservation.city,
-        icon: reservationIcon[reservation.type], href: `/viaje/${trip.id}/evento/reservation/${reservation.id}?moment=start`, cancelled: reservation.status === "cancelled",
+        icon: reservationIcon[reservation.type], tone: reservationTone[reservation.type], href: `/viaje/${trip.id}/evento/reservation/${reservation.id}?moment=start`, cancelled: reservation.status === "cancelled",
       });
       if (reservation.endAt && dateInTripZone(reservation.endAt, trip.timezone) === today) result.push({
         id: `${reservation.id}-end`, tripId: trip.id, tripName: trip.name,
         time: timeInTripZone(reservation.endAt, trip.timezone), title: reservation.title,
         detail: reservation.type === "hotel" || reservation.type === "apartment" ? `Check-out · ${reservation.city}` : `Llegada · ${reservation.destinationCity ?? reservation.city}`,
-        icon: reservationIcon[reservation.type], href: `/viaje/${trip.id}/evento/reservation/${reservation.id}?moment=end`, cancelled: reservation.status === "cancelled",
+        icon: reservationIcon[reservation.type], tone: reservationTone[reservation.type], href: `/viaje/${trip.id}/evento/reservation/${reservation.id}?moment=end`, cancelled: reservation.status === "cancelled",
       });
       return result;
     });
     const activities = trip.itinerary.filter((day) => day.date === today).flatMap((day) => day.activities.map((activity): TodayItem => ({
       id: activity.id, tripId: trip.id, tripName: trip.name, time: activity.startTime, title: activity.title,
-      detail: activity.location || day.city, icon: activityIcon[activity.category], href: `/viaje/${trip.id}/evento/activity/${activity.id}`,
+      detail: activity.location || day.city, icon: activityIcon[activity.category], tone: "activity", href: `/viaje/${trip.id}/evento/activity/${activity.id}`,
     })));
     return [...reservations, ...activities];
   }).sort((a, b) => a.time.localeCompare(b.time));
@@ -47,7 +48,7 @@ export function TodayPage() {
       <section className="today-list">
         {items.map((item) => <Link className={`today-item ${item.cancelled ? "cancelled" : ""}`} to={item.href} key={`${item.tripId}-${item.id}`}>
           <time>{formatClockTime(item.time)}</time>
-          <span className="today-item-icon"><Icon name={item.icon} size={23} /></span>
+          <span className={`today-item-icon tone-${item.tone}`}><Icon name={item.icon} size={23} /></span>
           <div><small>{item.tripName}</small><h2>{item.title}</h2><p>{item.detail}</p></div>
           <Icon name="chevronRight" size={18} />
         </Link>)}

@@ -120,7 +120,7 @@ export function DestinationPage() {
           <div className="section-heading"><div><h2>Excursiones y actividades</h2></div><span>{activities.length}</span></div>
           <div className="destination-event-list">
             {activities.map((activity) => (
-              <Link className="destination-event activity-event" key={activity.id} to={`/viaje/${trip.id}/evento/activity/${activity.id}`}>
+              <Link className="destination-event activity-event tone-activity" key={activity.id} to={`/viaje/${trip.id}/evento/activity/${activity.id}`}>
                 <span><Icon name={activity.category === "food" ? "receipt" : activity.category === "transport" ? "airplane" : "calendar"} size={21} /></span>
                 <div>
                   <p>{date(activity.date)}</p>
@@ -142,7 +142,7 @@ export function DestinationPage() {
             const end = stay.endAt ? new Date(stay.endAt) : undefined;
             const nights = end ? Math.max(0, Math.round((end.getTime() - start.getTime()) / 86_400_000)) : null;
             return (
-              <Link className="stay-card stay-card-link" key={stay.id} to={`/viaje/${trip.id}/evento/reservation/${stay.id}`}>
+              <Link className="stay-card stay-card-link tone-lodging" key={stay.id} to={`/viaje/${trip.id}/evento/reservation/${stay.id}`}>
                 <span><Icon name="bed" size={22} /></span>
                 <div>
                   <p>{stay.providerName}</p>

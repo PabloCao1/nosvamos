@@ -10,6 +10,7 @@ import { formatUsd } from "../lib/currency/exchangeRates";
 import { formatClockTime, formatShortDate, formatTripDateTime } from "../lib/dates/tripDateTime";
 import { tripRepository } from "../repositories";
 import type { Activity, Reservation, Trip } from "../types/domain";
+import { reservationIcon, reservationTone } from "../lib/icons/entityIcons";
 
 const transportTypes = new Set(["flight", "train", "bus", "ferry", "car"]);
 const lodgingTypes = new Set(["hotel", "apartment"]);
@@ -76,7 +77,7 @@ function Participants({ ids, trip }: { ids: string[]; trip: Trip }) {
 function ReservationDetail({ reservation, trip, moment }: { reservation: Reservation; trip: Trip; moment?: string }) {
   const isTransport = transportTypes.has(reservation.type);
   const isLodging = lodgingTypes.has(reservation.type);
-  const icon: IconName = reservation.type === "flight" ? "airplane" : reservation.type === "train" ? "train" : isLodging ? "bed" : "ticket";
+  const icon: IconName = reservationIcon[reservation.type];
   const linkedExpenses = trip.expenses.filter((expense) => expense.reservationId === reservation.id);
   const momentLabel = isLodging
     ? moment === "end" ? "Check-out" : "Check-in"
@@ -87,7 +88,7 @@ function ReservationDetail({ reservation, trip, moment }: { reservation: Reserva
   return (
     <>
       <section className="event-detail-hero">
-        <span className="event-detail-icon"><Icon name={icon} size={28} /></span>
+        <span className={`event-detail-icon tone-${reservationTone[reservation.type]}`}><Icon name={icon} size={28} /></span>
         <div><p>{momentLabel} · {reservation.providerName}</p><h2>{reservation.title}</h2></div>
         <span className={`event-status ${reservation.status}`}>{labels.status[reservation.status]}</span>
       </section>
@@ -175,7 +176,7 @@ function ActivityDetail({ activity, trip, date }: { activity: Activity; trip: Tr
   return (
     <>
       <section className="event-detail-hero">
-        <span className="event-detail-icon amber"><Icon name={activity.category === "food" ? "receipt" : "calendar"} size={28} /></span>
+        <span className="event-detail-icon tone-activity"><Icon name={activity.category === "food" ? "receipt" : "calendar"} size={28} /></span>
         <div><p>{labels.activityCategory[activity.category]}</p><h2>{activity.title}</h2></div>
         <span className="event-status confirmed">{labels.activityStatus[activity.status]}</span>
       </section>

@@ -9,7 +9,7 @@ import { useTrip } from "../hooks/useTrips";
 import { ParticipantAvatar } from "../components/ui/AvatarGroup";
 import { formatUsd } from "../lib/currency/exchangeRates";
 import { calculateBalances, calculateSettlements } from "../lib/expenses/calculateBalances";
-import { activityIcon } from "../lib/icons/entityIcons";
+import { activityIcon, reservationTone } from "../lib/icons/entityIcons";
 import { tripRepository } from "../repositories";
 import type { IconName } from "../components/ui/Icon";
 
@@ -186,7 +186,7 @@ export function MemberDetailPage() {
         <div className="section-heading"><div><h2>Reservas</h2></div><span>{reservations.length}</span></div>
         <div className="member-category-breakdown">
           {reservationsByType.map(([label, items]) => (
-            <article className={expandedCategory === `reservation:${label}` ? "expanded" : ""} key={label}>
+            <article className={`${expandedCategory === `reservation:${label}` ? "expanded " : ""}tone-${reservationTone[items[0].type]}`} key={label}>
               <button type="button" onClick={() => setExpandedCategory((current) => current === `reservation:${label}` ? null : `reservation:${label}`)} aria-expanded={expandedCategory === `reservation:${label}`}>
                 <span><Icon name={reservationTypeIcons[items[0].type] ?? "receipt"} size={20} /></span>
                 <div><strong>{label}</strong><small>{items.length} {items.length === 1 ? "reserva" : "reservas"}</small></div>
@@ -209,7 +209,7 @@ export function MemberDetailPage() {
         <div className="section-heading"><div><h2>Actividades</h2></div><span>{activities.length}</span></div>
         <div className="member-category-breakdown">
           {activitiesByCategory.map(([label, items]) => (
-            <article className={expandedCategory === `activity:${label}` ? "expanded" : ""} key={label}>
+            <article className={`${expandedCategory === `activity:${label}` ? "expanded " : ""}tone-activity`} key={label}>
               <button type="button" onClick={() => setExpandedCategory((current) => current === `activity:${label}` ? null : `activity:${label}`)} aria-expanded={expandedCategory === `activity:${label}`}>
                 <span><Icon name={activityIcon[items[0].activity.category]} size={20} weight="Filled" /></span>
                 <div><strong>{label}</strong><small>{items.length} {items.length === 1 ? "actividad" : "actividades"}</small></div>

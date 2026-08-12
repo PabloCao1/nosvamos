@@ -15,6 +15,23 @@ export const reservationIcon: Record<ReservationType, IconName> = {
   other: "ticket",
 };
 
+export type EntityTone = "auto" | "transport" | "lodging" | "excursion" | "activity" | "neutral";
+
+/** Stable visual identity for each kind of trip content. */
+export const reservationTone: Record<ReservationType, EntityTone> = {
+  flight: "transport",
+  train: "transport",
+  bus: "transport",
+  ferry: "transport",
+  hotel: "lodging",
+  apartment: "lodging",
+  restaurant: "excursion",
+  activity: "excursion",
+  car: "auto",
+  insurance: "neutral",
+  other: "neutral",
+};
+
 export const activityIcon: Record<ActivityCategory, IconName> = {
   visit: "location",
   food: "food",

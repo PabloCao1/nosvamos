@@ -13,6 +13,11 @@
   --coral: #ff9b82;
   --ice-blue: #7dd3fc;
   --amber: #f7c873;
+  --tone-auto: var(--mint-deep);
+  --tone-transport: var(--violet);
+  --tone-lodging: var(--ice-blue);
+  --tone-excursion: var(--coral);
+  --tone-activity: var(--amber);
   --canvas: #25272c;
   --surface: #303238;
   --surface-raised: #383b42;
@@ -802,6 +807,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .calendar-event-icon.violet { color: var(--violet); }
 .calendar-event-icon.amber { color: var(--amber); }
 .calendar-event-icon.blue { color: var(--ice-blue); }
+.calendar-event-icon.auto, .calendar-event-icon.transport, .calendar-event-icon.lodging,
+.calendar-event-icon.excursion, .calendar-event-icon.activity, .calendar-event-icon.neutral { color: var(--entity-tone, var(--mint)); }
 .calendar-event h3 { overflow: hidden; font-size: .76rem; text-overflow: ellipsis; white-space: nowrap; }
 .calendar-event p { margin-top: 4px; overflow: hidden; color: var(--muted); font-size: .62rem; text-overflow: ellipsis; white-space: nowrap; }
 .calendar-event-time { display: block; color: var(--mint); font-size: .72rem; font-weight: 820; letter-spacing: .01em; line-height: 1; }
@@ -811,6 +818,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .event-detail-hero { display: grid; grid-template-columns: 54px minmax(0,1fr); gap: 13px; align-items: center; margin-bottom: 27px; padding: 16px; border: 1px solid var(--line); border-radius: 22px; background: linear-gradient(145deg, rgba(184,247,228,.08), transparent 55%), var(--surface); }
 .event-detail-icon { display: grid; place-items: center; width: 54px; height: 54px; border-radius: 17px; background: rgba(184,247,228,.13); color: var(--mint); }
 .event-detail-icon.amber { background: rgba(247,200,115,.13); color: var(--amber); }
+.event-detail-icon[class*="tone-"] { background: color-mix(in srgb, var(--entity-tone) 14%, transparent); color: var(--entity-tone); }
 .event-detail-hero p { margin-bottom: 4px; color: var(--muted); font-size: .67rem; }
 .event-detail-hero h2 { font-size: 1.05rem; line-height: 1.2; }
 .event-status { grid-column: 2; width: fit-content; padding: 5px 9px; border-radius: 999px; background: rgba(184,247,228,.12); color: var(--mint); font-size: .62rem; font-weight: 720; }
@@ -871,6 +879,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .itinerary-movement-icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 15px; background: rgba(167,139,250,.13); color: var(--violet); }
 .movement-destination .itinerary-movement-icon { background: rgba(184,247,228,.12); color: var(--mint); }
 .movement-activity .itinerary-movement-icon { background: rgba(247,200,115,.12); color: var(--amber); }
+.itinerary-movement[class*="tone-"] .itinerary-movement-icon { background: color-mix(in srgb, var(--entity-tone) 13%, transparent); color: var(--entity-tone); }
 .itinerary-movement p { color: var(--mint); font-size: .59rem; font-weight: 700; }
 .itinerary-movement h2 { margin-top: 3px; overflow: hidden; font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
 .itinerary-movement small { display: block; margin-top: 4px; overflow: hidden; color: var(--muted); font-size: .61rem; text-overflow: ellipsis; white-space: nowrap; }
@@ -1336,6 +1345,27 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   background: linear-gradient(135deg, rgba(255,155,130,.14), rgba(255,255,255,.025)), rgba(48,51,57,.9);
   color: var(--coral);
 }
+.fab-bubble[class*="tone-"] .fab-bubble-icon {
+  border-color: color-mix(in srgb, var(--entity-tone) 25%, transparent);
+  background: color-mix(in srgb, var(--entity-tone) 17%, rgba(48,51,57,.9));
+  color: var(--entity-tone);
+}
+
+/* Category identity: the same color follows an entity across every screen. */
+.tone-auto { --entity-tone: var(--tone-auto); }
+.tone-transport { --entity-tone: var(--tone-transport); }
+.tone-lodging { --entity-tone: var(--tone-lodging); }
+.tone-excursion { --entity-tone: var(--tone-excursion); }
+.tone-activity { --entity-tone: var(--tone-activity); }
+.tone-neutral { --entity-tone: var(--mint); }
+.reservation-icon[class*="tone-"], .today-item-icon[class*="tone-"] { color: var(--entity-tone); background: color-mix(in srgb, var(--entity-tone) 13%, transparent); }
+.route-connector[class*="tone-"] > span { color: var(--entity-tone); }
+.activity-icon.tone-activity { color: var(--entity-tone); }
+.destination-event[class*="tone-"] > span, .stay-card[class*="tone-"] > span,
+.member-category-breakdown article[class*="tone-"] > button > span:first-child { background: color-mix(in srgb, var(--entity-tone) 13%, transparent); color: var(--entity-tone); }
+.entity-form-page[class*="tone-"] input:focus,
+.entity-form-page[class*="tone-"] select:focus,
+.entity-form-page[class*="tone-"] textarea:focus { border-color: var(--entity-tone); outline-color: color-mix(in srgb, var(--entity-tone) 38%, transparent); }
 .fab-bubble:active { transform: scale(.94); }
 
 /* Native, readable iOS typography scale */

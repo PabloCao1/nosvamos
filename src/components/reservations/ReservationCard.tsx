@@ -1,7 +1,7 @@
 import type { Reservation } from "../../types/domain";
 import { Icon } from "../ui/Icon";
 import { StatusPill } from "../ui/StatusPill";
-import { reservationIcon } from "../../lib/icons/entityIcons";
+import { reservationIcon, reservationTone } from "../../lib/icons/entityIcons";
 import { formatTripDateTime } from "../../lib/dates/tripDateTime";
 import { EntitySyncStatus } from "../sync/EntitySyncStatus";
 
@@ -9,7 +9,7 @@ export function ReservationCard({ reservation, timezone, onEdit }: { reservation
   const date = formatTripDateTime(reservation.startAt, timezone);
   return <div className="sync-entity-wrap">
     <button className="reservation-card" onClick={onEdit} disabled={!onEdit} aria-label={onEdit ? `Editar ${reservation.title}` : undefined}>
-      <span className={`reservation-icon reservation-${reservation.type}`}><Icon name={reservationIcon[reservation.type]} size={22} /></span>
+      <span className={`reservation-icon reservation-${reservation.type} tone-${reservationTone[reservation.type]}`}><Icon name={reservationIcon[reservation.type]} size={22} /></span>
       <div className="reservation-main">
         <p className="card-kicker">{reservation.providerName}</p>
         <h3>{reservation.title}</h3>

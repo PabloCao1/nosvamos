@@ -4,21 +4,23 @@ import { useNavigate } from "react-router-dom";
 import type { IconName } from "../ui/Icon";
 import { Icon } from "../ui/Icon";
 
-type CreateMode = "trip" | "activity" | "expense" | "reservation" | "lodging" | "transport" | "car" | "invite" | "import";
+type CreateMode = "trip" | "activity" | "expense" | "reservation" | "lodging" | "transport" | "car" | "excursion" | "invite" | "import";
 
 interface FabAction {
   label: string;
   icon: IconName;
   mode: CreateMode;
+  tone?: "auto" | "transport" | "lodging" | "excursion" | "activity";
 }
 
 const tripDetailActions: FabAction[] = [
   { label: "Escanear documento", icon: "receipt", mode: "import" },
   { label: "Invitar integrante", icon: "users", mode: "invite" },
-  { label: "Agregar traslado", icon: "airplane", mode: "transport" },
-  { label: "Alquiler de auto", icon: "car", mode: "car" },
-  { label: "Agregar alojamiento", icon: "bed", mode: "lodging" },
-  { label: "Agregar actividad", icon: "calendar", mode: "activity" },
+  { label: "Agregar transporte", icon: "airplane", mode: "transport", tone: "transport" },
+  { label: "Alquiler de auto", icon: "car", mode: "car", tone: "auto" },
+  { label: "Agregar alojamiento", icon: "bed", mode: "lodging", tone: "lodging" },
+  { label: "Agregar excursión", icon: "ticket", mode: "excursion", tone: "excursion" },
+  { label: "Agregar actividad", icon: "calendar", mode: "activity", tone: "activity" },
   { label: "Agregar gasto", icon: "wallet", mode: "expense" },
 ];
 
@@ -111,7 +113,7 @@ export function FloatingActionButton() {
         <div className={`fab-bubbles ${menuOpen ? "open" : ""}`} aria-hidden={!menuOpen}>
           {tripDetailActions.map((item, index) => (
             <button
-              className="fab-bubble"
+              className={`fab-bubble${item.tone ? ` tone-${item.tone}` : ""}`}
               key={item.label}
               onClick={() => {
                 setMenuOpen(false);

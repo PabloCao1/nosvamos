@@ -5,6 +5,7 @@ import { DetailIndicator } from "../components/ui/Button";
 import { ErrorState, LoadingState } from "../components/ui/PageState";
 import { useTrip } from "../hooks/useTrips";
 import { dateInTripZone, timeInTripZone } from "../lib/dates/tripDateTime";
+import { reservationTone, type EntityTone } from "../lib/icons/entityIcons";
 
 interface ItineraryMovement {
   id: string;
@@ -17,6 +18,7 @@ interface ItineraryMovement {
   label: string;
   icon: IconName;
   cancelled?: boolean;
+  tone: EntityTone;
 }
 
 const typeLabels: Record<string, string> = {
@@ -67,6 +69,7 @@ export function EditDestinationsPage() {
         : reservation.address ?? reservation.city,
       label: typeLabels[reservation.type] ?? "Reserva",
       icon: movementIcon(reservation.type),
+      tone: reservationTone[reservation.type],
       cancelled: reservation.status === "cancelled",
     })),
     ...trip.itinerary.flatMap((day) => day.activities.map((activity) => ({
@@ -79,6 +82,7 @@ export function EditDestinationsPage() {
       detail: activity.location,
       label: "Actividad",
       icon: "calendar" as IconName,
+      tone: "activity" as const,
     }))),
   ].sort((first, second) => `${first.date}T${first.time}`.localeCompare(`${second.date}T${second.time}`));
 
@@ -107,7 +111,7 @@ export function EditDestinationsPage() {
             <div className="itinerary-editor-items">
               {items.map((movement) => (
                 <Link
-                  className={`itinerary-movement movement-${movement.kind} ${movement.cancelled ? "cancelled" : ""}`}
+                  className={`itinerary-movement movement-${movement.kind} tone-${movement.tone} ${movement.cancelled ? "cancelled" : ""}`}
                   key={movement.id}
                   to={pathFor(movement)}
                 >

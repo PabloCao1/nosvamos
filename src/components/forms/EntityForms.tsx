@@ -366,7 +366,7 @@ export function ReservationForm({
 }: {
   close: () => void;
   entity?: Reservation;
-  variant?: "general" | "lodging" | "transport" | "car";
+  variant?: "general" | "lodging" | "transport" | "car" | "excursion";
   trip?: Trip;
   importDraft?: DocumentImportDraft;
 }) {
@@ -374,6 +374,7 @@ export function ReservationForm({
   const trip = tripOverride ?? activeTrip;
   const lodging = variant === "lodging";
   const carRental = variant === "car";
+  const excursion = variant === "excursion";
   const transport = variant === "transport" || carRental;
   const mutation = useSaveEntity(close);
   const [travelerDetails, setTravelerDetails] = useState<Record<string, {
@@ -402,7 +403,7 @@ export function ReservationForm({
       differentDropoffCity: entity.type === "car" && Boolean(entity.destinationCity && entity.destinationCity !== entity.originCity),
     } : {
       title: carRental ? "Alquiler de auto" : importDraft?.title ?? "",
-      type: carRental ? "car" : importDraft && importDraft.kind !== "expense" && importDraft.kind !== "other" ? importDraft.kind : lodging ? "hotel" : "flight",
+      type: carRental ? "car" : excursion ? "activity" : importDraft && importDraft.kind !== "expense" && importDraft.kind !== "other" ? importDraft.kind : lodging ? "hotel" : "flight",
       providerName: importDraft?.providerName ?? "", providerReference: importDraft?.providerReference ?? "",
       confirmationCode: importDraft?.confirmationCode ?? "", startAt: importDraft?.startAt ?? "", endAt: importDraft?.endAt ?? "",
       city: importDraft?.city ?? "", country: importDraft?.country ?? "", originCity: importDraft?.originCity ?? "",
@@ -553,6 +554,8 @@ export function ReservationForm({
         <Field label="Tipo" required><select {...register("type")}>
           {lodging ? (
             <><option value="hotel">Hotel</option><option value="apartment">Casa o departamento</option></>
+          ) : excursion ? (
+            <option value="activity">Excursión</option>
           ) : transport ? (
             <><option value="flight">Avión</option><option value="train">Tren</option><option value="bus">Bus</option><option value="ferry">Ferry</option><option value="car">Auto alquilado</option></>
           ) : (

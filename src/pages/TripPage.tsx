@@ -10,7 +10,7 @@ import { ButtonLink } from "../components/ui/Button";
 import { ErrorState, LoadingState } from "../components/ui/PageState";
 import { useTrip } from "../hooks/useTrips";
 import { formatUsd } from "../lib/currency/exchangeRates";
-import { reservationIcon } from "../lib/icons/entityIcons";
+import { reservationIcon, reservationTone } from "../lib/icons/entityIcons";
 import { formatTripDateTime } from "../lib/dates/tripDateTime";
 
 const transportDateTime = (value: string, timezone: string) => formatTripDateTime(value, timezone);
@@ -84,7 +84,7 @@ export function TripPage() {
             }
             const transport = item.transport;
             return (
-              <Link className={`route-connector route-${transport.type}`} key={transport.id} to={`/viaje/${trip.id}/evento/reservation/${transport.id}`}>
+              <Link className={`route-connector route-${transport.type} tone-${reservationTone[transport.type]}`} key={transport.id} to={`/viaje/${trip.id}/evento/reservation/${transport.id}`}>
                 <span><Icon name={reservationIcon[transport.type]} size={32} weight="Filled" /></span>
                 <strong>{transport.title}</strong>
                 <small>{transport.originPlace ?? transport.originCity ?? "Origen"} → {transport.destinationPlace ?? transport.destinationCity ?? transport.city}</small>
