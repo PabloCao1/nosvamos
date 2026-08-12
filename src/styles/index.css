@@ -669,6 +669,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .receipt-upload > img { object-fit: cover; }
 .receipt-upload strong { display: block; font-size: .78rem; }
 .receipt-upload p { margin-top: 4px; color: var(--muted); font-size: .66rem; }
+.document-source-picker { display: grid; gap: 10px; }
+.document-source-picker > input { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
+.document-selected-file { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid rgba(184,247,228,.18); border-radius: 14px; background: rgba(184,247,228,.06); overflow-wrap: anywhere; }
+.document-selected-file small { color: var(--muted); }
 .receipt-remove { align-self: start; margin-top: -5px; border: 0; background: transparent; color: #ff7777; font-size: .67rem; font-weight: 700; cursor: pointer; }
 .expense-card.cancelled { opacity: .62; }
 .expense-card.cancelled h3 { text-decoration: line-through; }

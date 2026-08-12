@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { PageHeader } from "../components/layout/PageHeader";
 import { Button } from "../components/ui/Button";
@@ -23,6 +23,13 @@ export function DocumentImportPage() {
   const [draft, setDraft] = useState<DocumentImportDraft>();
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState("");
+  const cameraInput = useRef<HTMLInputElement>(null);
+  const galleryInput = useRef<HTMLInputElement>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
+
+  const selectFile = (selected?: File) => {
+    setFile(selected); setDraft(undefined); setError("");
+  };
 
   if (isLoading) return <LoadingState />;
   if (isError || !trip) return <ErrorState onRetry={() => void refetch()} />;
@@ -54,10 +61,15 @@ export function DocumentImportPage() {
     <PageHeader eyebrow={trip.name} title="Escanear documento" />
     <section className="page-editor entity-form-page">
       <div className="entity-form">
-        <label className="receipt-upload">
-          <input type="file" accept="image/*,application/pdf" capture="environment" onChange={(event) => { setFile(event.target.files?.[0]); setDraft(undefined); setError(""); }} />
-          <span>+</span><div><strong>{file?.name ?? "Elegir foto o PDF"}</strong><p>Usá la cámara, Fotos o Archivos</p></div>
-        </label>
+        <section className="document-source-picker">
+          <input ref={cameraInput} type="file" accept="image/*" capture="environment" onChange={(event) => selectFile(event.target.files?.[0])} />
+          <input ref={galleryInput} type="file" accept="image/*" onChange={(event) => selectFile(event.target.files?.[0])} />
+          <input ref={fileInput} type="file" accept="image/*,application/pdf" onChange={(event) => selectFile(event.target.files?.[0])} />
+          <Button variant="secondary" fullWidth onClick={() => cameraInput.current?.click()}>Sacar foto</Button>
+          <Button variant="secondary" fullWidth onClick={() => galleryInput.current?.click()}>Buscar en galería</Button>
+          <Button variant="secondary" fullWidth onClick={() => fileInput.current?.click()}>Cargar archivo</Button>
+        </section>
+        {file && <div className="document-selected-file"><strong>{file.name}</strong><small>{file.type === "application/pdf" ? "PDF" : "Imagen"} seleccionado</small></div>}
         <Button variant="primary" fullWidth disabled={!file || analyzing} onClick={() => void analyze()}>{analyzing ? "Analizando…" : "Analizar documento"}</Button>
         {error && <p className="form-error" role="alert">{error}</p>}
         {draft && <section className="event-detail-card">
