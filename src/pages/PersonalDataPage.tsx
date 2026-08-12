@@ -117,16 +117,18 @@ export function PersonalDataPage() {
     const image = new Image();
     image.src = cropSource;
     await image.decode();
-    const sourceSize = Math.min(image.naturalWidth, image.naturalHeight) / zoom;
-    const previewScale = 230 / sourceSize;
-    const sourceX = Math.max(0, Math.min(image.naturalWidth - sourceSize, (image.naturalWidth - sourceSize) / 2 - cropX / previewScale));
-    const sourceY = Math.max(0, Math.min(image.naturalHeight - sourceSize, (image.naturalHeight - sourceSize) / 2 - cropY / previewScale));
+    const previewSize = 230;
+    const coverScale = Math.max(previewSize / image.naturalWidth, previewSize / image.naturalHeight);
+    const totalScale = coverScale * zoom;
+    const sourceSize = previewSize / totalScale;
+    const sourceX = Math.max(0, Math.min(image.naturalWidth - sourceSize, image.naturalWidth / 2 - cropX / totalScale - sourceSize / 2));
+    const sourceY = Math.max(0, Math.min(image.naturalHeight - sourceSize, image.naturalHeight / 2 - cropY / totalScale - sourceSize / 2));
     const canvas = document.createElement("canvas");
     canvas.width = 512; canvas.height = 512;
     canvas.getContext("2d")?.drawImage(image, sourceX, sourceY, sourceSize, sourceSize, 0, 0, 512, 512);
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.88));
     if (!blob) { setError("No pudimos recortar la foto."); setPending(false); return; }
-    const path = `${user.id}/profile.jpg`;
+    const path = `${user.id}/profile-${Date.now()}.jpg`;
     const { error: uploadError } = await supabase.storage.from("avatars").upload(path, blob, { upsert: true, contentType: "image/jpeg" });
     if (uploadError) { setError(uploadError.message); setPending(false); return; }
     const { error: profileError } = await supabase.from("profiles").update({ avatar_path: path }).eq("id", user.id);
