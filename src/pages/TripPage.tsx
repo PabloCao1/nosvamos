@@ -41,25 +41,16 @@ export function TripPage() {
     }, {}),
   ).sort(([, first], [, second]) => second - first);
   const sortedDestinations = [...trip.destinations].sort((first, second) =>
-    first.arrivalDate.localeCompare(second.arrivalDate) || first.departureDate.localeCompare(second.departureDate));
-  const firstDestination = sortedDestinations[0];
-  const lastDestination = sortedDestinations.at(-1);
-  const outboundFlights = firstDestination
-    ? trip.reservations
-        .filter((item) =>
-          item.type === "flight" &&
-          item.status !== "cancelled" &&
-          item.startAt.slice(0, 10) <= firstDestination.arrivalDate)
-        .sort((a, b) => a.startAt.localeCompare(b.startAt))
-    : [];
-  const returnFlights = lastDestination
-    ? trip.reservations
-        .filter((item) =>
-          item.type === "flight" &&
-          item.status !== "cancelled" &&
-          item.startAt.slice(0, 10) >= lastDestination.departureDate)
-        .sort((a, b) => a.startAt.localeCompare(b.startAt))
-    : [];
+    (first.arrivalDate || "9999-12-31").localeCompare(second.arrivalDate || "9999-12-31") || first.departureDate.localeCompare(second.departureDate));
+  const outboundFlights = trip.reservations
+    .filter((item) => ["flight", "train", "bus", "ferry", "car"].includes(item.type) && item.status !== "cancelled")
+    .sort((a, b) => a.startAt.localeCompare(b.startAt));
+  const returnFlights: typeof outboundFlights = [];
+  const routeDates = [...new Set([
+    ...sortedDestinations.map((destination) => destination.arrivalDate),
+    ...outboundFlights.map((transport) => transport.startAt.slice(0, 10)),
+  ])].filter(Boolean).sort();
+  const routeOrder = (date: string) => routeDates.indexOf(date);
 
   return (
     <>
@@ -73,9 +64,9 @@ export function TripPage() {
         </div>
         <div className="destination-scroll">
           {outboundFlights.map((flight, index) => (
-            <Link className="route-connector route-connector-boundary route-flight" key={flight.id} to={`/viaje/${trip.id}/evento/reservation/${flight.id}`}>
-              <span><Icon name="airplane" size={32} weight="Filled" /></span>
-              <strong>Ida · tramo {index + 1}</strong>
+            <Link style={{ order: routeOrder(flight.startAt.slice(0, 10)) }} className={`route-connector route-connector-boundary route-${flight.type}`} key={flight.id} to={`/viaje/${trip.id}/evento/reservation/${flight.id}`}>
+              <span><Icon name={reservationIcon[flight.type]} size={32} weight="Filled" /></span>
+              <strong>{flight.title || `Traslado ${index + 1}`}</strong>
               <small>{flight.originPlace ?? flight.originCity} → {flight.destinationPlace ?? flight.destinationCity}</small>
               <small>{transportDateTime(flight.startAt, trip.timezone)}</small>
               <small>{flight.serviceNumber}</small>
@@ -92,7 +83,7 @@ export function TripPage() {
               : undefined;
             return (
               <Fragment key={destination.id}>
-                <Link className="destination-card" to={`/viaje/${trip.id}/destino/${destination.id}`}>
+                <Link style={{ order: routeOrder(destination.arrivalDate) }} className="destination-card" to={`/viaje/${trip.id}/destino/${destination.id}`}>
                   <DestinationImage city={destination.city} country={destination.country} imageUrl={destination.imageUrl} />
                   <span>{index + 1}</span>
                   <div><h3>{destination.city}</h3><p>{destination.country}</p></div>

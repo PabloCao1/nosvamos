@@ -19,7 +19,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: "prompt",
+      registerType: "autoUpdate",
       includeAssets: ["offline.html", "icons/*.png", "icons/*.svg"],
       manifest: {
         name: "NosVamos — Viajes en grupo",
@@ -40,6 +40,8 @@ export default defineConfig({
         ],
       },
       workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
         importScripts: ["push-handler.js"],
         navigateFallback: "index.html",
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],

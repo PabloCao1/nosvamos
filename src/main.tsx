@@ -6,9 +6,10 @@ import { AppProviders } from "./app/AppProviders";
 import { router } from "./app/router";
 import "./styles/index.css";
 
-registerSW({
+const updateSW = registerSW({
+  immediate: true,
   onNeedRefresh() {
-    window.dispatchEvent(new CustomEvent("brujula:update-available"));
+    void updateSW(true);
   },
 });
 
