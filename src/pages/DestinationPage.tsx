@@ -91,7 +91,7 @@ export function DestinationPage() {
                   to={`/viaje/${trip.id}/evento/reservation/${transport.id}`}
                   aria-label={`Ver detalle de ${transport.title}`}
                 >
-                  <span><Icon name={transport.type === "flight" ? "airplane" : transport.type === "train" ? "train" : transport.type === "car" ? "suitcase" : "ticket"} size={21} /></span>
+                  <span><Icon name={transport.type === "flight" ? "airplane" : transport.type === "train" ? "train" : transport.type === "car" ? "car" : "ticket"} size={21} /></span>
                   <div>
                     <p>{direction}</p>
                     <h3>{transport.title}</h3>
