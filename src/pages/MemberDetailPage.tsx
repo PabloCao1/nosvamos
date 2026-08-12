@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ExpenseCard } from "../components/expenses/ExpenseCard";
 import { PageHeader } from "../components/layout/PageHeader";
 import { ReservationCard } from "../components/reservations/ReservationCard";
 import { Button, IconButtonLink } from "../components/ui/Button";
@@ -20,11 +19,22 @@ const activityDate = (date: string, time: string) => {
   return `${label} · ${time}`;
 };
 
+const expenseCategoryLabels: Record<string, string> = {
+  transport: "Transporte",
+  lodging: "Alojamiento",
+  food: "Comidas",
+  activities: "Actividades",
+  shopping: "Compras",
+  insurance: "Seguros",
+  other: "Otros",
+};
+
 export function MemberDetailPage() {
   const { tripId, memberId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [confirmingRemoval, setConfirmingRemoval] = useState(false);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const { data: trip, isLoading, isError, refetch } = useTrip(tripId);
 
   const removeMember = useMutation({
@@ -54,11 +64,15 @@ export function MemberDetailPage() {
   const settlements = calculateSettlements(trip.participants, trip.expenses)
     .filter((item) => item.fromParticipantId === member.id || item.toParticipantId === member.id);
   const byId = new Map(trip.participants.map((person) => [person.id, person]));
-  const expenses = [...trip.expenses]
-    .filter((expense) =>
-      expense.paidBy === member.id
-      || expense.splits.some((split) => split.participantId === member.id))
-    .reverse();
+  const paidExpenses = trip.expenses.filter((expense) => expense.paidBy === member.id && expense.status !== "cancelled");
+  const paidByCategory = Array.from(paidExpenses.reduce((categories, expense) => {
+    const label = expense.categoryLabel ?? expenseCategoryLabels[expense.category] ?? expense.category;
+    const current = categories.get(label) ?? { total: 0, expenses: [] as typeof paidExpenses };
+    categories.set(label, { total: current.total + expense.convertedAmount, expenses: [...current.expenses, expense] });
+    return categories;
+  }, new Map<string, { total: number; expenses: typeof paidExpenses }>()).entries())
+    .map(([label, values]) => ({ label, ...values }))
+    .sort((first, second) => second.total - first.total);
   const reservations = trip.reservations
     .filter((reservation) =>
       reservation.participantIds.includes(member.id)
@@ -93,7 +107,7 @@ export function MemberDetailPage() {
         <div className="member-dashboard-metrics">
           <article><Icon name="wallet" size={21} /><span>Pagó</span><strong>{formatUsd(balance?.paid ?? 0)}</strong></article>
           <article><Icon name="receipt" size={21} /><span>Le corresponde</span><strong>{formatUsd(balance?.consumed ?? 0)}</strong></article>
-          <article><Icon name="arrowUpRight" size={21} className={(balance?.net ?? 0) < 0 ? "member-balance-debt-icon" : undefined} /><span>{(balance?.net ?? 0) >= 0 ? "Recibe" : "Debe"}</span><strong>{formatUsd(Math.abs(balance?.net ?? 0))}</strong></article>
+          <article><Icon name="users" size={21} /><span>{(balance?.net ?? 0) >= 0 ? "Recibe" : "Debe"}</span><strong>{formatUsd(Math.abs(balance?.net ?? 0))}</strong></article>
         </div>
       </section>
 
@@ -116,17 +130,29 @@ export function MemberDetailPage() {
       </section>
 
       <section className="member-dashboard-section">
-        <div className="section-heading"><div><h2>Gastos</h2></div><span>{expenses.length}</span></div>
-        <div className="card-stack">
-          {expenses.map((expense) => (
-            <ExpenseCard
-              key={expense.id}
-              expense={expense}
-              payer={byId.get(expense.paidBy)}
-              onEdit={() => navigate(`/viaje/${trip.id}/editar/expense/${expense.id}`)}
-            />
+        <div className="section-heading"><div><p className="eyebrow">Pagado por {member.name}</p><h2>Gastos por rubro</h2></div><span>{paidExpenses.length}</span></div>
+        <div className="member-category-breakdown">
+          {paidByCategory.map((category) => (
+            <article className={expandedCategory === category.label ? "expanded" : ""} key={category.label}>
+              <button type="button" onClick={() => setExpandedCategory((current) => current === category.label ? null : category.label)} aria-expanded={expandedCategory === category.label}>
+                <span><Icon name="receipt" size={20} /></span>
+                <div><strong>{category.label}</strong><small>{category.expenses.length} {category.expenses.length === 1 ? "pago" : "pagos"}</small></div>
+                <b>{formatUsd(category.total)}</b>
+                <Icon name="chevronRight" size={18} className="member-category-chevron" />
+              </button>
+              {expandedCategory === category.label && (
+                <div className="member-category-items">
+                  {[...category.expenses].sort((first, second) => second.date.localeCompare(first.date)).map((expense) => (
+                    <button type="button" key={expense.id} onClick={() => navigate(`/viaje/${trip.id}/editar/expense/${expense.id}`)}>
+                      <span><strong>{expense.description}</strong><small>{new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(`${expense.date}T12:00:00`))}</small></span>
+                      <b>{formatUsd(expense.convertedAmount)}</b>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </article>
           ))}
-          {expenses.length === 0 && <p className="member-dashboard-empty">Todavía no participa en gastos.</p>}
+          {paidByCategory.length === 0 && <p className="member-dashboard-empty">Todavía no registró pagos.</p>}
         </div>
       </section>
 

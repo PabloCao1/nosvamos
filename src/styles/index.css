@@ -1696,7 +1696,22 @@ body .member-avatar {
 body .member-summary h2 { font-size: 1rem; }
 body .member-summary p { margin-top: 6px; font-size: .7rem; }
 body .member-dashboard-hero div > span { margin-top: 6px; }
-body .member-balance-debt-icon { display: inline-block; transform: rotate(180deg); }
+body .member-category-breakdown { display: grid; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: var(--line); gap: 1px; }
+body .member-category-breakdown article { background: var(--surface); }
+body .member-category-breakdown article > button { display: grid; grid-template-columns: 40px minmax(0,1fr) auto 18px; align-items: center; width: 100%; min-height: 70px; gap: 11px; padding: 12px 13px; border: 0; background: transparent; color: var(--text); text-align: left; cursor: pointer; }
+body .member-category-breakdown article > button > span:first-child { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; background: rgba(184,247,228,.1); color: var(--mint); }
+body .member-category-breakdown strong,
+body .member-category-breakdown small { display: block; }
+body .member-category-breakdown strong { font-size: .75rem; }
+body .member-category-breakdown small { margin-top: 4px; color: var(--muted); font-size: .61rem; }
+body .member-category-breakdown b { color: var(--mint); font-size: .78rem; white-space: nowrap; }
+body .member-category-chevron { color: var(--muted); transition: transform .2s ease; }
+body .member-category-breakdown article.expanded .member-category-chevron { transform: rotate(90deg); }
+body .member-category-items { border-top: 1px solid var(--line); }
+body .member-category-items > button { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 58px; gap: 14px; padding: 11px 14px 11px 64px; border: 0; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.018); color: var(--text); text-align: left; cursor: pointer; }
+body .member-category-items > button:last-child { border-bottom: 0; }
+body .member-category-items > button > span { min-width: 0; }
+body .member-category-items > button strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* The floating glass navigation and FAB deliberately remain unchanged. */
 @media (min-width: 700px) {
