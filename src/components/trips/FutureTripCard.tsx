@@ -5,14 +5,11 @@ import { DetailIndicator } from "../ui/Button";
 import { Icon } from "../ui/Icon";
 import { StatusPill } from "../ui/StatusPill";
 import { useCityImage } from "../../hooks/useCityImage";
+import { formatShortDate } from "../../lib/dates/tripDateTime";
 
 export function FutureTripCard({ trip }: { trip: Trip }) {
   const start = new Date(`${trip.startDate}T12:00:00`);
   const end = new Date(`${trip.endDate}T12:00:00`);
-  const compactDate = (value: string) => {
-    const [, month, day] = value.slice(0, 10).split("-").map(Number);
-    return `${day}/${month}`;
-  };
   const days = Math.ceil((start.getTime() - Date.now()) / 86_400_000);
   const timingLabel = days > 0 ? `Faltan ${days} días` : Date.now() <= end.getTime() ? "En curso" : "Finalizado";
   const firstDestination = trip.destinations[0];
@@ -34,7 +31,7 @@ export function FutureTripCard({ trip }: { trip: Trip }) {
       <div className="future-trip-body">
         <div className="future-trip-heading">
           <div>
-            <p>{compactDate(trip.startDate)} - {compactDate(trip.endDate)}</p>
+            <p>{formatShortDate(trip.startDate)} — {formatShortDate(trip.endDate)}</p>
             <h2>{trip.name}</h2>
           </div>
           <DetailIndicator label={`Ver detalle de ${trip.name}`} />
