@@ -8,6 +8,7 @@ import { useInstallStore } from "../stores/installStore";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
+import { useAvatarUrl } from "../hooks/useAvatarUrl";
 
 const isStandalone = () =>
   window.matchMedia("(display-mode: standalone)").matches ||
@@ -40,6 +41,7 @@ export function ProfilePage() {
     ? user.user_metadata.full_name.trim()
     : "Tu perfil";
   const initials = fullName.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "NV";
+  const avatarUrl = useAvatarUrl(typeof user?.user_metadata.avatar_path === "string" ? user.user_metadata.avatar_path : undefined);
 
   const handleSignOut = async () => {
     setSigningOut(true);
@@ -55,7 +57,7 @@ export function ProfilePage() {
     <>
       <PageHeader eyebrow="Cuenta personal" title="Perfil" />
       <section className="profile-card">
-        <div className="large-avatar">{initials}</div>
+        {avatarUrl ? <img className="large-avatar profile-avatar-image" src={avatarUrl} alt="Foto de perfil" /> : <div className="large-avatar">{initials}</div>}
         <div><h2>{fullName}</h2><p>{user?.email}</p></div>
         <IconButton icon="edit" label="Cambiar contraseña" size="small" onClick={() => navigate("/actualizar-clave")} />
       </section>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthProvider";
 import { Icon } from "../ui/Icon";
+import { useAvatarUrl } from "../../hooks/useAvatarUrl";
 
 export function ProfileDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { user, signOut } = useAuth();
@@ -11,6 +12,7 @@ export function ProfileDrawer({ open, onClose }: { open: boolean; onClose: () =>
     ? user.user_metadata.full_name.trim()
     : "Tu perfil";
   const initials = fullName.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "NV";
+  const avatarUrl = useAvatarUrl(typeof user?.user_metadata.avatar_path === "string" ? user.user_metadata.avatar_path : undefined);
 
   useEffect(() => {
     if (!open) return;
@@ -40,7 +42,7 @@ export function ProfileDrawer({ open, onClose }: { open: boolean; onClose: () =>
       <button className="profile-drawer-backdrop" type="button" aria-label="Cerrar perfil" onClick={onClose} />
       <aside className="profile-drawer" aria-label="Perfil" aria-modal="true" role="dialog">
         <div className="profile-drawer-user">
-          <div className="large-avatar">{initials}</div>
+          {avatarUrl ? <img className="large-avatar profile-avatar-image" src={avatarUrl} alt="Foto de perfil" /> : <div className="large-avatar">{initials}</div>}
           <div><h2>{fullName}</h2><p>{user?.email}</p></div>
         </div>
         <nav className="profile-drawer-menu">
