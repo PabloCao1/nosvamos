@@ -3,6 +3,7 @@ import { PageHeader } from "../components/layout/PageHeader";
 import { Icon } from "../components/ui/Icon";
 import { ErrorState, LoadingState } from "../components/ui/PageState";
 import { useTrip } from "../hooks/useTrips";
+import { ParticipantAvatar } from "../components/ui/AvatarGroup";
 
 export function MembersPage() {
   const { tripId } = useParams();
@@ -22,7 +23,7 @@ export function MembersPage() {
         {active.map((person) => (
           <article className="member-card" key={person.id}>
             <button className="member-summary" onClick={() => navigate(`/viaje/${trip.id}/integrantes/${person.id}`)}>
-              <span className="large-avatar member-avatar" style={{ background: person.color }}>{person.initials}</span>
+              <ParticipantAvatar participant={person} className="large-avatar member-avatar" />
               <div><h2>{person.name}</h2><p>{person.email ?? "Sin email"} · {person.role === "owner" ? "Propietario" : "Integrante"}</p></div>
               <Icon name="chevronRight" size={18} />
             </button>

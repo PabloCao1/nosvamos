@@ -206,6 +206,12 @@ export class SupabaseTripRepository extends LocalTripRepository {
       selectRows("destinations", tripIds), selectRows("itinerary_days", tripIds), selectRows("travelers", tripIds),
       selectRows("reservations", tripIds), selectRows("activities", tripIds), selectRows("expenses", tripIds),
     ]);
+    const linkedUserIds = travelerRows.map((row) => row.linked_user_id as string | undefined).filter((id): id is string => Boolean(id));
+    const { data: profileRows, error: profileError } = linkedUserIds.length
+      ? await supabase.from("profiles").select("id,avatar_path").in("id", linkedUserIds)
+      : { data: [], error: null };
+    if (profileError) throw profileError;
+    const avatarsByUser = new Map((profileRows ?? []).map((profile) => [profile.id, profile.avatar_path as string | null]));
     const reservationIds = reservationRows.map((row) => row.id as string);
     const activityIds = activityRows.map((row) => row.id as string);
     const expenseIds = expenseRows.map((row) => row.id as string);
@@ -221,6 +227,7 @@ export class SupabaseTripRepository extends LocalTripRepository {
     }));
     const participants: Participant[] = travelerRows.filter((row) => !row.deleted_at).map((row) => ({
       id: row.id, name: row.name, email: row.email || undefined, initials: row.initials || "", color: row.color || "#8EDCC5",
+      avatarPath: row.linked_user_id ? avatarsByUser.get(row.linked_user_id) || undefined : undefined,
       role: row.role, status: row.status, joinedAt: row.joined_at, removedAt: row.removed_at || undefined,
     }));
     const reservationParticipants = reservationParticipantRows ?? [];

@@ -8,6 +8,7 @@ import { Button, IconButtonLink } from "../components/ui/Button";
 import { Icon } from "../components/ui/Icon";
 import { ErrorState, LoadingState } from "../components/ui/PageState";
 import { useTrip } from "../hooks/useTrips";
+import { ParticipantAvatar } from "../components/ui/AvatarGroup";
 import { formatUsd } from "../lib/currency/exchangeRates";
 import { calculateBalances, calculateSettlements } from "../lib/expenses/calculateBalances";
 import { activityIcon } from "../lib/icons/entityIcons";
@@ -80,7 +81,7 @@ export function MemberDetailPage() {
       />
 
       <section className="member-dashboard-hero">
-        <span className="member-dashboard-avatar" style={{ background: member.color }}>{member.initials}</span>
+        <ParticipantAvatar participant={member} className="member-dashboard-avatar" />
         <div>
           <h2>{member.name}</h2>
           <p>{member.email ?? "Sin email cargado"}</p>

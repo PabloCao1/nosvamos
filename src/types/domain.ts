@@ -21,6 +21,7 @@ export interface Participant {
   id: string;
   name: string;
   email?: string;
+  avatarPath?: string;
   initials: string;
   color: string;
   role: "owner" | "admin" | "member" | "viewer";
