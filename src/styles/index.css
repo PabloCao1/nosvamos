@@ -755,12 +755,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .expense-dashboard { margin-top: 34px; }
 .expense-dashboard-heading { display: flex; align-items: center; justify-content: space-between; }
 .expense-dashboard-heading h2 { font-size: 1.28rem; }
-.expense-dashboard-total { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; margin-top: 13px; padding: 17px; border: 1px solid rgba(184,247,228,.15); border-radius: 19px; background: linear-gradient(135deg, rgba(184,247,228,.1), transparent 58%), #292c31; box-shadow: 0 10px 26px rgba(0,0,0,.13); }
+.expense-dashboard-total { display: grid; gap: 17px; margin-top: 13px; padding: 17px; border: 1px solid rgba(184,247,228,.15); border-radius: 19px; background: linear-gradient(135deg, rgba(184,247,228,.1), transparent 58%), #292c31; box-shadow: 0 10px 26px rgba(0,0,0,.13); }
 .expense-dashboard-total p { color: var(--muted); font-size: .66rem; }
-.expense-dashboard-total strong { display: block; margin-top: 4px; font-size: 1.75rem; letter-spacing: -.045em; }
+.expense-dashboard-total > strong { display: block; font-size: 1.75rem; letter-spacing: -.045em; }
 .expense-category-chart > div:not(.expense-category-title) > div { height: 6px; margin-top: 7px; overflow: hidden; border-radius: 99px; background: rgba(184,247,228,.09); }
 .expense-category-chart > div:not(.expense-category-title) > div > span { display: block; height: 100%; border-radius: inherit; background: var(--mint); }
-.expense-category-chart { display: grid; gap: 13px; margin-top: 10px; padding: 16px; border: 1px solid var(--line); border-radius: 19px; background: var(--surface); }
+.expense-category-chart { display: grid; gap: 13px; padding-top: 15px; border-top: 1px solid var(--line); }
 .expense-category-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; padding-bottom: 11px; border-bottom: 1px solid var(--line); }
 .expense-category-title > strong { font-size: .78rem; }
 .expense-category-title > span { color: var(--muted); font-size: .61rem; }

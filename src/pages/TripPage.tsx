@@ -111,25 +111,18 @@ export function TripPage() {
           <ButtonLink to={`/viaje/${trip.id}/gastos`} size="small">Ver historial</ButtonLink>
         </div>
         <div className="expense-dashboard-total">
-          <div>
-            <p>Total de gastos</p>
-            <strong>{formatUsd(spent)}</strong>
-          </div>
-        </div>
-        {expenseCategories.length > 0 && (
-          <div className="expense-category-chart">
-            <div className="expense-category-title">
-              <strong>Por categoría</strong>
-              <span>{expenseCategories.length} categorías</span>
+          <strong>{formatUsd(spent)}</strong>
+          {expenseCategories.length > 0 && (
+            <div className="expense-category-chart">
+              {expenseCategories.slice(0, 4).map(([category, total]) => (
+                <div key={category}>
+                  <p><span>{categoryLabels[category] ?? category}</span><strong>{formatUsd(total)}</strong></p>
+                  <div><span style={{ width: `${spent ? (total / spent) * 100 : 0}%` }} /></div>
+                </div>
+              ))}
             </div>
-            {expenseCategories.slice(0, 4).map(([category, total]) => (
-              <div key={category}>
-                <p><span>{categoryLabels[category] ?? category}</span><strong>{formatUsd(total)}</strong></p>
-                <div><span style={{ width: `${spent ? (total / spent) * 100 : 0}%` }} /></div>
-              </div>
-            ))}
-          </div>
-        )}
+          )}
+        </div>
       </section>
     </>
   );
