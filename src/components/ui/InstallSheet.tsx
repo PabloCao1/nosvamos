@@ -9,7 +9,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 type MobilePlatform = "ios" | "android" | "other";
-const INSTALL_INVITE_SEEN_KEY = "nosvamos:install-invite-seen";
+const INSTALL_INVITE_SEEN_KEY = "nosvamos:install-invite-seen-this-session";
 
 function isInstalled() {
   return window.matchMedia("(display-mode: standalone)").matches
@@ -60,13 +60,13 @@ export function InstallSheet() {
   }, []);
 
   useEffect(() => {
-    if (isInstalled() || window.localStorage.getItem(INSTALL_INVITE_SEEN_KEY) === "true") return;
+    if (isInstalled() || window.sessionStorage.getItem(INSTALL_INVITE_SEEN_KEY) === "true") return;
     const timer = window.setTimeout(() => setOpen(true), 700);
     return () => window.clearTimeout(timer);
   }, [platform, setOpen]);
 
   const close = () => {
-    window.localStorage.setItem(INSTALL_INVITE_SEEN_KEY, "true");
+    window.sessionStorage.setItem(INSTALL_INVITE_SEEN_KEY, "true");
     setOpen(false);
   };
 
