@@ -2,12 +2,11 @@ import type { Activity } from "../../types/domain";
 import { Icon } from "../ui/Icon";
 import { activityIcon } from "../../lib/icons/entityIcons";
 import { EntitySyncStatus } from "../sync/EntitySyncStatus";
-import { formatClockTime } from "../../lib/dates/tripDateTime";
 
 export function ActivityCard({ activity, onEdit }: { activity: Activity; onEdit?: () => void }) {
   return <div className="sync-entity-wrap">
     <button className="activity-card" onClick={onEdit} disabled={!onEdit} aria-label={onEdit ? `Editar ${activity.title}` : undefined}>
-      <time>{formatClockTime(activity.startTime)}</time>
+      <time>{activity.startTime}</time>
       <span className={`activity-icon category-${activity.category}`}>
         <Icon name={activityIcon[activity.category]} size={28} weight="Filled" />
       </span>
