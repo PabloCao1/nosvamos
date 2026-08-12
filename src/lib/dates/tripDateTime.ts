@@ -18,8 +18,10 @@ export const timeInTripZone = (value: string, timeZone: string) => {
 
 export const dateTimeLocalInTripZone = (value: string, timeZone: string) => `${dateInTripZone(value, timeZone)}T${timeInTripZone(value, timeZone)}`;
 
-export const formatTripDateTime = (value: string, timeZone: string, options: Intl.DateTimeFormatOptions = {}) =>
-  new Intl.DateTimeFormat("es-AR", {
+export const formatTripDateTime = (value: string, timeZone: string, options: Intl.DateTimeFormatOptions = {}) => {
+  const formatted = new Intl.DateTimeFormat("es-AR", {
     ...(value.endsWith("Z") || /[+-]\d{2}:?\d{2}$/.test(value) ? { timeZone } : {}),
-    day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", ...options,
+    day: "numeric", month: "short", hour: "numeric", minute: "2-digit", hour12: true, ...options,
   }).format(new Date(value));
+  return formatted.replace(/\s*a\.\s*m\.?/gi, " am").replace(/\s*p\.\s*m\.?/gi, " pm");
+};
