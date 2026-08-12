@@ -8,6 +8,7 @@ export interface NotificationPreferences {
   dayBefore: boolean;
   shortlyBefore: boolean;
   reminderTimings: Record<ScheduledNotificationCategory, ReminderTimingPreferences>;
+  shortlyBeforeHours: Record<ScheduledNotificationCategory, number>;
 }
 
 export type ScheduledNotificationCategory = "flights" | "transport" | "lodging" | "activities";
@@ -20,6 +21,10 @@ const defaultTimings = (): NotificationPreferences["reminderTimings"] => ({
   activities: { twoDays: false, dayBefore: true, shortlyBefore: true },
 });
 
+const defaultShortlyBeforeHours = (): NotificationPreferences["shortlyBeforeHours"] => ({
+  flights: 2, transport: 2, lodging: 2, activities: 2,
+});
+
 export const defaultNotificationPreferences: NotificationPreferences = {
   groupChanges: true,
   flights: true,
@@ -30,6 +35,7 @@ export const defaultNotificationPreferences: NotificationPreferences = {
   dayBefore: true,
   shortlyBefore: true,
   reminderTimings: defaultTimings(),
+  shortlyBeforeHours: defaultShortlyBeforeHours(),
 };
 
 const storageKey = "brujula:notification-preferences:v1";
@@ -46,7 +52,12 @@ export function getNotificationPreferences(): NotificationPreferences {
         ...saved.reminderTimings?.[category],
       };
     }
-    return { ...defaultNotificationPreferences, ...saved, reminderTimings: timings };
+    return {
+      ...defaultNotificationPreferences,
+      ...saved,
+      reminderTimings: timings,
+      shortlyBeforeHours: { ...defaultShortlyBeforeHours(), ...saved.shortlyBeforeHours },
+    };
   } catch {
     return defaultNotificationPreferences;
   }

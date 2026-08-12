@@ -33,5 +33,15 @@ export function useNotificationPreferences() {
     void updatePushPreferences(next);
   };
 
-  return { preferences, update, updateTiming };
+  const updateShortlyBeforeHours = (category: keyof NotificationPreferences["shortlyBeforeHours"], hours: number) => {
+    const next = {
+      ...preferences,
+      shortlyBeforeHours: { ...preferences.shortlyBeforeHours, [category]: hours },
+    };
+    setPreferences(next);
+    saveNotificationPreferences(next);
+    void updatePushPreferences(next);
+  };
+
+  return { preferences, update, updateTiming, updateShortlyBeforeHours };
 }

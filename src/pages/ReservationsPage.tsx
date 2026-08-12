@@ -19,6 +19,9 @@ export function ReservationsPage() {
       return text.includes(search.toLowerCase()) && (filter === "all" || reservation.type === filter);
     });
   }, [filter, search, trip]);
+  const actions = useMemo(() => trip?.reservations.filter((reservation) =>
+    reservation.status !== "cancelled" && (Boolean(reservation.nextAction) || reservation.paymentStatus === "unpaid"),
+  ) ?? [], [trip]);
 
   if (isLoading) return <LoadingState />;
   if (isError || !trip) return <ErrorState onRetry={() => void refetch()} />;
@@ -35,11 +38,13 @@ export function ReservationsPage() {
           <button className={filter === value ? "active" : ""} onClick={() => setFilter(value)} key={value}>{label}</button>
         ))}
       </div>
-      <section className="reservation-alert">
+      {actions.length > 0 && <section className="reservation-alert">
         <Icon name="bell" size={21} />
-        <div><strong>2 acciones próximas</strong><p>Un check-in y un pago pendiente</p></div>
-        <Icon name="chevronRight" size={18} />
-      </section>
+        <div>
+          <strong>{actions.length} {actions.length === 1 ? "acción pendiente" : "acciones pendientes"}</strong>
+          <p>{actions.slice(0, 2).map((item) => item.nextAction || `Pago pendiente de ${item.title}`).join(" · ")}</p>
+        </div>
+      </section>}
       <section className="section-block">
         <div className="section-heading"><div><p className="eyebrow">Vista cronológica</p><h2>Próximas reservas</h2></div><span>{reservations.length}</span></div>
         <div className="card-stack">

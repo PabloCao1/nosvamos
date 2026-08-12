@@ -2,7 +2,10 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3.6.7";
 
 const category = (type: string) => type === "flight" ? "flights" : ["hotel", "apartment"].includes(type) ? "lodging" : ["train", "bus", "ferry", "car"].includes(type) ? "transport" : "activities";
-const shortHours = () => 1;
+const shortHours = (preferences: Record<string, unknown>, group: string) => {
+  const configured = Number((preferences.shortlyBeforeHours as Record<string, unknown> | undefined)?.[group]);
+  return [1, 2, 3, 6].includes(configured) ? configured : 2;
+};
 
 Deno.serve(async (request) => {
   if (request.headers.get("x-cron-secret") !== Deno.env.get("PUSH_CRON_SECRET")) return Response.json({ error: "Unauthorized" }, { status: 401 });
@@ -30,7 +33,7 @@ Deno.serve(async (request) => {
       const group = category(reservation.type);
       if (prefs[group] === false) continue;
       const timingPrefs = prefs.reminderTimings?.[group] ?? { twoDays: false, dayBefore: true, shortlyBefore: true };
-      const timings = [["twoDays", 48], ["dayBefore", 24], ["shortlyBefore", shortHours()]] as const;
+      const timings = [["twoDays", 48], ["dayBefore", 24], ["shortlyBefore", shortHours(prefs, group)]] as const;
       for (const [timing, hours] of timings) {
         if (!timingPrefs[timing]) continue;
         const due = new Date(reservation.start_at).getTime() - hours * 60 * 60 * 1000;

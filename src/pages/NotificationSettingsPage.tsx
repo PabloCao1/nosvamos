@@ -34,8 +34,14 @@ export function NotificationSettingsPage() {
       {scheduledItems.map(([key, label, description]) => <article className="notification-schedule" key={key}>
         <label className="notification-preference"><span><strong>{label}</strong><small>{description}</small></span><input type="checkbox" checked={preferences.preferences[key]} onChange={(event) => preferences.update(key, event.target.checked)} /></label>
         {preferences.preferences[key] && <div className="timing-options">
-          {([['twoDays', '2 días antes'], ['dayBefore', '1 día antes'], ['shortlyBefore', '1 hora antes']] as const).map(([timing, timingLabel]) =>
+          {([['twoDays', '2 días antes'], ['dayBefore', '1 día antes'], ['shortlyBefore', 'Unas horas antes']] as const).map(([timing, timingLabel]) =>
             <label key={timing}><input type="checkbox" checked={preferences.preferences.reminderTimings[key][timing]} onChange={(event) => preferences.updateTiming(key, timing, event.target.checked)} /><span>{timingLabel}</span></label>)}
+          {preferences.preferences.reminderTimings[key].shortlyBefore && <label className="timing-hours">
+            <span>Anticipación</span>
+            <select aria-label={`Horas de anticipación para ${label}`} value={preferences.preferences.shortlyBeforeHours[key]} onChange={(event) => preferences.updateShortlyBeforeHours(key, Number(event.target.value))}>
+              {[1, 2, 3, 6].map((hours) => <option key={hours} value={hours}>{hours} {hours === 1 ? "hora" : "horas"} antes</option>)}
+            </select>
+          </label>}
         </div>}
       </article>)}
     </section>

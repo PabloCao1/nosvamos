@@ -70,11 +70,12 @@ export async function syncLocalReminders(trips: Trip[], now = Date.now()) {
     if (reservation.status === "cancelled" || reservation.status === "completed") return [];
     if (!isEnabled(reservation.type, preferences)) return [];
     const rule = rules[reservation.type] ?? rules.other!;
+    const shortlyBeforeHours = preferences.shortlyBeforeHours[categoryFor(reservation.type)] ?? rule.shortlyBefore;
     const timing = preferences.reminderTimings[categoryFor(reservation.type)];
     return [
       timing.twoDays ? reminder(trip, reservation, "twoDays", 48, now) : null,
       timing.dayBefore ? reminder(trip, reservation, "dayBefore", rule.dayBefore, now) : null,
-      timing.shortlyBefore ? reminder(trip, reservation, "shortlyBefore", rule.shortlyBefore, now) : null,
+      timing.shortlyBefore ? reminder(trip, reservation, "shortlyBefore", shortlyBeforeHours, now) : null,
     ].filter((item): item is AppNotification => item !== null);
   }));
   if (!reminders.length) return reminders;

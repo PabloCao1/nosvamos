@@ -13,8 +13,8 @@ describe("syncLocalReminders", () => {
   });
 
   it("crea recordatorios sin volver a marcar como no leído uno existente", async () => {
-    // 11:00 in Buenos Aires: one hour before the wall-clock reservation time.
-    const now = new Date("2026-08-10T14:00:00Z").getTime();
+    // 10:00 in Buenos Aires: two hours before the wall-clock reservation time.
+    const now = new Date("2026-08-10T13:00:00Z").getTime();
     const reservation: Reservation = {
       ...createSyncableFields(),
       id: "flight-1",

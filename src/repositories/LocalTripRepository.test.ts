@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createSyncableFields, db } from "../lib/indexed-db/database";
-import type { Expense, Trip } from "../types/domain";
+import type { Expense, Reservation, Trip } from "../types/domain";
 import { LocalTripRepository } from "./LocalTripRepository";
 
 const tripFixture = (): Trip => ({
@@ -81,5 +81,21 @@ describe("LocalTripRepository", () => {
     const operations = await db.syncQueue.where("localId").equals(expense.id).toArray();
     expect(operations).toHaveLength(1);
     expect(operations[0]).toMatchObject({ action: "create", payload: { description: "Cambio final" } });
+  });
+
+  it("cancela una alta local eliminada antes de sincronizar", async () => {
+    await repository.addTrip(tripFixture());
+    const reservation = {
+      ...createSyncableFields(), id: "local-reservation", tripId: "test-trip", type: "hotel",
+      title: "Hotel", provider: "generic", providerName: "", providerReference: "",
+      startAt: "2030-01-02T15:00", city: "Madrid", status: "confirmed", paymentStatus: "unpaid",
+      totalAmount: 100, currency: "USD", participantIds: [], availableOffline: true, importSource: "manual",
+    } as Reservation;
+    await repository.addReservation(reservation);
+    await repository.deleteReservation(reservation);
+
+    expect(await db.syncQueue.where("localId").equals(reservation.id).count()).toBe(0);
+    expect((await repository.getById("test-trip"))?.reservations).toEqual([]);
+    expect((await db.reservations.get(reservation.id))?.deletedAt).toBeDefined();
   });
 });

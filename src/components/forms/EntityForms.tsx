@@ -9,6 +9,7 @@ import { BASE_CURRENCY, convertToUsd, SUPPORTED_CURRENCIES } from "../../lib/cur
 import { prepareReceiptImage } from "../../lib/images/receiptImage";
 import { deriveTripDateRange } from "../../lib/trips/deriveTripDateRange";
 import { tripRepository } from "../../repositories";
+import { supabase } from "../../lib/supabase";
 import type { Activity, Expense, Reservation, Trip } from "../../types/domain";
 import type { DocumentImportDraft } from "../../types/documentImport";
 import { Button } from "../ui/Button";
@@ -715,32 +716,59 @@ function FormActions({
 export function InviteForm({ close, trip: tripOverride }: { close: () => void; trip?: Trip }) {
   const { data: activeTrip } = useActiveTrip();
   const trip = tripOverride ?? activeTrip;
+  const queryClient = useQueryClient();
   const [email, setEmail] = useState("");
   const [registered, setRegistered] = useState(false);
+  const [linked, setLinked] = useState(false);
+  const [error, setError] = useState("");
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (!trip) return false;
+      const normalizedEmail = email.trim().toLowerCase();
+      const alreadyExists = trip.participants.some((participant) => participant.email?.toLowerCase() === normalizedEmail);
+      if (!alreadyExists) {
+        const label = normalizedEmail.split("@")[0].replace(/[._-]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+        const words = label.split(/\s+/);
+        await tripRepository.updateTrip({
+          ...trip,
+          participants: [...trip.participants, {
+            id: crypto.randomUUID(), name: label, email: normalizedEmail,
+            initials: words.slice(0, 2).map((word) => word[0]).join("").toUpperCase(),
+            color: "#8edcc5", role: "member", status: "active", joinedAt: new Date().toISOString(),
+          }],
+        });
+      }
+      const { data, error: inviteError } = await supabase.rpc("invite_trip_member_by_email", {
+        target_trip_id: trip.id, target_email: normalizedEmail,
+      });
+      if (inviteError) throw inviteError;
+      return Boolean(data);
+    },
+    onSuccess: async (isLinked) => {
+      setLinked(isLinked);
+      setRegistered(true);
+      await queryClient.invalidateQueries({ queryKey: ["trips"] });
+    },
+    onError: (reason) => setError(reason instanceof Error ? reason.message : "No pudimos registrar la invitación."),
+  });
 
   if (!trip) return null;
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
-    const invitations = JSON.parse(localStorage.getItem("brujula:pending-invitations") ?? "[]") as unknown[];
-    invitations.push({
-      id: crypto.randomUUID(),
-      tripId: trip.id,
-      email: email.trim().toLowerCase(),
-      role: "member",
-      createdAt: new Date().toISOString(),
-      status: "pending",
-    });
-    localStorage.setItem("brujula:pending-invitations", JSON.stringify(invitations));
-    setRegistered(true);
+    setError("");
+    mutation.mutate();
   };
 
   if (registered) {
     return (
       <div className="invite-success">
         <span>✓</span>
-        <h3>Invitación pendiente</h3>
-        <p>Registramos a {email.trim().toLowerCase()} como invitado pendiente de {trip.name}.</p>
+        <h3>{linked ? "Integrante agregado" : "Invitación pendiente"}</h3>
+        <p>{linked
+          ? `${email.trim().toLowerCase()} ya puede acceder a ${trip.name}.`
+          : `Cuando ${email.trim().toLowerCase()} cree su cuenta, tendrá acceso a ${trip.name}.`}</p>
         <Button variant="primary" fullWidth onClick={close}>Listo</Button>
       </div>
     );
@@ -766,7 +794,10 @@ export function InviteForm({ close, trip: tripOverride }: { close: () => void; t
         <span>+</span>
         <div><strong>Integrante</strong><p>Podrá ver y agregar información al viaje.</p></div>
       </div>
-      <Button type="submit" variant="primary" fullWidth>Registrar invitación</Button>
+      {error && <p className="form-error" role="alert">{error}</p>}
+      <Button type="submit" variant="primary" fullWidth disabled={mutation.isPending}>
+        {mutation.isPending ? "Guardando…" : "Registrar invitación"}
+      </Button>
     </form>
   );
 }

@@ -106,6 +106,31 @@ export class SupabaseTripRepository extends LocalTripRepository {
     }
   }
 
+  private async persistTravelers(trip: Trip) {
+    if (!trip.participants.length) return;
+    const { data: existing, error: readError } = await supabase.from("travelers")
+      .select("id,linked_user_id").eq("trip_id", trip.id);
+    if (readError) throw readError;
+    const linkedById = new Map((existing ?? []).map((item) => [item.id, item.linked_user_id]));
+    const { error } = await supabase.from("travelers").upsert(trip.participants.map((participant) => ({
+      id: participant.id,
+      client_id: participant.id,
+      trip_id: trip.id,
+      name: participant.name,
+      email: participant.email || null,
+      initials: participant.initials,
+      color: participant.color,
+      role: participant.role,
+      status: participant.status ?? "active",
+      joined_at: participant.joinedAt ?? new Date().toISOString(),
+      removed_at: participant.removedAt ?? null,
+      linked_user_id: linkedById.get(participant.id) ?? null,
+      updated_at: new Date().toISOString(),
+      deleted_at: null,
+    })));
+    if (error) throw error;
+  }
+
   private async replaceLinks(table: "reservation_participants" | "activity_participants", key: "reservation_id" | "activity_id", id: string, participantIds: string[]) {
     const { error: deleteError } = await supabase.from(table).delete().eq(key, id);
     if (deleteError) throw deleteError;
@@ -165,6 +190,7 @@ export class SupabaseTripRepository extends LocalTripRepository {
           const { error } = await supabase.from("trips").upsert(tripRow(trip, item.action === "create" ? auth.user?.id : undefined));
           if (error) throw error;
           await this.persistDestinations(trip);
+          await this.persistTravelers(trip);
         }
         if (item.entityType === "reservation") await db.reservations.update(item.localId, { syncStatus: "synced", lastSyncedAt: new Date().toISOString() });
         else if (item.entityType === "activity") await db.activities.update(item.localId, { syncStatus: "synced", lastSyncedAt: new Date().toISOString() });
@@ -285,7 +311,12 @@ export class SupabaseTripRepository extends LocalTripRepository {
     try {
       await this.flushPending();
       if (await db.syncQueue.where("status").equals("pending").count()) return super.getAll();
-      return await this.fetchRemote();
+      const local = await super.getAll();
+      const remote = await this.fetchRemote();
+      // Session restoration can briefly yield an empty result in an installed PWA.
+      // Keep the populated local copy instead of making the whole trip disappear.
+      if (!remote.length && local.length) return local;
+      return remote;
     } catch (error) {
       console.error("No se pudieron descargar los viajes de Supabase", error);
       return super.getAll();
