@@ -117,7 +117,7 @@ export function TripCalendar({ trip }: { trip: Trip }) {
             to={`/viaje/${trip.id}/evento/${event.kind}/${event.entityId}${event.moment ? `?momento=${event.moment}` : ""}`}
             aria-label={`Ver detalle de ${event.title}`}
           >
-            <span className={`calendar-event-icon ${event.tone}`}><Icon name={event.icon} size={26} weight="Filled" /></span>
+            <span className={`calendar-event-icon tone-${event.tone}`}><Icon name={event.icon} size={26} weight="Filled" /></span>
             <time className="calendar-event-time">{formatClockTime(event.time)}</time>
             <div>
               <h3>{event.title}</h3>

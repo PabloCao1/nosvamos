@@ -816,8 +816,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .calendar-event-icon.violet { color: var(--violet); }
 .calendar-event-icon.amber { color: var(--amber); }
 .calendar-event-icon.blue { color: var(--ice-blue); }
-.calendar-event-icon.auto, .calendar-event-icon.transport, .calendar-event-icon.lodging,
-.calendar-event-icon.excursion, .calendar-event-icon.activity, .calendar-event-icon.neutral { color: var(--entity-tone, var(--mint)); }
+.calendar-event-icon[class*="tone-"] { color: var(--entity-tone, var(--mint)); }
 .calendar-event h3 { overflow: hidden; font-size: .76rem; text-overflow: ellipsis; white-space: nowrap; }
 .calendar-event p { margin-top: 4px; overflow: hidden; color: var(--muted); font-size: .62rem; text-overflow: ellipsis; white-space: nowrap; }
 .calendar-event-time { display: block; color: var(--mint); font-size: .72rem; font-weight: 820; letter-spacing: .01em; line-height: 1; }
