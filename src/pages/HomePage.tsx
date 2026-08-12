@@ -14,8 +14,12 @@ export function HomePage() {
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const activeStatuses = new Set(["planning", "confirmed", "in_progress"]);
   const futureTrips = (trips ?? [])
-    .filter((trip) => new Date(`${trip.endDate || trip.startDate}T23:59:59`) >= today && trip.status !== "archived")
+    .filter((trip) => trip.status !== "archived" && (
+      activeStatuses.has(trip.status)
+      || new Date(`${trip.endDate || trip.startDate}T23:59:59`) >= today
+    ))
     .sort((a, b) => a.startDate.localeCompare(b.startDate));
 
   return (
