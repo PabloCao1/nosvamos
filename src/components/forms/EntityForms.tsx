@@ -683,7 +683,7 @@ function FormActions({
     <>
       <div className="form-actions">
         <Button type="submit" variant="primary" icon="save" fullWidth className="form-submit form-action-important" disabled={pending}>
-          {pending ? "Guardando…" : editing ? "Guardar cambios" : "Guardar en el dispositivo"}
+          {pending ? "Guardando…" : editing ? "Guardar cambios" : "Guardar"}
         </Button>
         {editing && (
           <Button
