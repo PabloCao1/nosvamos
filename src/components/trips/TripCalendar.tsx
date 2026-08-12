@@ -4,7 +4,7 @@ import type { Trip } from "../../types/domain";
 import type { IconName } from "../ui/Icon";
 import { Icon } from "../ui/Icon";
 import { DetailIndicator } from "../ui/Button";
-import { dateInTripZone, formatClockTime, timeInTripZone } from "../../lib/dates/tripDateTime";
+import { dateInTripZone, formatClockTime, localCalendarDate, timeInTripZone } from "../../lib/dates/tripDateTime";
 
 interface CalendarEvent {
   id: string;
@@ -76,7 +76,7 @@ export function TripCalendar({ trip }: { trip: Trip }) {
   }, [trip]);
 
   const dates = [...new Set(events.map((event) => event.date))];
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localCalendarDate();
   const initialDate = dates.find((date) => date >= today) ?? dates.at(-1) ?? trip.startDate;
   const [selectedDate, setSelectedDate] = useState(initialDate);
   const selectedEvents = events.filter((event) => event.date === selectedDate);

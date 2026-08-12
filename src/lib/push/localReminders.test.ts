@@ -13,7 +13,8 @@ describe("syncLocalReminders", () => {
   });
 
   it("crea recordatorios sin volver a marcar como no leído uno existente", async () => {
-    const now = new Date("2026-08-10T11:00:00Z").getTime();
+    // 11:00 in Buenos Aires: one hour before the wall-clock reservation time.
+    const now = new Date("2026-08-10T14:00:00Z").getTime();
     const reservation: Reservation = {
       ...createSyncableFields(),
       id: "flight-1",
@@ -23,7 +24,7 @@ describe("syncLocalReminders", () => {
       provider: "generic",
       providerName: "Aerolínea",
       providerReference: "ABC",
-      startAt: "2026-08-10T12:00:00Z",
+      startAt: "2026-08-10T12:00",
       city: "Ciudad de prueba",
       status: "confirmed",
       paymentStatus: "paid",

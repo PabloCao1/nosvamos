@@ -3,7 +3,7 @@ import { PageHeader } from "../components/layout/PageHeader";
 import { EmptyState, ErrorState, LoadingState } from "../components/ui/PageState";
 import { Icon } from "../components/ui/Icon";
 import { useTrips } from "../hooks/useTrips";
-import { dateInTripZone, formatClockTime, timeInTripZone } from "../lib/dates/tripDateTime";
+import { dateInTripZone, formatClockTime, localCalendarDate, timeInTripZone } from "../lib/dates/tripDateTime";
 import { activityIcon, reservationIcon } from "../lib/icons/entityIcons";
 
 type TodayItem = {
@@ -16,9 +16,8 @@ export function TodayPage() {
   if (isLoading) return <LoadingState />;
   if (isError) return <ErrorState onRetry={() => void refetch()} />;
 
-  const now = new Date().toISOString();
+  const today = localCalendarDate();
   const items: TodayItem[] = (trips ?? []).flatMap((trip) => {
-    const today = dateInTripZone(now, trip.timezone);
     const reservations = trip.reservations.flatMap((reservation) => {
       const result: TodayItem[] = [];
       if (dateInTripZone(reservation.startAt, trip.timezone) === today) result.push({

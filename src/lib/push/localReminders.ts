@@ -1,6 +1,7 @@
 import type { Reservation, ReservationType, Trip } from "../../types/domain";
 import { db, type AppNotification, type NotificationKind } from "../indexed-db/database";
 import { getNotificationPreferences, type NotificationPreferences } from "./notificationPreferences";
+import { wallClockToInstant } from "../dates/tripDateTime";
 
 const HOUR = 60 * 60 * 1000;
 
@@ -45,7 +46,7 @@ function reminder(
   hours: number,
   now: number,
 ): AppNotification | null {
-  const startsAt = new Date(reservation.startAt).getTime();
+  const startsAt = wallClockToInstant(reservation.startAt, trip.timezone);
   const dueAt = startsAt - hours * HOUR;
   if (!Number.isFinite(startsAt) || now < dueAt || now >= startsAt) return null;
   const id = `reminder:${reservation.id}:${offset}`;

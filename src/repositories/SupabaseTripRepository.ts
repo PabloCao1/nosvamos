@@ -1,5 +1,6 @@
 import { db } from "../lib/indexed-db/database";
 import { deriveTripDateRange } from "../lib/trips/deriveTripDateRange";
+import { wallClockToInstant } from "../lib/dates/tripDateTime";
 import { supabase } from "../lib/supabase";
 import type { Activity, Destination, Expense, ItineraryDay, Participant, Reservation, Trip } from "../types/domain";
 import { LocalTripRepository } from "./LocalTripRepository";
@@ -82,21 +83,7 @@ const tripRow = (trip: Trip, ownerId?: string) => ({
   status: trip.status, updated_at: new Date().toISOString(), deleted_at: trip.deletedAt ?? null, version: trip.version,
 });
 
-const wallClockToIso = (value: string, timezone: string) => {
-  if (value.endsWith("Z") || /[+-]\d{2}:?\d{2}$/.test(value)) return value;
-  const desired = new Date(`${value.length === 16 ? `${value}:00` : value}Z`).getTime();
-  let instant = desired;
-  const formatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23",
-  });
-  for (let index = 0; index < 2; index += 1) {
-    const parts = Object.fromEntries(formatter.formatToParts(new Date(instant)).map((part) => [part.type, part.value]));
-    const represented = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), Number(parts.hour), Number(parts.minute), Number(parts.second));
-    instant += desired - represented;
-  }
-  return new Date(instant).toISOString();
-};
+const wallClockToIso = (value: string, timezone: string) => new Date(wallClockToInstant(value, timezone)).toISOString();
 
 export class SupabaseTripRepository extends LocalTripRepository {
   private async persistDestinations(trip: Trip) {
