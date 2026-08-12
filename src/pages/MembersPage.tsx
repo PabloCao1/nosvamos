@@ -24,7 +24,7 @@ export function MembersPage() {
           <article className="member-card" key={person.id}>
             <button className="member-summary" onClick={() => navigate(`/viaje/${trip.id}/integrantes/${person.id}`)}>
               <ParticipantAvatar participant={person} className="large-avatar member-avatar" />
-              <div><h2>{person.name}</h2><p>{person.email ?? "Sin email"} · {person.role === "owner" ? "Propietario" : "Integrante"}</p></div>
+              <div><h2>{person.name}</h2><p>{person.role === "owner" ? "Propietario" : "Integrante"}</p></div>
               <Icon name="chevronRight" size={18} />
             </button>
           </article>

@@ -1676,6 +1676,26 @@ body .entity-form :is(input:not([type="checkbox"]):not([type="radio"]), select, 
 body .personal-data-form :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) { border-radius: 10px; background: rgba(255,255,255,.025); }
 body :is(.personal-data-form, .password-action-card, .auth-card, .confirm-dialog) { border-radius: 16px; }
 
+body .member-list { gap: 12px; }
+body .member-card { border-radius: 16px; }
+body .member-summary {
+  grid-template-columns: 58px minmax(0,1fr) 22px;
+  min-height: 92px;
+  gap: 14px;
+  padding: 16px;
+}
+body .member-avatar {
+  width: 58px;
+  height: 58px;
+  min-width: 58px;
+  min-height: 58px;
+  flex-basis: 58px;
+  border-radius: 19px;
+  font-size: .82rem;
+}
+body .member-summary h2 { font-size: 1rem; }
+body .member-summary p { margin-top: 6px; font-size: .7rem; }
+
 /* The floating glass navigation and FAB deliberately remain unchanged. */
 @media (min-width: 700px) {
   body .page-content { padding-right: 24px; padding-left: 24px; }
