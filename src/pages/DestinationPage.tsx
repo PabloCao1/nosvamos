@@ -1,11 +1,14 @@
-import { Link, useParams } from "react-router-dom";
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { PageHeader } from "../components/layout/PageHeader";
 import { Icon } from "../components/ui/Icon";
-import { DetailIndicator } from "../components/ui/Button";
+import { Button, DetailIndicator } from "../components/ui/Button";
 import { ErrorState, LoadingState } from "../components/ui/PageState";
 import { useTrip } from "../hooks/useTrips";
 import { formatUsd } from "../lib/currency/exchangeRates";
 import { formatTripDateTime } from "../lib/dates/tripDateTime";
+import { tripRepository } from "../repositories";
 
 const date = (value: string) =>
   new Intl.DateTimeFormat("es-AR", { day: "numeric", month: "long", year: "numeric" })
@@ -15,7 +18,20 @@ const transportTypes = new Set(["flight", "train", "bus", "ferry", "car"]);
 
 export function DestinationPage() {
   const { tripId, destinationId } = useParams();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const { data: trip, isLoading, isError, refetch } = useTrip(tripId);
+  const deletion = useMutation({
+    mutationFn: async () => {
+      if (!trip || !destinationId) throw new Error("Destino no encontrado");
+      await tripRepository.updateTrip({ ...trip, destinations: trip.destinations.filter((item) => item.id !== destinationId) });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["trips"] });
+      navigate(`/viaje/${tripId}`);
+    },
+  });
 
   if (isLoading) return <LoadingState />;
   if (isError || !trip) return <ErrorState onRetry={() => void refetch()} />;
@@ -177,6 +193,22 @@ export function DestinationPage() {
           </div>
         </article>
       </section>
+      <section className="section-block">
+        <Button variant="danger" icon="trash" fullWidth onClick={() => setConfirmingDelete(true)}>Eliminar destino</Button>
+      </section>
+      {confirmingDelete && <div className="confirm-layer" role="presentation">
+        <button type="button" className="confirm-backdrop" onClick={() => setConfirmingDelete(false)} aria-label="Cancelar eliminación" />
+        <section className="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="delete-destination-title">
+          <div className="confirm-icon">!</div>
+          <h2 id="delete-destination-title">¿Eliminar {destination.city}?</h2>
+          <p>Se quitará del itinerario. Las reservas y actividades asociadas no se eliminarán.</p>
+          {deletion.error && <p className="form-error">No pudimos eliminar el destino. Probá nuevamente.</p>}
+          <div className="confirm-actions">
+            <Button variant="secondary" onClick={() => setConfirmingDelete(false)}>Cancelar</Button>
+            <Button variant="danger" icon="trash" disabled={deletion.isPending} onClick={() => deletion.mutate()}>{deletion.isPending ? "Eliminando…" : "Eliminar"}</Button>
+          </div>
+        </section>
+      </div>}
     </>
   );
 }

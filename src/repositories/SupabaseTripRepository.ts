@@ -89,14 +89,23 @@ const wallClockToIso = (value: string, timezone: string) => {
 
 export class SupabaseTripRepository extends LocalTripRepository {
   private async persistDestinations(trip: Trip) {
-    if (!trip.destinations.length) return;
-    const { error } = await supabase.from("destinations").upsert(trip.destinations.map((destination, position) => ({
-      id: destination.id, client_id: destination.id, trip_id: trip.id, city: destination.city,
-      country: destination.country, arrival_date: destination.arrivalDate || null,
-      departure_date: destination.departureDate || null, address: destination.address ?? null,
-      image_path: destination.imageUrl || null, position, updated_at: new Date().toISOString(),
-    })));
-    if (error) throw error;
+    const { data: remote, error: readError } = await supabase.from("destinations").select("id").eq("trip_id", trip.id).is("deleted_at", null);
+    if (readError) throw readError;
+    const currentIds = new Set(trip.destinations.map((destination) => destination.id));
+    const removedIds = (remote ?? []).map((row) => row.id).filter((id) => !currentIds.has(id));
+    if (removedIds.length) {
+      const { error } = await supabase.from("destinations").update({ deleted_at: new Date().toISOString() }).in("id", removedIds);
+      if (error) throw error;
+    }
+    if (trip.destinations.length) {
+      const { error } = await supabase.from("destinations").upsert(trip.destinations.map((destination, position) => ({
+        id: destination.id, client_id: destination.id, trip_id: trip.id, city: destination.city,
+        country: destination.country, arrival_date: destination.arrivalDate || null,
+        departure_date: destination.departureDate || null, address: destination.address ?? null,
+        image_path: destination.imageUrl || null, position, updated_at: new Date().toISOString(), deleted_at: null,
+      })));
+      if (error) throw error;
+    }
   }
 
   private async replaceLinks(table: "reservation_participants" | "activity_participants", key: "reservation_id" | "activity_id", id: string, participantIds: string[]) {
@@ -159,6 +168,7 @@ export class SupabaseTripRepository extends LocalTripRepository {
           const { data: auth } = await supabase.auth.getUser();
           const { error } = await supabase.from("trips").upsert(tripRow(trip, item.action === "create" ? auth.user?.id : undefined));
           if (error) throw error;
+          await this.persistDestinations(trip);
         }
         await db.syncQueue.delete(item.id);
       } catch (error) {
