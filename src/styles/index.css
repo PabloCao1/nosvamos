@@ -755,7 +755,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .expense-dashboard { margin-top: 34px; }
 .expense-dashboard-heading { display: flex; align-items: center; justify-content: space-between; }
 .expense-dashboard-heading h2 { font-size: 1.28rem; }
-.expense-dashboard-total { display: grid; gap: 17px; margin-top: 13px; padding: 17px; border: 1px solid rgba(184,247,228,.15); border-radius: 19px; background: linear-gradient(135deg, rgba(184,247,228,.1), transparent 58%), #292c31; box-shadow: 0 10px 26px rgba(0,0,0,.13); }
+.expense-dashboard-total { display: grid; gap: 17px; margin-top: 13px; }
 .expense-dashboard-total p { color: var(--muted); font-size: .66rem; }
 .expense-dashboard-total > strong { display: block; font-size: 1.75rem; letter-spacing: -.045em; }
 .expense-category-chart > div:not(.expense-category-title) > div { height: 6px; margin-top: 7px; overflow: hidden; border-radius: 99px; background: rgba(184,247,228,.09); }
@@ -767,9 +767,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .expense-category-chart p { display: flex; justify-content: space-between; gap: 12px; font-size: .66rem; }
 .expense-category-chart p > span { color: var(--muted); }
 .expense-category-chart p > strong { font-size: .68rem; }
-.expense-category-chart > div:nth-child(3) > div > span { background: var(--violet); }
-.expense-category-chart > div:nth-child(4) > div > span { background: var(--coral); }
-.expense-category-chart > div:nth-child(5) > div > span { background: var(--ice-blue); }
+.expense-category-chart .expense-category-transport > div > span { background: var(--tone-transport); }
+.expense-category-chart .expense-category-lodging > div > span { background: var(--tone-lodging); }
+.expense-category-chart .expense-category-food > div > span,
+.expense-category-chart .expense-category-shopping > div > span { background: var(--tone-excursion); }
+.expense-category-chart .expense-category-activities > div > span { background: var(--tone-activity); }
+.expense-category-chart .expense-category-insurance > div > span,
+.expense-category-chart .expense-category-other > div > span { background: var(--mint-deep); }
 .trip-calendar { margin-top: 31px; }
 .calendar-heading { align-items: center; }
 .calendar-date-strip { display: flex; max-width: calc(100% + 36px); gap: 8px; margin: 0 -18px; padding: 2px 18px 8px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }

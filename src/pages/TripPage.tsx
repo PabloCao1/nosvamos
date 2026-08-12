@@ -32,13 +32,18 @@ export function TripPage() {
     insurance: "Seguros",
     other: "Otros",
   };
-  const expenseCategories = Object.entries(
-    activeExpenses.reduce<Record<string, number>>((totals, expense) => {
-      const category = expense.categoryLabel ?? expense.category;
-      totals[category] = (totals[category] ?? 0) + expense.convertedAmount;
+  const expenseCategories = Object.values(
+    activeExpenses.reduce<Record<string, { category: string; label: string; total: number }>>((totals, expense) => {
+      const key = expense.categoryLabel ?? expense.category;
+      totals[key] ??= {
+        category: expense.category,
+        label: expense.categoryLabel ?? categoryLabels[expense.category] ?? expense.category,
+        total: 0,
+      };
+      totals[key].total += expense.convertedAmount;
       return totals;
     }, {}),
-  ).sort(([, first], [, second]) => second - first);
+  ).sort((first, second) => second.total - first.total);
   const sortedDestinations = [...trip.destinations].sort((first, second) =>
     (first.arrivalDate || "9999-12-31").localeCompare(second.arrivalDate || "9999-12-31") || first.departureDate.localeCompare(second.departureDate));
   const transports = trip.reservations
@@ -114,9 +119,9 @@ export function TripPage() {
           <strong>{formatUsd(spent)}</strong>
           {expenseCategories.length > 0 && (
             <div className="expense-category-chart">
-              {expenseCategories.slice(0, 4).map(([category, total]) => (
-                <div key={category}>
-                  <p><span>{categoryLabels[category] ?? category}</span><strong>{formatUsd(total)}</strong></p>
+              {expenseCategories.slice(0, 4).map(({ category, label, total }) => (
+                <div className={`expense-category-${category}`} key={label}>
+                  <p><span>{label}</span><strong>{formatUsd(total)}</strong></p>
                   <div><span style={{ width: `${spent ? (total / spent) * 100 : 0}%` }} /></div>
                 </div>
               ))}
