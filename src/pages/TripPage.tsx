@@ -11,9 +11,23 @@ import { ErrorState, LoadingState } from "../components/ui/PageState";
 import { useTrip } from "../hooks/useTrips";
 import { formatUsd } from "../lib/currency/exchangeRates";
 import { reservationIcon, reservationTone } from "../lib/icons/entityIcons";
-import { formatTripDateTime } from "../lib/dates/tripDateTime";
+import { dateInTripZone, formatClockTime, timeInTripZone } from "../lib/dates/tripDateTime";
 
-const transportDateTime = (value: string, timezone: string) => formatTripDateTime(value, timezone);
+const transportLabels: Record<string, string> = {
+  flight: "Vuelo",
+  train: "Tren",
+  bus: "Bus",
+  ferry: "Ferry",
+  car: "Auto",
+};
+
+const transportDateTime = (value: string, timezone: string) => {
+  const [year, month, day] = dateInTripZone(value, timezone).split("-").map(Number);
+  const monthLabel = new Intl.DateTimeFormat("es-AR", { month: "short", timeZone: "UTC" })
+    .format(new Date(Date.UTC(year, month - 1, day, 12)))
+    .replace(".", "");
+  return `${day} ${monthLabel.charAt(0).toUpperCase()}${monthLabel.slice(1)} · ${formatClockTime(timeInTripZone(value, timezone))}`;
+};
 
 const semanticExpenseCategory = (category: string, label: string, linkedType?: string) => {
   if (linkedType === "car") return "auto";
@@ -124,10 +138,9 @@ export function TripPage() {
             return (
               <Link className={`route-connector route-${transport.type} tone-${reservationTone[transport.type]}`} key={transport.id} to={`/viaje/${trip.id}/evento/reservation/${transport.id}`}>
                 <span><Icon name={reservationIcon[transport.type]} size={32} weight="Filled" /></span>
-                <strong>{transport.title}</strong>
-                <small>{transport.originPlace ?? transport.originCity ?? "Origen"} → {transport.destinationPlace ?? transport.destinationCity ?? transport.city}</small>
-                <small>{transportDateTime(transport.startAt, trip.timezone)}</small>
-                {transport.serviceNumber && <small>{transport.serviceNumber}</small>}
+                <strong>{transportLabels[transport.type] ?? "Transporte"}{transport.serviceNumber ? ` ${transport.serviceNumber}` : ""}</strong>
+                <small className="route-journey">{transport.originCity ?? "Origen"} → {transport.destinationCity ?? transport.city}</small>
+                <small className="route-date">{transportDateTime(transport.startAt, trip.timezone)}</small>
               </Link>
             );
           })}

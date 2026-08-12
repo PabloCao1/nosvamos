@@ -463,7 +463,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .destination-card div { padding: 11px; }
 .destination-card h3 { font-size: .85rem; }
 .destination-card p { margin-top: 3px; color: var(--muted); font-size: .65rem; }
-.route-connector { position: relative; display: flex; align-items: center; justify-content: flex-start; flex-direction: column; width: 88px; min-width: 88px; padding-top: 38px; color: var(--muted); text-align: center; text-decoration: none; }
+.route-connector { position: relative; display: flex; align-items: center; justify-content: flex-start; flex-direction: column; width: 112px; min-width: 112px; padding-top: 38px; color: var(--muted); text-align: center; text-decoration: none; }
 .route-connector::before, .route-connector::after { width: 20px; height: 1px; background: rgba(184,247,228,.34); content: ""; }
 .route-connector::before { position: absolute; top: 62px; left: 0; }
 .route-connector::after { position: absolute; top: 62px; right: 0; }
@@ -471,6 +471,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .route-connector:active > span { transform: scale(.9); opacity: .72; }
 .route-connector strong { margin-top: 9px; color: var(--text); font-size: .67rem; line-height: 1.2; }
 .route-connector small { margin-top: 3px; color: var(--muted); font-size: .57rem; line-height: 1.2; text-transform: capitalize; }
+.route-connector .route-journey { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; text-transform: none; }
+.route-connector .route-date { white-space: nowrap; text-transform: none; }
 .route-train > span { color: var(--mint); }
 .route-bus > span, .route-ferry > span { color: var(--ice-blue); }
 .route-car > span { color: var(--amber); }
