@@ -15,6 +15,32 @@ import { formatTripDateTime } from "../lib/dates/tripDateTime";
 
 const transportDateTime = (value: string, timezone: string) => formatTripDateTime(value, timezone);
 
+const semanticExpenseCategory = (category: string, label: string, linkedType?: string) => {
+  if (linkedType === "car") return "auto";
+  if (linkedType === "activity") return "excursion";
+  if (category !== "other") return category;
+  const normalized = label.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+  if (/auto|coche|alquiler/.test(normalized)) return "auto";
+  if (/aloj|hotel|departamento|airbnb/.test(normalized)) return "lodging";
+  if (/transport|vuelo|avion|tren|bus|ferry|traslado/.test(normalized)) return "transport";
+  if (/excursion|tour|entrada|experiencia/.test(normalized)) return "excursion";
+  if (/actividad|evento/.test(normalized)) return "activities";
+  if (/comida|restaurant|bar|cafe/.test(normalized)) return "food";
+  return "other";
+};
+
+const expenseCategoryColor: Record<string, string> = {
+  auto: "var(--tone-auto)",
+  transport: "var(--tone-transport)",
+  lodging: "var(--tone-lodging)",
+  excursion: "var(--tone-excursion)",
+  food: "var(--tone-excursion)",
+  shopping: "var(--tone-excursion)",
+  activities: "var(--tone-activity)",
+  insurance: "var(--mint)",
+  other: "var(--mint)",
+};
+
 export function TripPage() {
   const { tripId } = useParams();
   const { data: trip, isLoading, isError, refetch } = useTrip(tripId);
@@ -35,12 +61,12 @@ export function TripPage() {
   const expenseCategories = Object.values(
     activeExpenses.reduce<Record<string, { category: string; label: string; total: number }>>((totals, expense) => {
       const linkedType = trip.reservations.find((reservation) => reservation.id === expense.reservationId)?.type;
-      const semanticCategory = linkedType === "car" ? "auto" : linkedType === "activity" ? "excursion" : expense.category;
       const semanticLabel = linkedType === "car"
         ? "Auto"
         : linkedType === "activity"
           ? "Excursiones"
           : expense.categoryLabel ?? categoryLabels[expense.category] ?? expense.category;
+      const semanticCategory = semanticExpenseCategory(expense.category, semanticLabel, linkedType);
       const key = `${semanticCategory}:${semanticLabel}`;
       totals[key] ??= {
         category: semanticCategory,
@@ -129,7 +155,7 @@ export function TripPage() {
               {expenseCategories.slice(0, 4).map(({ category, label, total }) => (
                 <div className={`expense-category-${category}`} key={label}>
                   <p><span>{label}</span><strong>{formatUsd(total)}</strong></p>
-                  <div><span style={{ width: `${spent ? (total / spent) * 100 : 0}%` }} /></div>
+                  <div><span style={{ width: `${spent ? (total / spent) * 100 : 0}%`, backgroundColor: expenseCategoryColor[category] ?? "var(--mint)" }} /></div>
                 </div>
               ))}
             </div>
