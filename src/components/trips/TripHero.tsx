@@ -13,7 +13,8 @@ export function TripHero({ trip }: { trip: Trip }) {
   const nights = Math.max(0, Math.round((end.getTime() - start.getTime()) / 86_400_000));
   const compactDate = (value: string) => {
     const [, month, day] = value.slice(0, 10).split("-").map(Number);
-    return `${day}/${month}`;
+    const monthName = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"][month - 1];
+    return `${String(day).padStart(2, "0")} ${monthName}`;
   };
   const dates = `${compactDate(trip.startDate)} - ${compactDate(trip.endDate)}`;
 
