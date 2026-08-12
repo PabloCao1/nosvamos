@@ -145,7 +145,9 @@ export function MemberDetailPage() {
             const other = byId.get(memberPays ? settlement.toParticipantId : settlement.fromParticipantId);
             return (
               <article key={`${settlement.fromParticipantId}-${settlement.toParticipantId}`}>
-                <span className="mini-avatar" style={{ background: other?.color }}>{other?.initials}</span>
+                {other
+                  ? <ParticipantAvatar participant={other} className="mini-avatar" />
+                  : <span className="mini-avatar">?</span>}
                 <div><strong>{memberPays ? `Pagarle a ${other?.name}` : `${other?.name} debe pagarle`}</strong><p>{memberPays ? "Pago pendiente" : "Importe por recibir"}</p></div>
                 <b>{formatUsd(settlement.amount)}</b>
               </article>

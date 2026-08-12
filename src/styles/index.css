@@ -842,6 +842,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .event-people { display: grid; gap: 8px; }
 .event-people > div { display: flex; align-items: center; gap: 11px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 17px; background: var(--surface); }
 .event-people > div > span { display: grid; place-items: center; width: 39px; height: 39px; border-radius: 50%; color: #fff; font-size: .67rem; font-weight: 750; }
+.event-person-avatar img { display: block; width: 100%; height: 100%; border-radius: inherit; object-fit: cover; object-position: center; }
 .event-people strong, .event-people small { display: block; }
 .event-people strong { font-size: .76rem; }
 .event-people small { margin-top: 3px; color: var(--muted); font-size: .62rem; }

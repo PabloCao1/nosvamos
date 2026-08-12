@@ -11,6 +11,7 @@ import { formatClockTime, formatShortDate, formatTripDateTime } from "../lib/dat
 import { tripRepository } from "../repositories";
 import type { Activity, Reservation, Trip } from "../types/domain";
 import { reservationIcon, reservationTone } from "../lib/icons/entityIcons";
+import { ParticipantAvatar } from "../components/ui/AvatarGroup";
 
 const transportTypes = new Set(["flight", "train", "bus", "ferry", "car"]);
 const lodgingTypes = new Set(["hotel", "apartment"]);
@@ -65,7 +66,7 @@ function Participants({ ids, trip }: { ids: string[]; trip: Trip }) {
       <div className="event-people">
         {people.map((person) => person && (
           <div key={person.id}>
-            <span style={{ background: person.color }}>{person.initials}</span>
+            <ParticipantAvatar participant={person} className="event-person-avatar" />
             <div><strong>{person.name}</strong><small>{person.email ?? "Integrante del viaje"}</small></div>
           </div>
         ))}
