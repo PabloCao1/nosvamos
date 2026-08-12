@@ -67,10 +67,10 @@ export function PersonalDataPage() {
         {avatarUrl ? <img src={avatarUrl} alt="Foto de perfil" /> : <div className="large-avatar">{initials}</div>}
         <label className="profile-photo-button">Cambiar foto<input type="file" accept="image/*" onChange={(event) => void uploadAvatar(event)} hidden /></label>
       </div>
-      <label className="form-field"><span>Nombre</span><input value={firstName} onChange={(event) => setFirstName(event.target.value)} required /></label>
-      <label className="form-field"><span>Apellido</span><input value={lastName} onChange={(event) => setLastName(event.target.value)} required /></label>
+      <label className="form-field"><span>Nombre <small>Opcional</small></span><input value={firstName} onChange={(event) => setFirstName(event.target.value)} /></label>
+      <label className="form-field"><span>Apellido <small>Opcional</small></span><input value={lastName} onChange={(event) => setLastName(event.target.value)} /></label>
       <label className="form-field"><span>Correo electrónico</span><input value={user?.email ?? ""} disabled /></label>
-      <label className="form-field"><span>Fecha de nacimiento</span><input type="date" value={birthDate} max={new Date().toISOString().slice(0, 10)} onChange={(event) => setBirthDate(event.target.value)} /></label>
+      <label className="form-field"><span>Fecha de nacimiento <small>Opcional</small></span><input type="date" value={birthDate} max={new Date().toISOString().slice(0, 10)} onChange={(event) => setBirthDate(event.target.value)} /></label>
       {error && <p className="form-error" role="alert">{error}</p>}
       {message && <p className="form-success" role="status">{message}</p>}
       <Button type="submit" variant="primary" fullWidth disabled={pending}>{pending ? "Guardando..." : "Guardar"}</Button>
