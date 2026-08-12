@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { PageHeader } from "../components/layout/PageHeader";
 import { Icon } from "../components/ui/Icon";
 import { Button } from "../components/ui/Button";
+import { ParticipantAvatar } from "../components/ui/AvatarGroup";
 import { ErrorState, LoadingState } from "../components/ui/PageState";
 import { calculateBalances, calculateSettlements } from "../lib/expenses/calculateBalances";
 import { useTrip } from "../hooks/useTrips";
@@ -70,23 +71,22 @@ export function ExpensesPage() {
       <section className="section-block">
         <div className="section-heading"><div><h2>Quién debe a quién</h2></div></div>
         <div className="settlements-card">
-          {settlements.map((settlement) => (
-            <div className="settlement-row" key={`${settlement.fromParticipantId}-${settlement.toParticipantId}`}>
+          {settlements.map((settlement) => {
+            const fromParticipant = byId.get(settlement.fromParticipantId);
+            const toParticipant = byId.get(settlement.toParticipantId);
+            if (!fromParticipant || !toParticipant) return null;
+            return <div className="settlement-row" key={`${settlement.fromParticipantId}-${settlement.toParticipantId}`}>
               <div className="settlement-people" aria-hidden="true">
-                <span className="mini-avatar" style={{ background: byId.get(settlement.fromParticipantId)?.color }}>
-                  {byId.get(settlement.fromParticipantId)?.initials}
-                </span>
+                <ParticipantAvatar participant={fromParticipant} className="mini-avatar" />
                 <Icon name="chevronRight" size={17} />
-                <span className="mini-avatar" style={{ background: byId.get(settlement.toParticipantId)?.color }}>
-                  {byId.get(settlement.toParticipantId)?.initials}
-                </span>
+                <ParticipantAvatar participant={toParticipant} className="mini-avatar" />
               </div>
               <div className="settlement-copy">
-                <p><strong>{byId.get(settlement.fromParticipantId)?.name}</strong> le debe a <strong>{byId.get(settlement.toParticipantId)?.name}</strong></p>
+                <p><strong>{fromParticipant.name}</strong> le debe a <strong>{toParticipant.name}</strong></p>
                 <b>{formatUsd(settlement.amount)}</b>
               </div>
             </div>
-          ))}
+          })}
           {settlements.length === 0 && (
             <div className="settlements-empty">
               <Icon name="check" size={24} weight="Filled" />
@@ -101,7 +101,7 @@ export function ExpensesPage() {
         <div className="balance-grid">
           {balances.map((balance) => (
             <article key={balance.participant.id}>
-              <span className="mini-avatar" style={{ background: balance.participant.color }}>{balance.participant.initials}</span>
+              <ParticipantAvatar participant={balance.participant} className="mini-avatar" />
               <div>
                 <strong>{balance.participant.name}</strong>
               </div>
