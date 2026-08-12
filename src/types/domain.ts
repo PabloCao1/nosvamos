@@ -131,6 +131,8 @@ export interface Reservation extends SyncableEntity {
   paymentMethodLast4?: string;
   status: "draft" | "pending" | "confirmed" | "cancelled" | "completed";
   paymentStatus: "unpaid" | "partially_paid" | "paid" | "refunded";
+  paidBy?: string;
+  payOnArrival?: boolean;
   totalAmount: number;
   currency: string;
   originalTotalAmount?: number;
