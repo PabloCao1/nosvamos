@@ -400,7 +400,7 @@ export function ReservationForm({
       payOnArrival: entity.payOnArrival, confirmed: entity.status === "confirmed",
       differentDropoffCity: entity.type === "car" && Boolean(entity.destinationCity && entity.destinationCity !== entity.originCity),
     } : {
-      title: importDraft?.title ?? "",
+      title: carRental ? "Alquiler de auto" : importDraft?.title ?? "",
       type: carRental ? "car" : importDraft && importDraft.kind !== "expense" && importDraft.kind !== "other" ? importDraft.kind : lodging ? "hotel" : "flight",
       providerName: importDraft?.providerName ?? "", providerReference: importDraft?.providerReference ?? "",
       confirmationCode: importDraft?.confirmationCode ?? "", startAt: importDraft?.startAt ?? "", endAt: importDraft?.endAt ?? "",
@@ -444,7 +444,7 @@ export function ReservationForm({
     if (carRental && values.differentDropoffCity && !values.destinationCity?.trim()) { setError("destinationCity", { message: "Ingresá la ciudad de entrega" }); return; }
     if (carRental && !values.endAt) { setError("endAt", { message: "Ingresá la fecha de entrega" }); return; }
     if (carRental && !values.paidBy) { setError("paidBy", { message: "Seleccioná quién pagó" }); return; }
-    if (!isLodging && !values.providerName?.trim()) { setError("providerName", { message: "Ingresá el proveedor" }); return; }
+    if (!isLodging && !carRental && !values.providerName?.trim()) { setError("providerName", { message: "Ingresá el proveedor" }); return; }
     if (!isLodging && !values.providerReference?.trim()) { setError("providerReference", { message: "Ingresá el código" }); return; }
     const conversion = await convertToUsd(values.totalAmount, values.currency).catch((reason: unknown) => {
       setError("root", {
@@ -460,9 +460,9 @@ export function ReservationForm({
         participantIds: trip.participants.map((person) => person.id),
         availableOffline: true, importSource: "manual" as const,
       }),
-      title: values.title,
+      title: carRental ? `Auto en ${values.originCity?.trim() || "destino"}` : values.title,
       type: values.type,
-      providerName: values.providerName?.trim() || "Sin plataforma",
+      providerName: values.providerName?.trim() || (carRental ? "Alquiler de auto" : "Sin plataforma"),
       providerReference: values.providerReference?.trim() || "Sin código",
       confirmationCode: values.confirmationCode?.trim() || values.providerReference?.trim() || undefined,
       externalUrl: values.externalUrl?.trim() || undefined,
@@ -545,15 +545,13 @@ export function ReservationForm({
 
   return (
     <form className="entity-form" onSubmit={handleSubmit(submit)}>
-      <Field label={carRental ? "Nombre de la reserva" : transport ? "Nombre del viaje" : lodging ? "Nombre del alojamiento" : "Nombre"} required error={errors.title?.message}>
-        <input autoFocus {...register("title")} placeholder={carRental ? "Ej. Auto en Madrid" : transport ? "Ej. Vuelo de ida" : lodging ? "Ej. Hotel Central" : "Ej. Reserva"} />
-      </Field>
-      <div className={lodging ? "" : "form-row"}>
+      {!carRental && <Field label={transport ? "Nombre del viaje" : lodging ? "Nombre del alojamiento" : "Nombre"} required error={errors.title?.message}>
+        <input autoFocus {...register("title")} placeholder={transport ? "Ej. Vuelo de ida" : lodging ? "Ej. Hotel Central" : "Ej. Reserva"} />
+      </Field>}
+      {!carRental && <div className={lodging ? "" : "form-row"}>
         <Field label="Tipo" required><select {...register("type")}>
           {lodging ? (
             <><option value="hotel">Hotel</option><option value="apartment">Casa o departamento</option></>
-          ) : carRental ? (
-            <option value="car">Auto alquilado</option>
           ) : transport ? (
             <><option value="flight">Avión</option><option value="train">Tren</option><option value="bus">Bus</option><option value="ferry">Ferry</option><option value="car">Auto alquilado</option></>
           ) : (
@@ -561,18 +559,19 @@ export function ReservationForm({
           )}
         </select></Field>
         {!lodging && <Field label="Estado de pago" required><select {...register("paymentStatus")}><option value="unpaid">Sin pagar</option><option value="partially_paid">Pago parcial</option><option value="paid">Pagada</option></select></Field>}
-      </div>
-      <div className="form-row">
+      </div>}
+      {!carRental && <div className="form-row">
         <Field label={reservationType === "flight" ? "Aerolínea" : reservationType === "car" ? "Empresa de alquiler" : lodging ? "Plataforma" : "Empresa"} required={!lodging} error={errors.providerName?.message}>
           <input {...register("providerName")} placeholder={reservationType === "flight" ? "Ej. Aerolíneas Argentinas" : lodging ? "Ej. Airbnb o nombre del hotel" : "Nombre de la empresa"} />
         </Field>
         <Field label="Código de reserva" required={!lodging} error={errors.providerReference?.message}><input autoCapitalize="characters" {...register("providerReference")} /></Field>
-      </div>
-      <div className="form-row">
+      </div>}
+      {!carRental && <div className="form-row">
         <Field label="Código de confirmación"><input autoCapitalize="characters" {...register("confirmationCode")} /></Field>
         {!lodging && <Field label="Estado" required><select {...register("status")}><option value="draft">Borrador</option><option value="pending">Pendiente</option><option value="confirmed">Confirmada</option><option value="completed">Completada</option><option value="cancelled">Anulada</option></select></Field>}
-      </div>
-      {isTransport && <Field label={reservationType === "flight" ? "Número de vuelo" : reservationType === "car" ? "Número de reserva" : "Número de servicio"}><input {...register("serviceNumber")} placeholder={reservationType === "flight" ? "Ej. AR1132" : ""} /></Field>}
+      </div>}
+      {carRental && <Field label="Código de reserva" required error={errors.providerReference?.message}><input autoFocus autoCapitalize="characters" {...register("providerReference")} /></Field>}
+      {isTransport && !carRental && <Field label={reservationType === "flight" ? "Número de vuelo" : "Número de servicio"}><input {...register("serviceNumber")} placeholder={reservationType === "flight" ? "Ej. AR1132" : ""} /></Field>}
       <Field label={isLodging ? "Check-in" : reservationType === "car" ? "Retiro" : isTransport ? "Salida" : "Fecha y hora"} required error={errors.startAt?.message}><input type="datetime-local" {...register("startAt")} /></Field>
       {(isLodging || isTransport) && <Field label={isLodging ? "Check-out" : reservationType === "car" ? "Devolución" : "Llegada"} required={isLodging || carRental} error={errors.endAt?.message}><input type="datetime-local" {...register("endAt")} /></Field>}
       {isTransport && !carRental && (
@@ -592,7 +591,7 @@ export function ReservationForm({
         <label className="traveler-toggle"><input type="checkbox" {...register("differentDropoffCity")} /><strong>Se entrega en otra ciudad</strong></label>
         {watch("differentDropoffCity") && <Field label="Ciudad de entrega" required error={errors.destinationCity?.message}><input {...register("destinationCity")} placeholder="Ej. Barcelona" /></Field>}
         <Field label="Dirección de retiro"><input {...register("originPlace")} placeholder="Aeropuerto, estación o dirección" /></Field>
-        <Field label="Dirección de entrega"><input {...register("destinationPlace")} placeholder="Aeropuerto, estación o dirección" /></Field>
+        {watch("differentDropoffCity") && <Field label="Dirección de entrega"><input {...register("destinationPlace")} placeholder="Aeropuerto, estación o dirección" /></Field>}
       </>}
       {isLodging && (
         <>
@@ -601,20 +600,20 @@ export function ReservationForm({
           <Field label="Dirección"><input {...register("address")} placeholder="Calle, número o indicaciones" /></Field>
         </>
       )}
-      {!lodging && <Field label="Enlace del proveedor"><input type="url" inputMode="url" autoCapitalize="none" {...register("externalUrl")} placeholder="https://…" /></Field>}
+      {!lodging && !carRental && <Field label="Enlace del proveedor"><input type="url" inputMode="url" autoCapitalize="none" {...register("externalUrl")} placeholder="https://…" /></Field>}
       <div className="form-row">
-        <Field label="Total"><input type="number" inputMode="decimal" step="0.01" {...register("totalAmount")} /></Field>
+        <Field label={carRental ? "Precio" : "Total"}><input type="number" inputMode="decimal" step="0.01" {...register("totalAmount")} /></Field>
         <Field label="Moneda"><select {...register("currency")}>{SUPPORTED_CURRENCIES.map(([code, name]) => <option key={code} value={code}>{code} · {name}</option>)}</select></Field>
       </div>
       {carRental && <Field label="Pagado por" required error={errors.paidBy?.message}><select {...register("paidBy")}><option value="">Seleccionar integrante</option>{trip.participants.filter((person) => person.status !== "removed").map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select></Field>}
-      {!lodging && <Field label="Últimos 4 dígitos de la tarjeta"><input inputMode="numeric" maxLength={4} pattern="[0-9]{4}" {...register("paymentMethodLast4")} placeholder="Ej. 9620" /></Field>}
+      {!lodging && !carRental && <Field label="Últimos 4 dígitos de la tarjeta"><input inputMode="numeric" maxLength={4} pattern="[0-9]{4}" {...register("paymentMethodLast4")} placeholder="Ej. 9620" /></Field>}
       {lodging && <section className="form-subsection">
         <label className="traveler-toggle"><input type="checkbox" {...register("paid")} /><strong>Pagado</strong></label>
         {watch("paid") && <Field label="Pagado por" required error={errors.paidBy?.message}><select {...register("paidBy")}><option value="">Seleccionar integrante</option>{trip.participants.filter((person) => person.status !== "removed").map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select></Field>}
         <label className="traveler-toggle"><input type="checkbox" {...register("payOnArrival")} /><strong>Se paga al llegar</strong></label>
         <label className="traveler-toggle"><input type="checkbox" {...register("confirmed")} /><strong>Reserva confirmada</strong></label>
       </section>}
-      {isTransport && (
+      {isTransport && !carRental && (
         <section className="form-subsection">
           <div><strong>Pasajeros</strong><p>Códigos, asientos y equipaje por integrante.</p></div>
           {trip.participants.filter((person) => person.status !== "removed").map((person) => {
