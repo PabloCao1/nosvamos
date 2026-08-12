@@ -45,7 +45,10 @@ export function ExpensesPage() {
       || (selectedFilter === "cancelled"
         ? expense.status === "cancelled"
         : expenseFilterKey(expense) === selectedFilter))
-    .reverse();
+    .sort((first, second) =>
+      second.date.localeCompare(first.date)
+      || second.createdAt.localeCompare(first.createdAt),
+    );
   const activeFilterLabel = selectedFilter === "all"
     ? undefined
     : selectedFilter === "cancelled"
@@ -65,7 +68,7 @@ export function ExpensesPage() {
       </section>
 
       <section className="section-block">
-        <div className="section-heading"><div><p className="eyebrow">Balance del grupo</p><h2>Quién debe a quién</h2></div></div>
+        <div className="section-heading"><div><h2>Quién debe a quién</h2></div></div>
         <div className="settlements-card">
           {settlements.map((settlement) => (
             <div className="settlement-row" key={`${settlement.fromParticipantId}-${settlement.toParticipantId}`}>
@@ -79,7 +82,7 @@ export function ExpensesPage() {
                 </span>
               </div>
               <div className="settlement-copy">
-                <p><strong>{byId.get(settlement.fromParticipantId)?.name}</strong> le paga a <strong>{byId.get(settlement.toParticipantId)?.name}</strong></p>
+                <p><strong>{byId.get(settlement.fromParticipantId)?.name}</strong> le debe a <strong>{byId.get(settlement.toParticipantId)?.name}</strong></p>
                 <b>{formatUsd(settlement.amount)}</b>
               </div>
             </div>
@@ -94,16 +97,15 @@ export function ExpensesPage() {
       </section>
 
       <section className="section-block">
-        <div className="section-heading"><div><p className="eyebrow">Saldos</p><h2>Por persona</h2></div></div>
+        <div className="section-heading"><div><h2>Por persona</h2></div></div>
         <div className="balance-grid">
           {balances.map((balance) => (
             <article key={balance.participant.id}>
               <span className="mini-avatar" style={{ background: balance.participant.color }}>{balance.participant.initials}</span>
               <div>
                 <strong>{balance.participant.name}</strong>
-                <p>Pagó {formatUsd(balance.paid)} · Le corresponde {formatUsd(balance.consumed)}</p>
               </div>
-              <b className={balance.net >= 0 ? "positive" : "negative"}>{formatUsd(Math.abs(balance.net))}</b>
+              <b>{formatUsd(balance.paid)}</b>
             </article>
           ))}
         </div>
