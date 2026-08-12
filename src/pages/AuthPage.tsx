@@ -11,7 +11,7 @@ const copy = {
   login: { eyebrow: "Bienvenido de nuevo", title: "Ingresá a NosVamos", action: "Ingresar" },
   register: { eyebrow: "Tu próximo viaje empieza acá", title: "Creá tu cuenta", action: "Crear cuenta" },
   forgot: { eyebrow: "Recuperar acceso", title: "Restablecé tu clave", action: "Enviar enlace" },
-  update: { eyebrow: "Nueva contraseña", title: "Elegí una clave nueva", action: "Guardar contraseña" },
+  update: { eyebrow: "Nueva contraseña", title: "Elegí una clave nueva", action: "Guardar" },
 } satisfies Record<AuthMode, { eyebrow: string; title: string; action: string }>;
 
 const authRedirectUrl = (path: string) => `${window.location.origin}${path}`;

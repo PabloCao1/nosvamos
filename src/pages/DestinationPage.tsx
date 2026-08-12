@@ -21,6 +21,12 @@ export function DestinationPage() {
   const deletion = useMutation({
     mutationFn: async () => {
       if (!trip || !destinationId) throw new Error("Destino no encontrado");
+      const selected = trip.destinations.find((item) => item.id === destinationId);
+      if (!selected) throw new Error("Destino no encontrado");
+      const sameCity = (value?: string) => Boolean(value && value.localeCompare(selected.city, "es", { sensitivity: "base" }) === 0);
+      const hasReservations = trip.reservations.some((item) => !["flight", "train", "bus", "ferry", "car"].includes(item.type) && item.status !== "cancelled" && sameCity(item.city));
+      const hasActivities = trip.itinerary.some((day) => sameCity(day.city) && day.activities.length > 0);
+      if (hasReservations || hasActivities) throw new Error("El destino todavía tiene contenido asociado");
       await tripRepository.updateTrip({ ...trip, destinations: trip.destinations.filter((item) => item.id !== destinationId) });
     },
     onSuccess: async () => {
@@ -50,6 +56,12 @@ export function DestinationPage() {
     .filter((day) => cityMatches(day.city))
     .flatMap((day) => day.activities.map((activity) => ({ ...activity, date: day.date })))
     .sort((a, b) => `${a.date}T${a.startTime}`.localeCompare(`${b.date}T${b.startTime}`));
+  const relatedReservations = trip.reservations.filter((item) =>
+    !["flight", "train", "bus", "ferry", "car"].includes(item.type) &&
+    item.status !== "cancelled" &&
+    cityMatches(item.city),
+  );
+  const canDeleteDestination = relatedReservations.length === 0 && activities.length === 0;
 
   return (
     <>
@@ -153,9 +165,9 @@ export function DestinationPage() {
         </div>
       </section>
 
-      <section className="section-block">
+      {canDeleteDestination && <section className="section-block">
         <Button variant="danger" icon="trash" fullWidth onClick={() => setConfirmingDelete(true)}>Eliminar destino</Button>
-      </section>
+      </section>}
       {confirmingDelete && <div className="confirm-layer" role="presentation">
         <button type="button" className="confirm-backdrop" onClick={() => setConfirmingDelete(false)} aria-label="Cancelar eliminación" />
         <section className="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="delete-destination-title">

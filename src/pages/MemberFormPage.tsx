@@ -69,7 +69,7 @@ export function MemberFormPage() {
           </label>
           <div className="form-actions">
             <Button type="submit" variant="primary" icon="save" fullWidth className="form-action-important" disabled={mutation.isPending}>
-              {mutation.isPending ? "Guardando…" : member ? "Guardar cambios" : "Agregar integrante"}
+              {mutation.isPending ? "Guardando…" : "Guardar"}
             </Button>
           </div>
         </form>
