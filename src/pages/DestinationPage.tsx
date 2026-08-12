@@ -14,8 +14,6 @@ const date = (value: string) =>
   new Intl.DateTimeFormat("es-AR", { day: "numeric", month: "long", year: "numeric" })
     .format(new Date(value.includes("T") ? value : `${value}T12:00:00`));
 
-const transportTypes = new Set(["flight", "train", "bus", "ferry", "car"]);
-
 export function DestinationPage() {
   const { tripId, destinationId } = useParams();
   const navigate = useNavigate();
@@ -46,34 +44,10 @@ export function DestinationPage() {
       item.city.localeCompare(destination.city, "es", { sensitivity: "base" }) === 0,
     )
     .sort((a, b) => a.startAt.localeCompare(b.startAt));
-  const departure = trip.reservations
-    .filter((item) =>
-      transportTypes.has(item.type) &&
-      item.startAt.slice(0, 10) >= destination.arrivalDate &&
-      (item.originCity
-        ? item.originCity.localeCompare(destination.city, "es", { sensitivity: "base" }) === 0
-        : item.city.localeCompare(destination.city, "es", { sensitivity: "base" }) === 0),
-    )
-    .sort((a, b) => a.startAt.localeCompare(b.startAt))[0];
-  const departureDate = departure?.startAt ?? destination.departureDate;
+  const departureDate = destination.departureDate;
   const cityMatches = (value?: string) =>
     Boolean(value && value.localeCompare(destination.city, "es", { sensitivity: "base" }) === 0);
-  const destinationIndex = trip.destinations.findIndex((item) => item.id === destination.id);
-  const isFirstDestination = destinationIndex === 0;
-  const isLastDestination = destinationIndex === trip.destinations.length - 1;
-  const transports = trip.reservations
-    .filter((item) =>
-      transportTypes.has(item.type) &&
-      item.status !== "cancelled" &&
-      (
-        cityMatches(item.originCity) ||
-        cityMatches(item.destinationCity) ||
-        cityMatches(item.city) ||
-        (isFirstDestination && item.type === "flight" && cityMatches(item.destinationCity)) ||
-        (isLastDestination && item.type === "flight" && item.startAt.slice(0, 10) >= destination.departureDate)
-      ),
-    )
-    .sort((a, b) => a.startAt.localeCompare(b.startAt));
+  const transports: typeof trip.reservations = [];
   const activities = trip.itinerary
     .filter((day) => cityMatches(day.city))
     .flatMap((day) => day.activities.map((activity) => ({ ...activity, date: day.date })))
@@ -99,9 +73,7 @@ export function DestinationPage() {
                 ? `Llega desde ${transport.originCity ?? "origen"}`
                 : leaving
                   ? `Sale hacia ${transport.destinationCity ?? "próximo destino"}`
-                  : isLastDestination && transport.type === "flight"
-                    ? "Conexión de regreso"
-                    : "Viaje relacionado";
+                  : "Viaje relacionado";
               return (
                 <Link
                   className="destination-event transport-event"
@@ -183,16 +155,6 @@ export function DestinationPage() {
         </div>
       </section>
 
-      <section className="section-block">
-        <div className="section-heading"><div><h2>Próxima salida</h2></div></div>
-        <article className="departure-card">
-          <span><Icon name={departure?.type === "flight" ? "airplane" : "ticket"} size={22} /></span>
-          <div>
-            <strong>{departure ? departure.title : "Fecha definida manualmente"}</strong>
-            <p>{date(departureDate)}{departure?.destinationCity ? ` · hacia ${departure.destinationCity}` : ""}</p>
-          </div>
-        </article>
-      </section>
       <section className="section-block">
         <Button variant="danger" icon="trash" fullWidth onClick={() => setConfirmingDelete(true)}>Eliminar destino</Button>
       </section>

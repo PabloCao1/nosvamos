@@ -10,7 +10,8 @@ export function FutureTripCard({ trip }: { trip: Trip }) {
   const date = new Intl.DateTimeFormat("es-AR", { day: "numeric", month: "short" });
   const start = new Date(`${trip.startDate}T12:00:00`);
   const end = new Date(`${trip.endDate}T12:00:00`);
-  const days = Math.max(0, Math.ceil((start.getTime() - Date.now()) / 86_400_000));
+  const days = Math.ceil((start.getTime() - Date.now()) / 86_400_000);
+  const timingLabel = days > 0 ? `Faltan ${days} días` : Date.now() <= end.getTime() ? "En curso" : "Finalizado";
   const firstDestination = trip.destinations[0];
   const { data: automaticCover } = useCityImage(firstDestination?.city, firstDestination?.country, !trip.coverUrl);
   const coverUrl = trip.coverUrl || automaticCover?.url;
@@ -23,7 +24,7 @@ export function FutureTripCard({ trip }: { trip: Trip }) {
       >
         <div className="future-trip-overlay" />
         <div className="future-trip-badges">
-          <StatusPill tone="mint">{days === 0 ? "Empieza hoy" : `Faltan ${days} días`}</StatusPill>
+          <StatusPill tone="mint">{timingLabel}</StatusPill>
           {trip.syncStatus !== "synced" && <StatusPill>Solo local</StatusPill>}
         </div>
       </div>

@@ -165,11 +165,6 @@ export function TripForm({ close, entity }: { close: () => void; entity?: Trip }
     <form className="entity-form" onSubmit={handleSubmit(submit)}>
       <Field label="Nombre del viaje" error={errors.name?.message}><input autoFocus {...register("name")} placeholder="Ej. Escapada a Mendoza" /></Field>
       <Field label="Descripción" error={errors.description?.message}><input {...register("description")} placeholder="Una semana de bodegas y montaña" /></Field>
-      {automaticRange && (
-        <p className="form-note">
-          Las fechas se calculan automáticamente a partir de tus viajes, alojamientos y destinos. Para cambiarlas, editá primero esos datos.
-        </p>
-      )}
       <div className="form-row trip-date-row">
         <Field label="Desde" error={errors.startDate?.message}><input type="date" min={entity ? undefined : minimumDate} disabled={Boolean(automaticRange)} {...register("startDate")} /></Field>
         <Field label="Hasta" error={errors.endDate?.message}><input type="date" min={entity ? undefined : minimumDate} disabled={Boolean(automaticRange)} {...register("endDate")} /></Field>
@@ -468,7 +463,7 @@ export function ReservationForm({
       }),
       title: values.title,
       type: values.type,
-      providerName: values.providerName?.trim() || "Carga manual",
+      providerName: values.providerName?.trim() || "Sin plataforma",
       providerReference: values.providerReference?.trim() || "Sin código",
       confirmationCode: values.confirmationCode?.trim() || values.providerReference?.trim() || undefined,
       externalUrl: values.externalUrl?.trim() || undefined,
@@ -511,14 +506,15 @@ export function ReservationForm({
       if (entity) await tripRepository.updateReservation(reservation);
       else await tripRepository.addReservation(reservation);
 
-      const destinationName = isTransport ? reservation.destinationCity : reservation.city;
-      if (!destinationName) return;
+      const destinationName = isLodging ? reservation.city : undefined;
       const existingDestination = trip.destinations.find(
-        (item) => item.city.localeCompare(destinationName, "es", { sensitivity: "base" }) === 0,
+        (item) => Boolean(destinationName) && item.city.localeCompare(destinationName!, "es", { sensitivity: "base" }) === 0,
       );
       const date = reservation.startAt.slice(0, 10);
       const departureDate = reservation.endAt?.slice(0, 10) ?? date;
-      const destinations = existingDestination
+      const destinations = !destinationName
+        ? trip.destinations
+        : existingDestination
         ? trip.destinations.map((item) => item.id === existingDestination.id
           ? {
               ...item,

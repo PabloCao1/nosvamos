@@ -1,4 +1,5 @@
 import { db } from "../lib/indexed-db/database";
+import { deriveTripDateRange } from "../lib/trips/deriveTripDateRange";
 import { supabase } from "../lib/supabase";
 import type { Activity, Destination, Expense, ItineraryDay, Participant, Reservation, Trip } from "../types/domain";
 import { LocalTripRepository } from "./LocalTripRepository";
@@ -166,6 +167,10 @@ export class SupabaseTripRepository extends LocalTripRepository {
           if (error) throw error;
           await this.persistDestinations(trip);
         }
+        if (item.entityType === "reservation") await db.reservations.update(item.localId, { syncStatus: "synced", lastSyncedAt: new Date().toISOString() });
+        else if (item.entityType === "activity") await db.activities.update(item.localId, { syncStatus: "synced", lastSyncedAt: new Date().toISOString() });
+        else if (item.entityType === "expense") await db.expenses.update(item.localId, { syncStatus: "synced", lastSyncedAt: new Date().toISOString() });
+        else await db.trips.update(item.localId, { syncStatus: "synced", lastSyncedAt: new Date().toISOString() });
         await db.syncQueue.delete(item.id);
       } catch (error) {
         console.error("No se pudo sincronizar el cambio pendiente", error);
@@ -257,13 +262,14 @@ export class SupabaseTripRepository extends LocalTripRepository {
       };
     });
 
+    const normalizedTrips = trips.map((trip) => ({ ...trip, ...(deriveTripDateRange(trip) ?? {}) }));
     await db.transaction("rw", [db.trips, db.activities, db.reservations, db.expenses], async () => {
-      await db.trips.bulkPut(trips);
-      await db.activities.bulkPut(trips.flatMap((trip) => trip.itinerary.flatMap((day) => day.activities)));
-      await db.reservations.bulkPut(trips.flatMap((trip) => trip.reservations));
-      await db.expenses.bulkPut(trips.flatMap((trip) => trip.expenses));
+      await db.trips.bulkPut(normalizedTrips);
+      await db.activities.bulkPut(normalizedTrips.flatMap((trip) => trip.itinerary.flatMap((day) => day.activities)));
+      await db.reservations.bulkPut(normalizedTrips.flatMap((trip) => trip.reservations));
+      await db.expenses.bulkPut(normalizedTrips.flatMap((trip) => trip.expenses));
     });
-    return trips;
+    return normalizedTrips;
   }
 
   override async getAll() {
