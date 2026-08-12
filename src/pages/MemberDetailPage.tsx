@@ -84,7 +84,6 @@ export function MemberDetailPage() {
         <ParticipantAvatar participant={member} className="member-dashboard-avatar" />
         <div>
           <h2>{member.name}</h2>
-          <p>{member.email ?? "Sin email cargado"}</p>
           <span>{member.status === "removed" ? "Retirado" : member.role === "owner" ? "Propietario" : "Integrante"}</span>
         </div>
       </section>
@@ -94,7 +93,7 @@ export function MemberDetailPage() {
         <div className="member-dashboard-metrics">
           <article><Icon name="wallet" size={21} /><span>Pagó</span><strong>{formatUsd(balance?.paid ?? 0)}</strong></article>
           <article><Icon name="receipt" size={21} /><span>Le corresponde</span><strong>{formatUsd(balance?.consumed ?? 0)}</strong></article>
-          <article><Icon name="arrowUpRight" size={21} /><span>{(balance?.net ?? 0) >= 0 ? "Recibe" : "Debe"}</span><strong>{formatUsd(Math.abs(balance?.net ?? 0))}</strong></article>
+          <article><Icon name="arrowUpRight" size={21} className={(balance?.net ?? 0) < 0 ? "member-balance-debt-icon" : undefined} /><span>{(balance?.net ?? 0) >= 0 ? "Recibe" : "Debe"}</span><strong>{formatUsd(Math.abs(balance?.net ?? 0))}</strong></article>
         </div>
       </section>
 

@@ -1695,6 +1695,8 @@ body .member-avatar {
 }
 body .member-summary h2 { font-size: 1rem; }
 body .member-summary p { margin-top: 6px; font-size: .7rem; }
+body .member-dashboard-hero div > span { margin-top: 6px; }
+body .member-balance-debt-icon { display: inline-block; transform: rotate(180deg); }
 
 /* The floating glass navigation and FAB deliberately remain unchanged. */
 @media (min-width: 700px) {
