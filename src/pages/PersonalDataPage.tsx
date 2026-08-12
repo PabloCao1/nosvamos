@@ -1,4 +1,4 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type PointerEvent as ReactPointerEvent, type WheelEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { PageHeader } from "../components/layout/PageHeader";
@@ -21,6 +21,9 @@ export function PersonalDataPage() {
   const [zoom, setZoom] = useState(1);
   const [cropX, setCropX] = useState(0);
   const [cropY, setCropY] = useState(0);
+  const cropZoom = useRef(1);
+  const cropPointers = useRef(new Map<number, { x: number; y: number }>());
+  const lastGesture = useRef<{ x: number; y: number; distance: number } | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -43,12 +46,65 @@ export function PersonalDataPage() {
     };
     reader.onerror = () => setError("No pudimos abrir la foto seleccionada.");
     reader.readAsDataURL(file);
+    cropZoom.current = 1;
     setZoom(1); setCropX(0); setCropY(0);
     event.target.value = "";
   };
 
   const closeCropper = () => {
     setCropSource("");
+  };
+
+  const readGesture = () => {
+    const points = [...cropPointers.current.values()];
+    if (!points.length) return null;
+    if (points.length === 1) return { x: points[0].x, y: points[0].y, distance: 0 };
+    const [first, second] = points;
+    return {
+      x: (first.x + second.x) / 2,
+      y: (first.y + second.y) / 2,
+      distance: Math.hypot(second.x - first.x, second.y - first.y),
+    };
+  };
+
+  const limitOffset = (value: number, nextZoom: number) => {
+    const maximum = 115 * (nextZoom - 1);
+    return Math.max(-maximum, Math.min(maximum, value));
+  };
+
+  const startCropGesture = (event: ReactPointerEvent<HTMLDivElement>) => {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    cropPointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    lastGesture.current = readGesture();
+  };
+
+  const moveCropGesture = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!cropPointers.current.has(event.pointerId)) return;
+    const previous = lastGesture.current;
+    cropPointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    const current = readGesture();
+    if (!previous || !current) return;
+    const zoomChange = previous.distance > 0 && current.distance > 0 ? current.distance / previous.distance : 1;
+    const nextZoom = Math.max(1, Math.min(3, cropZoom.current * zoomChange));
+    cropZoom.current = nextZoom;
+    setZoom(nextZoom);
+    setCropX((value) => limitOffset(value + current.x - previous.x, nextZoom));
+    setCropY((value) => limitOffset(value + current.y - previous.y, nextZoom));
+    lastGesture.current = current;
+  };
+
+  const endCropGesture = (event: ReactPointerEvent<HTMLDivElement>) => {
+    cropPointers.current.delete(event.pointerId);
+    lastGesture.current = readGesture();
+  };
+
+  const zoomCropWithWheel = (event: WheelEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const nextZoom = Math.max(1, Math.min(3, cropZoom.current - event.deltaY * .002));
+    cropZoom.current = nextZoom;
+    setZoom(nextZoom);
+    setCropX((value) => limitOffset(value, nextZoom));
+    setCropY((value) => limitOffset(value, nextZoom));
   };
 
   const saveCroppedAvatar = async () => {
@@ -58,8 +114,8 @@ export function PersonalDataPage() {
     image.src = cropSource;
     await image.decode();
     const sourceSize = Math.min(image.naturalWidth, image.naturalHeight) / zoom;
-    const sourceX = (image.naturalWidth - sourceSize) * ((cropX + 100) / 200);
-    const sourceY = (image.naturalHeight - sourceSize) * ((cropY + 100) / 200);
+    const sourceX = Math.max(0, Math.min(image.naturalWidth - sourceSize, (image.naturalWidth - sourceSize) / 2 - cropX * sourceSize / 230));
+    const sourceY = Math.max(0, Math.min(image.naturalHeight - sourceSize, (image.naturalHeight - sourceSize) / 2 - cropY * sourceSize / 230));
     const canvas = document.createElement("canvas");
     canvas.width = 512; canvas.height = 512;
     canvas.getContext("2d")?.drawImage(image, sourceX, sourceY, sourceSize, sourceSize, 0, 0, 512, 512);
@@ -100,12 +156,17 @@ export function PersonalDataPage() {
       </div>
       {cropSource && <section id="avatar-crop-editor" className="avatar-crop-inline" aria-labelledby="avatar-crop-title">
         <h2 id="avatar-crop-title">Ajustar foto</h2>
-        <div className="avatar-crop-preview">
-          <img src={cropSource} alt="Vista previa" style={{ transform: `scale(${zoom})`, objectPosition: `${(cropX + 100) / 2}% ${(cropY + 100) / 2}%` }} />
+        <div
+          className="avatar-crop-preview"
+          onPointerDown={startCropGesture}
+          onPointerMove={moveCropGesture}
+          onPointerUp={endCropGesture}
+          onPointerCancel={endCropGesture}
+          onWheel={zoomCropWithWheel}
+        >
+          <img src={cropSource} alt="Vista previa" draggable={false} style={{ transform: `translate(${cropX}px, ${cropY}px) scale(${zoom})` }} />
         </div>
-        <label className="avatar-crop-control"><span>Zoom</span><input type="range" min="1" max="3" step="0.05" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} /></label>
-        <label className="avatar-crop-control"><span>Horizontal</span><input type="range" min="-100" max="100" value={cropX} onChange={(event) => setCropX(Number(event.target.value))} /></label>
-        <label className="avatar-crop-control"><span>Vertical</span><input type="range" min="-100" max="100" value={cropY} onChange={(event) => setCropY(Number(event.target.value))} /></label>
+        <p className="avatar-crop-hint">Arrastrá para centrar · Pellizcá con dos dedos para ajustar</p>
         <div className="confirm-actions">
           <Button variant="secondary" onClick={closeCropper}>Cancelar</Button>
           <Button variant="primary" disabled={pending} onClick={() => void saveCroppedAvatar()}>{pending ? "Guardando..." : "Guardar foto"}</Button>
