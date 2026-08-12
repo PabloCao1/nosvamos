@@ -34,6 +34,13 @@ export function HomePage() {
         }
       />
 
+      <section className="home-intro">
+        <div>
+          <strong>{futureTrips.length}</strong>
+          <p>{futureTrips.length === 1 ? "viaje por delante" : "viajes por delante"}</p>
+        </div>
+      </section>
+
       {futureTrips.length ? (
         <>
           <section className="future-trip-list" aria-label="Viajes futuros">

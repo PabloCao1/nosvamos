@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import { PageHeader } from "../components/layout/PageHeader";
 import { TripHero } from "../components/trips/TripHero";
+import { DestinationImage } from "../components/trips/DestinationImage";
 import { TripCalendar } from "../components/trips/TripCalendar";
 import { AvatarGroup } from "../components/ui/AvatarGroup";
 import { Icon } from "../components/ui/Icon";
@@ -10,7 +11,7 @@ import { ErrorState, LoadingState } from "../components/ui/PageState";
 import { useTrip } from "../hooks/useTrips";
 import { formatUsd } from "../lib/currency/exchangeRates";
 import { reservationIcon } from "../lib/icons/entityIcons";
-import { formatShortDate, formatTripDateTime } from "../lib/dates/tripDateTime";
+import { formatTripDateTime } from "../lib/dates/tripDateTime";
 
 const transportDateTime = (value: string, timezone: string) => formatTripDateTime(value, timezone);
 
@@ -68,33 +69,27 @@ export function TripPage() {
           <div><h2>Itinerario</h2></div>
           <ButtonLink to={`/viaje/${trip.id}/itinerario/editar`} size="small">Editar</ButtonLink>
         </div>
-        <div className="journey-list">
+        <div className="destination-scroll">
           {routeItems.map((item) => {
             if (item.kind === "destination") {
               const destination = item.destination;
               const destinationNumber = sortedDestinations.findIndex((candidate) => candidate.id === destination.id) + 1;
               return (
-                <Link key={destination.id} className="journey-row journey-destination" to={`/viaje/${trip.id}/destino/${destination.id}`}>
-                  <span className="journey-index">{destinationNumber}</span>
-                  <div className="journey-copy">
-                    <small>{destination.arrivalDate ? formatShortDate(destination.arrivalDate) : "Fecha por definir"}</small>
-                    <h3>{destination.city}</h3>
-                    <p>{destination.country}{destination.departureDate ? ` · hasta ${formatShortDate(destination.departureDate)}` : ""}</p>
-                  </div>
-                  <Icon name="chevronRight" size={18} />
+                <Link key={destination.id} className="destination-card" to={`/viaje/${trip.id}/destino/${destination.id}`}>
+                  <DestinationImage city={destination.city} country={destination.country} imageUrl={destination.imageUrl} />
+                  <span>{destinationNumber}</span>
+                  <div><h3>{destination.city}</h3><p>{destination.country}</p></div>
                 </Link>
               );
             }
             const transport = item.transport;
             return (
-              <Link className={`journey-row journey-transport route-${transport.type}`} key={transport.id} to={`/viaje/${trip.id}/evento/reservation/${transport.id}`}>
-                <span className="journey-icon"><Icon name={reservationIcon[transport.type]} size={20} /></span>
-                <div className="journey-copy">
-                  <small>{transportDateTime(transport.startAt, trip.timezone)}</small>
-                  <h3>{transport.title}</h3>
-                  <p>{transport.originPlace ?? transport.originCity ?? "Origen"} → {transport.destinationPlace ?? transport.destinationCity ?? transport.city}{transport.serviceNumber ? ` · ${transport.serviceNumber}` : ""}</p>
-                </div>
-                <Icon name="chevronRight" size={18} />
+              <Link className={`route-connector route-${transport.type}`} key={transport.id} to={`/viaje/${trip.id}/evento/reservation/${transport.id}`}>
+                <span><Icon name={reservationIcon[transport.type]} size={32} weight="Filled" /></span>
+                <strong>{transport.title}</strong>
+                <small>{transport.originPlace ?? transport.originCity ?? "Origen"} → {transport.destinationPlace ?? transport.destinationCity ?? transport.city}</small>
+                <small>{transportDateTime(transport.startAt, trip.timezone)}</small>
+                {transport.serviceNumber && <small>{transport.serviceNumber}</small>}
               </Link>
             );
           })}
