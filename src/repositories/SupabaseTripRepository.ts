@@ -88,6 +88,17 @@ const wallClockToIso = (value: string, timezone: string) => {
 };
 
 export class SupabaseTripRepository extends LocalTripRepository {
+  private async persistDestinations(trip: Trip) {
+    if (!trip.destinations.length) return;
+    const { error } = await supabase.from("destinations").upsert(trip.destinations.map((destination, position) => ({
+      id: destination.id, client_id: destination.id, trip_id: trip.id, city: destination.city,
+      country: destination.country, arrival_date: destination.arrivalDate || null,
+      departure_date: destination.departureDate || null, address: destination.address ?? null,
+      image_path: destination.imageUrl || null, position, updated_at: new Date().toISOString(),
+    })));
+    if (error) throw error;
+  }
+
   private async replaceLinks(table: "reservation_participants" | "activity_participants", key: "reservation_id" | "activity_id", id: string, participantIds: string[]) {
     const { error: deleteError } = await supabase.from(table).delete().eq(key, id);
     if (deleteError) throw deleteError;
@@ -309,6 +320,7 @@ export class SupabaseTripRepository extends LocalTripRepository {
     if (!auth.user) throw new Error("Tenés que iniciar sesión para guardar el viaje.");
     const { error } = await supabase.from("trips").insert(tripRow(trip, auth.user.id));
     if (error) throw error;
+    await this.persistDestinations(trip);
     await super.addTrip(trip); await this.clearQueued(trip.id);
   }
 
@@ -316,6 +328,7 @@ export class SupabaseTripRepository extends LocalTripRepository {
     if (!navigator.onLine) return super.updateTrip(trip);
     const { error } = await supabase.from("trips").update(tripRow(trip)).eq("id", trip.id);
     if (error) throw error;
+    await this.persistDestinations(trip);
     await super.updateTrip(trip); await this.clearQueued(trip.id);
   }
 }

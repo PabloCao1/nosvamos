@@ -46,6 +46,7 @@ const reservationSchema = z.object({
   startAt: z.string().min(1, "Ingresá fecha y hora"),
   endAt: z.string().optional(),
   city: z.string().optional(),
+  country: z.string().optional(),
   originCity: z.string().optional(),
   destinationCity: z.string().optional(),
   originPlace: z.string().optional(),
@@ -387,6 +388,7 @@ export function ReservationForm({
       title: entity.title, type: entity.type, providerName: entity.providerName,
       providerReference: entity.providerReference, startAt: entity.startAt.slice(0, 16),
       endAt: entity.endAt?.slice(0, 16), city: entity.city,
+      country: trip?.destinations.find((destination) => destination.city.localeCompare(entity.city, "es", { sensitivity: "base" }) === 0)?.country,
       originCity: entity.originCity, destinationCity: entity.destinationCity,
       originPlace: entity.originPlace, destinationPlace: entity.destinationPlace,
       serviceNumber: entity.serviceNumber, address: entity.address,
@@ -426,6 +428,7 @@ export function ReservationForm({
 
   const submit = async (values: ReservationValues) => {
     if (isLodging && !values.city?.trim()) { setError("city", { message: "Ingresá la ciudad" }); return; }
+    if (isLodging && !values.country?.trim()) { setError("country", { message: "Ingresá el país" }); return; }
     if (isLodging && !values.endAt) { setError("endAt", { message: "Ingresá la fecha de check-out" }); return; }
     if (isLodging && values.paid && !values.paidBy) { setError("paidBy", { message: "Seleccioná quién pagó" }); return; }
     if (!isLodging && !values.providerName?.trim()) { setError("providerName", { message: "Ingresá el proveedor" }); return; }
@@ -500,6 +503,7 @@ export function ReservationForm({
         ? trip.destinations.map((item) => item.id === existingDestination.id
           ? {
               ...item,
+              country: item.country || values.country?.trim() || "",
               arrivalDate: item.arrivalDate < date ? item.arrivalDate : date,
               departureDate: item.departureDate > departureDate ? item.departureDate : departureDate,
             }
@@ -507,7 +511,7 @@ export function ReservationForm({
         : [...trip.destinations, {
             id: crypto.randomUUID(),
             city: destinationName,
-            country: "",
+            country: values.country?.trim() || "",
             arrivalDate: date,
             departureDate,
             imageUrl: "",
@@ -570,6 +574,7 @@ export function ReservationForm({
       {isLodging && (
         <>
           <Field label="Ciudad" error={errors.city?.message}><input {...register("city")} placeholder="Ej. Madrid" /></Field>
+          <Field label="País" error={errors.country?.message}><input {...register("country")} placeholder="Ej. España" /></Field>
           <Field label="Dirección"><input {...register("address")} placeholder="Calle, número o indicaciones" /></Field>
         </>
       )}
