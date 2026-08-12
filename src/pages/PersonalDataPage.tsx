@@ -17,6 +17,10 @@ export function PersonalDataPage() {
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [cropSource, setCropSource] = useState("");
+  const [zoom, setZoom] = useState(1);
+  const [cropX, setCropX] = useState(0);
+  const [cropY, setCropY] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -29,13 +33,36 @@ export function PersonalDataPage() {
     });
   }, [user]);
 
-  const uploadAvatar = async (event: ChangeEvent<HTMLInputElement>) => {
+  const chooseAvatar = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !user) return;
+    if (!file) return;
+    if (cropSource) URL.revokeObjectURL(cropSource);
+    setCropSource(URL.createObjectURL(file));
+    setZoom(1); setCropX(0); setCropY(0);
+    event.target.value = "";
+  };
+
+  const closeCropper = () => {
+    if (cropSource) URL.revokeObjectURL(cropSource);
+    setCropSource("");
+  };
+
+  const saveCroppedAvatar = async () => {
+    if (!cropSource || !user) return;
     setPending(true); setError(""); setMessage("");
-    const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const path = `${user.id}/profile.${extension}`;
-    const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
+    const image = new Image();
+    image.src = cropSource;
+    await image.decode();
+    const sourceSize = Math.min(image.naturalWidth, image.naturalHeight) / zoom;
+    const sourceX = (image.naturalWidth - sourceSize) * ((cropX + 100) / 200);
+    const sourceY = (image.naturalHeight - sourceSize) * ((cropY + 100) / 200);
+    const canvas = document.createElement("canvas");
+    canvas.width = 512; canvas.height = 512;
+    canvas.getContext("2d")?.drawImage(image, sourceX, sourceY, sourceSize, sourceSize, 0, 0, 512, 512);
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.88));
+    if (!blob) { setError("No pudimos recortar la foto."); setPending(false); return; }
+    const path = `${user.id}/profile.jpg`;
+    const { error: uploadError } = await supabase.storage.from("avatars").upload(path, blob, { upsert: true, contentType: "image/jpeg" });
     if (uploadError) { setError(uploadError.message); setPending(false); return; }
     const { error: profileError } = await supabase.from("profiles").update({ avatar_path: path }).eq("id", user.id);
     const { error: authError } = await supabase.auth.updateUser({ data: { avatar_path: path } });
@@ -43,7 +70,7 @@ export function PersonalDataPage() {
     if (profileError || authError) setError((profileError || authError)?.message ?? "No pudimos guardar la foto.");
     else {
       const { data: signed } = await supabase.storage.from("avatars").createSignedUrl(path, 3600);
-      setAvatarUrl(signed?.signedUrl ?? ""); setMessage("Foto de perfil actualizada.");
+      setAvatarUrl(signed?.signedUrl ?? ""); setMessage("Foto de perfil actualizada."); closeCropper();
     }
   };
 
@@ -65,7 +92,7 @@ export function PersonalDataPage() {
     <form className="section-block personal-data-form" onSubmit={save}>
       <div className="profile-photo-editor">
         {avatarUrl ? <img src={avatarUrl} alt="Foto de perfil" /> : <div className="large-avatar">{initials}</div>}
-        <label className="profile-photo-button">Cambiar foto<input type="file" accept="image/*" onChange={(event) => void uploadAvatar(event)} hidden /></label>
+        <label className="profile-photo-button">Cambiar foto<input type="file" accept="image/*" onChange={chooseAvatar} hidden /></label>
       </div>
       <label className="form-field"><span>Nombre <small>Opcional</small></span><input value={firstName} onChange={(event) => setFirstName(event.target.value)} /></label>
       <label className="form-field"><span>Apellido <small>Opcional</small></span><input value={lastName} onChange={(event) => setLastName(event.target.value)} /></label>
@@ -79,5 +106,21 @@ export function PersonalDataPage() {
       <div><strong>Contraseña</strong><p>Actualizá la clave con la que ingresás a NosVamos.</p></div>
       <Button variant="secondary" fullWidth onClick={() => navigate("/actualizar-clave", { state: { from: "/datos-personales" } })}>Cambiar contraseña</Button>
     </section>
+    {cropSource && <div className="confirm-layer avatar-crop-layer" role="presentation">
+      <button type="button" className="confirm-backdrop" onClick={closeCropper} aria-label="Cancelar recorte" />
+      <section className="confirm-dialog avatar-crop-dialog" role="dialog" aria-modal="true" aria-labelledby="avatar-crop-title">
+        <h2 id="avatar-crop-title">Ajustar foto</h2>
+        <div className="avatar-crop-preview">
+          <img src={cropSource} alt="Vista previa" style={{ transform: `scale(${zoom})`, objectPosition: `${(cropX + 100) / 2}% ${(cropY + 100) / 2}%` }} />
+        </div>
+        <label className="avatar-crop-control"><span>Zoom</span><input type="range" min="1" max="3" step="0.05" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} /></label>
+        <label className="avatar-crop-control"><span>Horizontal</span><input type="range" min="-100" max="100" value={cropX} onChange={(event) => setCropX(Number(event.target.value))} /></label>
+        <label className="avatar-crop-control"><span>Vertical</span><input type="range" min="-100" max="100" value={cropY} onChange={(event) => setCropY(Number(event.target.value))} /></label>
+        <div className="confirm-actions">
+          <Button variant="secondary" onClick={closeCropper}>Cancelar</Button>
+          <Button variant="primary" disabled={pending} onClick={() => void saveCroppedAvatar()}>{pending ? "Guardando..." : "Guardar"}</Button>
+        </div>
+      </section>
+    </div>}
   </>;
 }
