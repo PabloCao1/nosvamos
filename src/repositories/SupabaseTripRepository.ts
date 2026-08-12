@@ -259,6 +259,7 @@ export class SupabaseTripRepository extends LocalTripRepository {
   }
 
   override async deleteReservation(reservation: Reservation) {
+    if (!navigator.onLine) return super.deleteReservationPermanently(reservation);
     const deletedAt = new Date().toISOString();
     const { error } = await supabase.from("reservations").update({ deleted_at: deletedAt }).eq("id", reservation.id);
     if (error) throw error;
@@ -267,6 +268,7 @@ export class SupabaseTripRepository extends LocalTripRepository {
   }
 
   override async deleteActivity(activity: Activity) {
+    if (!navigator.onLine) return super.deleteActivityPermanently(activity);
     const deletedAt = new Date().toISOString();
     const { error } = await supabase.from("activities").update({ deleted_at: deletedAt }).eq("id", activity.id);
     if (error) throw error;
@@ -274,14 +276,33 @@ export class SupabaseTripRepository extends LocalTripRepository {
     await this.clearQueued(activity.id);
   }
 
-  override async addReservation(reservation: Reservation) { await this.persistReservation(reservation); await super.addReservation(reservation); await this.clearQueued(reservation.id); }
-  override async updateReservation(reservation: Reservation) { await this.persistReservation(reservation); await super.updateReservation(reservation); await this.clearQueued(reservation.id); }
-  override async addActivity(activity: Activity) { await this.persistActivity(activity); await super.addActivity(activity); await this.clearQueued(activity.id); }
-  override async updateActivity(activity: Activity) { await this.persistActivity(activity); await super.updateActivity(activity); await this.clearQueued(activity.id); }
-  override async addExpense(expense: Expense) { await this.persistExpense(expense); await super.addExpense(expense); await this.clearQueued(expense.id); }
-  override async updateExpense(expense: Expense) { await this.persistExpense(expense); await super.updateExpense(expense); await this.clearQueued(expense.id); }
+  override async addReservation(reservation: Reservation) {
+    if (!navigator.onLine) return super.addReservation(reservation);
+    await this.persistReservation(reservation); await super.addReservation(reservation); await this.clearQueued(reservation.id);
+  }
+  override async updateReservation(reservation: Reservation) {
+    if (!navigator.onLine) return super.updateReservation(reservation);
+    await this.persistReservation(reservation); await super.updateReservation(reservation); await this.clearQueued(reservation.id);
+  }
+  override async addActivity(activity: Activity) {
+    if (!navigator.onLine) return super.addActivity(activity);
+    await this.persistActivity(activity); await super.addActivity(activity); await this.clearQueued(activity.id);
+  }
+  override async updateActivity(activity: Activity) {
+    if (!navigator.onLine) return super.updateActivity(activity);
+    await this.persistActivity(activity); await super.updateActivity(activity); await this.clearQueued(activity.id);
+  }
+  override async addExpense(expense: Expense) {
+    if (!navigator.onLine) return super.addExpense(expense);
+    await this.persistExpense(expense); await super.addExpense(expense); await this.clearQueued(expense.id);
+  }
+  override async updateExpense(expense: Expense) {
+    if (!navigator.onLine) return super.updateExpense(expense);
+    await this.persistExpense(expense); await super.updateExpense(expense); await this.clearQueued(expense.id);
+  }
 
   override async addTrip(trip: Trip) {
+    if (!navigator.onLine) return super.addTrip(trip);
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) throw new Error("Tenés que iniciar sesión para guardar el viaje.");
     const { error } = await supabase.from("trips").insert(tripRow(trip, auth.user.id));
@@ -290,6 +311,7 @@ export class SupabaseTripRepository extends LocalTripRepository {
   }
 
   override async updateTrip(trip: Trip) {
+    if (!navigator.onLine) return super.updateTrip(trip);
     const { error } = await supabase.from("trips").update(tripRow(trip)).eq("id", trip.id);
     if (error) throw error;
     await super.updateTrip(trip); await this.clearQueued(trip.id);
