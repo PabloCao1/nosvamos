@@ -21,6 +21,7 @@ export function PersonalDataPage() {
   const [zoom, setZoom] = useState(1);
   const [cropX, setCropX] = useState(0);
   const [cropY, setCropY] = useState(0);
+  const [cropImageSize, setCropImageSize] = useState({ width: 1, height: 1 });
   const cropZoom = useRef(1);
   const cropPointers = useRef(new Map<number, { x: number; y: number }>());
   const lastGesture = useRef<{ x: number; y: number; distance: number } | null>(null);
@@ -67,8 +68,11 @@ export function PersonalDataPage() {
     };
   };
 
-  const limitOffset = (value: number, nextZoom: number) => {
-    const maximum = 115 * (nextZoom - 1);
+  const limitOffset = (value: number, nextZoom: number, axis: "x" | "y") => {
+    const previewSize = 230;
+    const coverScale = Math.max(previewSize / cropImageSize.width, previewSize / cropImageSize.height);
+    const renderedSize = (axis === "x" ? cropImageSize.width : cropImageSize.height) * coverScale * nextZoom;
+    const maximum = Math.max(0, (renderedSize - previewSize) / 2);
     return Math.max(-maximum, Math.min(maximum, value));
   };
 
@@ -88,8 +92,8 @@ export function PersonalDataPage() {
     const nextZoom = Math.max(1, Math.min(3, cropZoom.current * zoomChange));
     cropZoom.current = nextZoom;
     setZoom(nextZoom);
-    setCropX((value) => limitOffset(value + current.x - previous.x, nextZoom));
-    setCropY((value) => limitOffset(value + current.y - previous.y, nextZoom));
+    setCropX((value) => limitOffset(value + current.x - previous.x, nextZoom, "x"));
+    setCropY((value) => limitOffset(value + current.y - previous.y, nextZoom, "y"));
     lastGesture.current = current;
   };
 
@@ -103,8 +107,8 @@ export function PersonalDataPage() {
     const nextZoom = Math.max(1, Math.min(3, cropZoom.current - event.deltaY * .002));
     cropZoom.current = nextZoom;
     setZoom(nextZoom);
-    setCropX((value) => limitOffset(value, nextZoom));
-    setCropY((value) => limitOffset(value, nextZoom));
+    setCropX((value) => limitOffset(value, nextZoom, "x"));
+    setCropY((value) => limitOffset(value, nextZoom, "y"));
   };
 
   const saveCroppedAvatar = async () => {
@@ -114,8 +118,9 @@ export function PersonalDataPage() {
     image.src = cropSource;
     await image.decode();
     const sourceSize = Math.min(image.naturalWidth, image.naturalHeight) / zoom;
-    const sourceX = Math.max(0, Math.min(image.naturalWidth - sourceSize, (image.naturalWidth - sourceSize) / 2 - cropX * sourceSize / 230));
-    const sourceY = Math.max(0, Math.min(image.naturalHeight - sourceSize, (image.naturalHeight - sourceSize) / 2 - cropY * sourceSize / 230));
+    const previewScale = 230 / sourceSize;
+    const sourceX = Math.max(0, Math.min(image.naturalWidth - sourceSize, (image.naturalWidth - sourceSize) / 2 - cropX / previewScale));
+    const sourceY = Math.max(0, Math.min(image.naturalHeight - sourceSize, (image.naturalHeight - sourceSize) / 2 - cropY / previewScale));
     const canvas = document.createElement("canvas");
     canvas.width = 512; canvas.height = 512;
     canvas.getContext("2d")?.drawImage(image, sourceX, sourceY, sourceSize, sourceSize, 0, 0, 512, 512);
@@ -164,7 +169,17 @@ export function PersonalDataPage() {
           onPointerCancel={endCropGesture}
           onWheel={zoomCropWithWheel}
         >
-          <img src={cropSource} alt="Vista previa" draggable={false} style={{ transform: `translate(${cropX}px, ${cropY}px) scale(${zoom})` }} />
+          <img
+            src={cropSource}
+            alt="Vista previa"
+            draggable={false}
+            onLoad={(event) => setCropImageSize({ width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight })}
+            style={{
+              width: cropImageSize.width >= cropImageSize.height ? `${230 * cropImageSize.width / cropImageSize.height}px` : "230px",
+              height: cropImageSize.height >= cropImageSize.width ? `${230 * cropImageSize.height / cropImageSize.width}px` : "230px",
+              transform: `translate(${cropX}px, ${cropY}px) scale(${zoom})`,
+            }}
+          />
         </div>
         <p className="avatar-crop-hint">Arrastrá para centrar · Pellizcá con dos dedos para ajustar</p>
         <div className="confirm-actions">
