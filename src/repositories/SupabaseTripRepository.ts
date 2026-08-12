@@ -46,6 +46,7 @@ const reservationRow = (reservation: Reservation) => ({
   provider: reservation.provider, provider_name: reservation.providerName, provider_reference: reservation.providerReference,
   confirmation_code: reservation.confirmationCode ?? null, external_url: reservation.externalUrl ?? null,
   start_at: reservation.startAt, end_at: reservation.endAt || null, city: reservation.city,
+  local_start_at: reservation.startAt, local_end_at: reservation.endAt || null,
   origin_city: reservation.originCity ?? null, destination_city: reservation.destinationCity ?? null,
   origin_place: reservation.originPlace ?? null, destination_place: reservation.destinationPlace ?? null,
   service_number: reservation.serviceNumber ?? null, address: reservation.address ?? null,
@@ -140,7 +141,9 @@ export class SupabaseTripRepository extends LocalTripRepository {
     if (dayError) throw dayError;
     const localTrip = await db.trips.get(day.trip_id);
     const timezone = localTrip?.timezone ?? "America/Argentina/Buenos_Aires";
-    const row = { ...activityRow(activity), trip_id: day.trip_id, start_at: wallClockToIso(`${day.day}T${activity.startTime}`, timezone), end_at: activity.endTime ? wallClockToIso(`${day.day}T${activity.endTime}`, timezone) : null };
+    const localStartAt = `${day.day}T${activity.startTime}`;
+    const localEndAt = activity.endTime ? `${day.day}T${activity.endTime}` : null;
+    const row = { ...activityRow(activity), trip_id: day.trip_id, local_start_at: localStartAt, local_end_at: localEndAt, start_at: wallClockToIso(localStartAt, timezone), end_at: localEndAt ? wallClockToIso(localEndAt, timezone) : null };
     const { error } = await supabase.from("activities").upsert(row);
     if (error) throw error;
     await this.replaceLinks("activity_participants", "activity_id", activity.id, activity.participantIds);
@@ -233,8 +236,8 @@ export class SupabaseTripRepository extends LocalTripRepository {
         ...synced(row), tripId: tripRow.id, destinationId: row.destination_id || undefined, type: row.type, title: row.title,
         provider: row.provider || "generic", providerName: row.provider_name || "", providerReference: row.provider_reference || "",
         confirmationCode: row.confirmation_code || undefined, externalUrl: row.external_url || undefined,
-        startAt: wallClockFromIso(row.start_at, row.timezone || timezone),
-        endAt: row.end_at ? wallClockFromIso(row.end_at, row.timezone || timezone) : undefined,
+        startAt: row.local_start_at?.slice(0, 16) || wallClockFromIso(row.start_at, row.timezone || timezone),
+        endAt: row.local_end_at?.slice(0, 16) || (row.end_at ? wallClockFromIso(row.end_at, row.timezone || timezone) : undefined),
         city: row.city || "", originCity: row.origin_city || undefined,
         destinationCity: row.destination_city || undefined, originPlace: row.origin_place || undefined,
         destinationPlace: row.destination_place || undefined, serviceNumber: row.service_number || undefined, address: row.address || undefined,
@@ -247,7 +250,8 @@ export class SupabaseTripRepository extends LocalTripRepository {
       }));
       const activities: Activity[] = activityRows.filter((row) => row.trip_id === tripRow.id && !row.deleted_at).map((row) => ({
         ...synced(row), dayId: row.itinerary_day_id, title: row.title, description: row.description || undefined,
-        startTime: timeInZone(row.start_at, timezone), endTime: row.end_at ? timeInZone(row.end_at, timezone) : undefined,
+        startTime: row.local_start_at?.slice(11, 16) || timeInZone(row.start_at, timezone),
+        endTime: row.local_end_at?.slice(11, 16) || (row.end_at ? timeInZone(row.end_at, timezone) : undefined),
         location: row.location || "", category: row.category, status: row.status,
         participantIds: activityParticipants.filter((link) => link.activity_id === row.id).map((link) => link.traveler_id),
         reservationId: row.reservation_id || undefined,
