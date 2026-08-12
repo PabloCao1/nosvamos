@@ -34,10 +34,17 @@ export function TripPage() {
   };
   const expenseCategories = Object.values(
     activeExpenses.reduce<Record<string, { category: string; label: string; total: number }>>((totals, expense) => {
-      const key = expense.categoryLabel ?? expense.category;
+      const linkedType = trip.reservations.find((reservation) => reservation.id === expense.reservationId)?.type;
+      const semanticCategory = linkedType === "car" ? "auto" : linkedType === "activity" ? "excursion" : expense.category;
+      const semanticLabel = linkedType === "car"
+        ? "Auto"
+        : linkedType === "activity"
+          ? "Excursiones"
+          : expense.categoryLabel ?? categoryLabels[expense.category] ?? expense.category;
+      const key = `${semanticCategory}:${semanticLabel}`;
       totals[key] ??= {
-        category: expense.category,
-        label: expense.categoryLabel ?? categoryLabels[expense.category] ?? expense.category,
+        category: semanticCategory,
+        label: semanticLabel,
         total: 0,
       };
       totals[key].total += expense.convertedAmount;

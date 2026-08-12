@@ -13,7 +13,7 @@
   --coral: #ff9b82;
   --ice-blue: #7dd3fc;
   --amber: #f7c873;
-  --tone-auto: var(--mint-deep);
+  --tone-auto: var(--text);
   --tone-transport: var(--violet);
   --tone-lodging: var(--ice-blue);
   --tone-excursion: var(--coral);
@@ -773,8 +773,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .expense-category-chart .expense-category-food > div > span,
 .expense-category-chart .expense-category-shopping > div > span { background: var(--tone-excursion); }
 .expense-category-chart .expense-category-activities > div > span { background: var(--tone-activity); }
+.expense-category-chart .expense-category-excursion > div > span { background: var(--tone-excursion); }
+.expense-category-chart .expense-category-auto > div > span { background: var(--tone-auto); }
 .expense-category-chart .expense-category-insurance > div > span,
-.expense-category-chart .expense-category-other > div > span { background: var(--mint-deep); }
+.expense-category-chart .expense-category-other > div > span { background: var(--mint); }
 .trip-calendar { margin-top: 31px; }
 .calendar-heading { align-items: center; }
 .calendar-date-strip { display: flex; max-width: calc(100% + 36px); gap: 8px; margin: 0 -18px; padding: 2px 18px 8px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
