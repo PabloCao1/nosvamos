@@ -5,9 +5,9 @@ import { DetailIndicator } from "../ui/Button";
 import { Icon } from "../ui/Icon";
 import { StatusPill } from "../ui/StatusPill";
 import { useCityImage } from "../../hooks/useCityImage";
+import { formatShortDate } from "../../lib/dates/tripDateTime";
 
 export function FutureTripCard({ trip }: { trip: Trip }) {
-  const date = new Intl.DateTimeFormat("es-AR", { day: "numeric", month: "short" });
   const start = new Date(`${trip.startDate}T12:00:00`);
   const end = new Date(`${trip.endDate}T12:00:00`);
   const days = Math.ceil((start.getTime() - Date.now()) / 86_400_000);
@@ -31,7 +31,7 @@ export function FutureTripCard({ trip }: { trip: Trip }) {
       <div className="future-trip-body">
         <div className="future-trip-heading">
           <div>
-            <p>{date.format(start)} — {date.format(end)}</p>
+            <p>{formatShortDate(trip.startDate)} — {formatShortDate(trip.endDate)}</p>
             <h2>{trip.name}</h2>
           </div>
           <DetailIndicator label={`Ver detalle de ${trip.name}`} />

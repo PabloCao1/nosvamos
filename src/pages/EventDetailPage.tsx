@@ -7,7 +7,7 @@ import { Icon, type IconName } from "../components/ui/Icon";
 import { ErrorState, LoadingState } from "../components/ui/PageState";
 import { useTrip } from "../hooks/useTrips";
 import { formatUsd } from "../lib/currency/exchangeRates";
-import { formatTripDateTime } from "../lib/dates/tripDateTime";
+import { formatClockTime, formatShortDate, formatTripDateTime } from "../lib/dates/tripDateTime";
 import { tripRepository } from "../repositories";
 import type { Activity, Reservation, Trip } from "../types/domain";
 
@@ -182,8 +182,8 @@ function ActivityDetail({ activity, trip, date }: { activity: Activity; trip: Tr
       <section className="event-detail-section">
         <h2>Detalles</h2>
         <div className="event-detail-card">
-          <DetailRow label="Fecha" value={`${new Intl.DateTimeFormat("es-AR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date(`${date}T12:00:00`))} · ${activity.startTime}`} />
-          <DetailRow label="Finaliza" value={activity.endTime ? `${new Intl.DateTimeFormat("es-AR", { day: "numeric", month: "long" }).format(new Date(`${date}T12:00:00`))} · ${activity.endTime}` : undefined} />
+          <DetailRow label="Fecha" value={`${formatShortDate(date)}, ${formatClockTime(activity.startTime)}`} />
+          <DetailRow label="Finaliza" value={activity.endTime ? `${formatShortDate(date)}, ${formatClockTime(activity.endTime)}` : undefined} />
           <DetailRow label="Lugar" value={activity.location} />
           <DetailRow label="Descripción" value={activity.description} />
           <DetailRow label="Categoría" value={labels.activityCategory[activity.category]} />

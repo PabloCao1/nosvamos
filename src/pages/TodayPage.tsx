@@ -3,7 +3,7 @@ import { PageHeader } from "../components/layout/PageHeader";
 import { EmptyState, ErrorState, LoadingState } from "../components/ui/PageState";
 import { Icon } from "../components/ui/Icon";
 import { useTrips } from "../hooks/useTrips";
-import { dateInTripZone, timeInTripZone } from "../lib/dates/tripDateTime";
+import { dateInTripZone, formatClockTime, timeInTripZone } from "../lib/dates/tripDateTime";
 import { activityIcon, reservationIcon } from "../lib/icons/entityIcons";
 
 type TodayItem = {
@@ -47,7 +47,7 @@ export function TodayPage() {
     {items.length === 0 ? <EmptyState title="Nada para hoy" message="No hay vuelos, traslados, reservas ni actividades programadas para hoy." /> :
       <section className="today-list">
         {items.map((item) => <Link className={`today-item ${item.cancelled ? "cancelled" : ""}`} to={item.href} key={`${item.tripId}-${item.id}`}>
-          <time>{item.time}</time>
+          <time>{formatClockTime(item.time)}</time>
           <span className="today-item-icon"><Icon name={item.icon} size={23} /></span>
           <div><small>{item.tripName}</small><h2>{item.title}</h2><p>{item.detail}</p></div>
           <Icon name="chevronRight" size={18} />

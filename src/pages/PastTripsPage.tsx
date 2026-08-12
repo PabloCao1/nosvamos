@@ -3,6 +3,7 @@ import { PageHeader } from "../components/layout/PageHeader";
 import { EmptyState, ErrorState, LoadingState } from "../components/ui/PageState";
 import { Icon } from "../components/ui/Icon";
 import { useTrips } from "../hooks/useTrips";
+import { formatShortDate } from "../lib/dates/tripDateTime";
 
 export function PastTripsPage() {
   const { data: trips, isLoading, isError, refetch } = useTrips();
@@ -28,7 +29,7 @@ export function PastTripsPage() {
               />
               <div>
                 <h2>{trip.name}</h2>
-                <p>{new Intl.DateTimeFormat("es-AR", { month: "long", year: "numeric" }).format(new Date(`${trip.endDate}T12:00:00`))}</p>
+                <p>{formatShortDate(trip.endDate)}</p>
               </div>
               <Icon name="chevronRight" size={18} />
             </Link>

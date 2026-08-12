@@ -6,6 +6,7 @@ import { Icon } from "../components/ui/Icon";
 import { IconButton } from "../components/ui/Button";
 import { ErrorState, LoadingState } from "../components/ui/PageState";
 import { useTrip } from "../hooks/useTrips";
+import { formatShortDate } from "../lib/dates/tripDateTime";
 
 export function ItineraryPage() {
   const { tripId } = useParams();
@@ -42,7 +43,7 @@ export function ItineraryPage() {
 
       <section className="day-overview">
         <div>
-          <p className="eyebrow">{new Intl.DateTimeFormat("es-AR", { day: "numeric", month: "long" }).format(new Date(`${day.date}T12:00:00`))}</p>
+          <p className="eyebrow">{formatShortDate(day.date)}</p>
           <h2>{day.city}</h2>
         </div>
         <div className="weather-placeholder" title="Clima de demostración">

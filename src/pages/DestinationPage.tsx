@@ -7,12 +7,10 @@ import { Button, DetailIndicator } from "../components/ui/Button";
 import { ErrorState, LoadingState } from "../components/ui/PageState";
 import { useTrip } from "../hooks/useTrips";
 import { formatUsd } from "../lib/currency/exchangeRates";
-import { formatTripDateTime } from "../lib/dates/tripDateTime";
+import { formatShortDate, formatTripDateTime } from "../lib/dates/tripDateTime";
 import { tripRepository } from "../repositories";
 
-const date = (value: string) =>
-  new Intl.DateTimeFormat("es-AR", { day: "numeric", month: "long", year: "numeric" })
-    .format(new Date(value.includes("T") ? value : `${value}T12:00:00`));
+const date = (value: string) => formatShortDate(value);
 
 export function DestinationPage() {
   const { tripId, destinationId } = useParams();

@@ -3,6 +3,7 @@ import { AvatarGroup } from "../ui/AvatarGroup";
 import { IconButtonLink } from "../ui/Button";
 import { Icon } from "../ui/Icon";
 import { useCityImage } from "../../hooks/useCityImage";
+import { formatShortDate } from "../../lib/dates/tripDateTime";
 
 export function TripHero({ trip }: { trip: Trip }) {
   const firstDestination = trip.destinations[0];
@@ -11,7 +12,7 @@ export function TripHero({ trip }: { trip: Trip }) {
   const start = new Date(`${trip.startDate}T12:00:00`);
   const end = new Date(`${trip.endDate}T12:00:00`);
   const nights = Math.max(0, Math.round((end.getTime() - start.getTime()) / 86_400_000));
-  const dates = `${new Intl.DateTimeFormat("es-AR", { day: "numeric", month: "short" }).format(start)}–${new Intl.DateTimeFormat("es-AR", { day: "numeric", month: "short" }).format(end)}`;
+  const dates = `${formatShortDate(trip.startDate)} — ${formatShortDate(trip.endDate)}`;
 
   return (
     <article className={`trip-hero ${coverUrl ? "" : "cover-placeholder"}`} style={coverUrl ? { backgroundImage: `url("${coverUrl}")` } : undefined}>

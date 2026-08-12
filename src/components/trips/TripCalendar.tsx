@@ -4,7 +4,7 @@ import type { Trip } from "../../types/domain";
 import type { IconName } from "../ui/Icon";
 import { Icon } from "../ui/Icon";
 import { DetailIndicator } from "../ui/Button";
-import { dateInTripZone, timeInTripZone } from "../../lib/dates/tripDateTime";
+import { dateInTripZone, formatClockTime, timeInTripZone } from "../../lib/dates/tripDateTime";
 
 interface CalendarEvent {
   id: string;
@@ -117,7 +117,7 @@ export function TripCalendar({ trip }: { trip: Trip }) {
             aria-label={`Ver detalle de ${event.title}`}
           >
             <span className={`calendar-event-icon ${event.tone}`}><Icon name={event.icon} size={26} weight="Filled" /></span>
-            <time className="calendar-event-time">{event.time}</time>
+            <time className="calendar-event-time">{formatClockTime(event.time)}</time>
             <div>
               <h3>{event.title}</h3>
               <p>{event.detail}</p>
