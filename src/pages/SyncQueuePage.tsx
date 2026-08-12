@@ -42,7 +42,7 @@ export function SyncQueuePage() {
               </span>
               <div>
                 <strong>{actionLabels[operation.action]} {entityLabels[operation.entityType].toLowerCase()}</strong>
-                <p>{operation.status === "failed" ? operation.lastError ?? "Error pendiente de revisión" : "Pendiente de conexión"} · {new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(new Date(operation.createdAt))}</p>
+                <p>{operation.lastError ? `Pendiente de sincronizar: ${operation.lastError}` : "Pendiente de sincronizar"} · {new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(new Date(operation.createdAt))}</p>
               </div>
               {operation.status === "failed" && (
                 <div className="queue-actions">

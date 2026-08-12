@@ -8,7 +8,7 @@ export function SyncStatusBar() {
   return (
     <Link to="/sincronizacion" className="sync-status" role="status">
       <Icon name="cloudCheck" size={16} />
-      {count} {count === 1 ? "cambio guardado" : "cambios guardados"} en este dispositivo
+      {count} {count === 1 ? "cambio pendiente de sincronizar" : "cambios pendientes de sincronizar"}
     </Link>
   );
 }

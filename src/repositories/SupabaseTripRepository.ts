@@ -147,10 +147,6 @@ export class SupabaseTripRepository extends LocalTripRepository {
     }
   }
 
-  private async clearQueued(localId: string) {
-    await db.syncQueue.where("localId").equals(localId).delete();
-  }
-
   private async flushPending() {
     if (!navigator.onLine) return;
     const pending = await db.syncQueue.where("status").equals("pending").toArray();
@@ -173,6 +169,11 @@ export class SupabaseTripRepository extends LocalTripRepository {
         await db.syncQueue.delete(item.id);
       } catch (error) {
         console.error("No se pudo sincronizar el cambio pendiente", error);
+        await db.syncQueue.update(item.id, {
+          attempts: item.attempts + 1,
+          lastError: error instanceof Error ? error.message : "Error de sincronización",
+          nextAttemptAt: new Date(Date.now() + 10_000).toISOString(),
+        });
       }
     }
   }
@@ -282,63 +283,44 @@ export class SupabaseTripRepository extends LocalTripRepository {
   }
 
   override async deleteReservation(reservation: Reservation) {
-    if (!navigator.onLine) return super.deleteReservationPermanently(reservation);
-    const deletedAt = new Date().toISOString();
-    const { error } = await supabase.from("reservations").update({ deleted_at: deletedAt }).eq("id", reservation.id);
-    if (error) throw error;
-    await super.deleteReservationPermanently(reservation, deletedAt);
-    await this.clearQueued(reservation.id);
+    await super.deleteReservationPermanently(reservation);
+    await this.flushPending();
   }
 
   override async deleteActivity(activity: Activity) {
-    if (!navigator.onLine) return super.deleteActivityPermanently(activity);
-    const deletedAt = new Date().toISOString();
-    const { error } = await supabase.from("activities").update({ deleted_at: deletedAt }).eq("id", activity.id);
-    if (error) throw error;
-    await super.deleteActivityPermanently(activity, deletedAt);
-    await this.clearQueued(activity.id);
+    await super.deleteActivityPermanently(activity);
+    await this.flushPending();
   }
 
   override async addReservation(reservation: Reservation) {
-    if (!navigator.onLine) return super.addReservation(reservation);
-    await this.persistReservation(reservation); await super.addReservation(reservation); await this.clearQueued(reservation.id);
+    await super.addReservation(reservation); await this.flushPending();
   }
   override async updateReservation(reservation: Reservation) {
-    if (!navigator.onLine) return super.updateReservation(reservation);
-    await this.persistReservation(reservation); await super.updateReservation(reservation); await this.clearQueued(reservation.id);
+    await super.updateReservation(reservation); await this.flushPending();
   }
   override async addActivity(activity: Activity) {
-    if (!navigator.onLine) return super.addActivity(activity);
-    await this.persistActivity(activity); await super.addActivity(activity); await this.clearQueued(activity.id);
+    await super.addActivity(activity); await this.flushPending();
   }
   override async updateActivity(activity: Activity) {
-    if (!navigator.onLine) return super.updateActivity(activity);
-    await this.persistActivity(activity); await super.updateActivity(activity); await this.clearQueued(activity.id);
+    await super.updateActivity(activity); await this.flushPending();
   }
   override async addExpense(expense: Expense) {
-    if (!navigator.onLine) return super.addExpense(expense);
-    await this.persistExpense(expense); await super.addExpense(expense); await this.clearQueued(expense.id);
+    await super.addExpense(expense); await this.flushPending();
   }
   override async updateExpense(expense: Expense) {
-    if (!navigator.onLine) return super.updateExpense(expense);
-    await this.persistExpense(expense); await super.updateExpense(expense); await this.clearQueued(expense.id);
+    await super.updateExpense(expense); await this.flushPending();
   }
 
   override async addTrip(trip: Trip) {
-    if (!navigator.onLine) return super.addTrip(trip);
-    const { data: auth } = await supabase.auth.getUser();
-    if (!auth.user) throw new Error("Tenés que iniciar sesión para guardar el viaje.");
-    const { error } = await supabase.from("trips").insert(tripRow(trip, auth.user.id));
-    if (error) throw error;
-    await this.persistDestinations(trip);
-    await super.addTrip(trip); await this.clearQueued(trip.id);
+    await super.addTrip(trip); await this.flushPending();
   }
 
   override async updateTrip(trip: Trip) {
-    if (!navigator.onLine) return super.updateTrip(trip);
-    const { error } = await supabase.from("trips").update(tripRow(trip)).eq("id", trip.id);
-    if (error) throw error;
-    await this.persistDestinations(trip);
-    await super.updateTrip(trip); await this.clearQueued(trip.id);
+    await super.updateTrip(trip); await this.flushPending();
+  }
+
+  override async getPendingCount() {
+    await this.flushPending();
+    return super.getPendingCount();
   }
 }
