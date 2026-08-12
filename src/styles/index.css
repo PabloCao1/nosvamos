@@ -1039,6 +1039,176 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   flex: 0 0 auto;
   accent-color: var(--mint);
 }
+
+/* Editorial UI pass, inspired by GourmetGrove's restrained mobile layouts. */
+:root {
+  --radius-lg: 18px;
+  --radius-md: 14px;
+  --shadow: 0 10px 28px rgba(0, 0, 0, .18);
+}
+
+.page-content {
+  padding-right: 20px;
+  padding-left: 20px;
+}
+
+.page-header {
+  align-items: flex-start;
+  margin-bottom: 28px;
+}
+
+.page-header h1 {
+  font-size: clamp(1.85rem, 7vw, 2.2rem);
+  line-height: 1.02;
+  letter-spacing: -.035em;
+}
+
+.eyebrow {
+  margin-bottom: 7px;
+  font-size: .62rem;
+  letter-spacing: .14em;
+}
+
+.section-block { margin-top: 38px; }
+.section-heading { margin: 0 0 15px; }
+.section-heading h2 { font-size: 1.12rem; letter-spacing: -.018em; }
+
+.trip-hero {
+  min-height: 350px;
+  padding: 20px;
+  border-radius: 18px;
+}
+
+.trip-hero-content { right: 20px; bottom: 20px; left: 20px; }
+.trip-hero-date h2 { max-width: 310px; font-size: 1.75rem; }
+
+:is(
+  .metric-card,
+  .reservation-card,
+  .expense-card,
+  .destination-event,
+  .calendar-event,
+  .stay-card,
+  .departure-card,
+  .destination-period-card,
+  .destination-edit-row,
+  .planning-card,
+  .people-card,
+  .profile-card,
+  .queue-list article,
+  .settlement-row,
+  .settlements-empty,
+  .balance-grid article,
+  .notification-schedule,
+  .event-detail-card,
+  .event-people > div,
+  .event-linked-expenses article,
+  .itinerary-movement,
+  .invite-role,
+  .traveler-form-card
+) {
+  border-color: rgba(184,247,228,.09);
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+.dashboard-grid { gap: 8px; }
+.metric-card { padding: 15px; }
+.metric-icon { width: 34px; height: 34px; margin-bottom: 17px; border-radius: 10px; }
+.metric-card > strong { font-size: 1.48rem; }
+
+.activity-list,
+.card-stack,
+.calendar-event-list,
+.destination-event-list,
+.event-people,
+.event-linked-expenses { gap: 2px; }
+
+.activity-card,
+.calendar-event,
+.destination-event,
+.expense-card {
+  min-height: 76px;
+  border-radius: 0;
+  border-width: 0 0 1px;
+  background: transparent;
+}
+
+.activity-card:first-child,
+.calendar-event:first-child,
+.destination-event:first-child,
+.expense-card:first-child { border-top: 1px solid rgba(184,247,228,.09); }
+
+.activity-card { padding: 11px 4px; }
+.calendar-event,
+.destination-event,
+.expense-card { padding: 12px 2px; }
+
+.reservation-card {
+  min-height: 106px;
+  padding: 16px;
+}
+
+.reservation-icon,
+.expense-icon,
+.stay-card > span,
+.departure-card > span,
+.destination-event > span,
+.itinerary-movement-icon,
+.event-linked-expenses article > span {
+  border-radius: 10px;
+}
+
+.card-kicker,
+.calendar-event p,
+.destination-event p,
+.destination-event small,
+.expense-card p,
+.activity-card p { letter-spacing: .01em; }
+
+.calendar-date-strip { gap: 7px; }
+.calendar-date-strip button {
+  width: 58px;
+  min-width: 58px;
+  min-height: 96px;
+  border-radius: 12px;
+}
+
+.event-detail-hero {
+  padding: 0 0 22px;
+  border-width: 0 0 1px;
+  border-radius: 0;
+  background: transparent;
+}
+
+.event-detail-section { margin-top: 30px; }
+.event-detail-section > h2 { margin-bottom: 13px; font-size: .82rem; letter-spacing: .02em; }
+.event-detail-row { padding: 15px 14px; }
+
+.entity-form { gap: 20px; }
+.form-field { gap: 8px; }
+.form-field > span { font-size: .68rem; letter-spacing: .025em; }
+
+.entity-form :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea),
+.personal-data-form :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  border-radius: 11px;
+  background: rgba(255,255,255,.025);
+}
+
+.form-subsection {
+  margin-top: 10px;
+  padding-top: 22px;
+}
+
+.profile-card,
+.password-action-card,
+.personal-data-form { border-radius: 14px; }
+
+.confirm-dialog { border-radius: 18px; }
+
+@media (min-width: 700px) {
+  .app-frame { max-width: 560px; }
+}
 .fab {
   z-index: 48;
   bottom: calc(91px + env(safe-area-inset-bottom));
