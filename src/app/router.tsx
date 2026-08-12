@@ -80,7 +80,6 @@ export const router = createBrowserRouter([
       { path: "/viaje/:tripId/integrantes", element: page(<MembersPage />) },
       { path: "/viaje/:tripId/integrantes/nuevo", element: page(<MemberFormPage />) },
       { path: "/viaje/:tripId/integrantes/:memberId", element: page(<MemberDetailPage />) },
-      { path: "/viaje/:tripId/integrantes/:memberId/editar", element: page(<MemberFormPage />) },
       { path: "/viaje/:tripId/evento/:eventType/:eventId", element: page(<EventDetailPage />) },
       { path: "/perfil", element: <Navigate to="/" replace /> },
       { path: "/datos-personales", element: page(<PersonalDataPage />) },

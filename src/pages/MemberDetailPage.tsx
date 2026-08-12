@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { PageHeader } from "../components/layout/PageHeader";
-import { Button, IconButtonLink } from "../components/ui/Button";
+import { Button } from "../components/ui/Button";
 import { Icon } from "../components/ui/Icon";
 import { ErrorState, LoadingState } from "../components/ui/PageState";
 import { useTrip } from "../hooks/useTrips";
@@ -118,13 +118,7 @@ export function MemberDetailPage() {
 
   return (
     <>
-      <PageHeader
-        eyebrow={trip.name}
-        title={member.name}
-        action={member.status !== "removed"
-          ? <IconButtonLink icon="edit" label="Editar integrante" to={`/viaje/${trip.id}/integrantes/${member.id}/editar`} />
-          : undefined}
-      />
+      <PageHeader eyebrow={trip.name} title={member.name} />
 
       <section className="member-dashboard-hero">
         <ParticipantAvatar participant={member} className="member-dashboard-avatar" />
