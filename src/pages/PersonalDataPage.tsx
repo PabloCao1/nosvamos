@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type PointerEvent as ReactPointerEvent, type WheelEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent, type PointerEvent as ReactPointerEvent, type WheelEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { PageHeader } from "../components/layout/PageHeader";
@@ -25,6 +25,8 @@ export function PersonalDataPage() {
   const cropZoom = useRef(1);
   const cropPointers = useRef(new Map<number, { x: number; y: number }>());
   const lastGesture = useRef<{ x: number; y: number; distance: number } | null>(null);
+  const cropCanvas = useRef<HTMLCanvasElement>(null);
+  const cropImage = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -36,6 +38,34 @@ export function PersonalDataPage() {
       if (data.avatar_path) void supabase.storage.from("avatars").createSignedUrl(data.avatar_path, 3600).then(({ data: signed }) => setAvatarUrl(signed?.signedUrl ?? ""));
     });
   }, [user]);
+
+  useEffect(() => {
+    if (!cropSource) return;
+    const image = new Image();
+    image.onload = () => {
+      cropImage.current = image;
+      setCropImageSize({ width: image.naturalWidth, height: image.naturalHeight });
+    };
+    image.onerror = () => setError("No pudimos abrir la foto seleccionada.");
+    image.src = cropSource;
+  }, [cropSource]);
+
+  const drawCrop = useCallback((canvas: HTMLCanvasElement, image: HTMLImageElement) => {
+    const previewSize = 230;
+    const coverScale = Math.max(previewSize / image.naturalWidth, previewSize / image.naturalHeight);
+    const totalScale = coverScale * zoom;
+    const sourceSize = previewSize / totalScale;
+    const sourceX = Math.max(0, Math.min(image.naturalWidth - sourceSize, image.naturalWidth / 2 - cropX / totalScale - sourceSize / 2));
+    const sourceY = Math.max(0, Math.min(image.naturalHeight - sourceSize, image.naturalHeight / 2 - cropY / totalScale - sourceSize / 2));
+    const context = canvas.getContext("2d");
+    if (!context) return;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(image, sourceX, sourceY, sourceSize, sourceSize, 0, 0, canvas.width, canvas.height);
+  }, [cropX, cropY, zoom]);
+
+  useEffect(() => {
+    if (cropCanvas.current && cropImage.current) drawCrop(cropCanvas.current, cropImage.current);
+  }, [cropImageSize, cropSource, drawCrop]);
 
   const chooseAvatar = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -114,18 +144,10 @@ export function PersonalDataPage() {
   const saveCroppedAvatar = async () => {
     if (!cropSource || !user) return;
     setPending(true); setError(""); setMessage("");
-    const image = new Image();
-    image.src = cropSource;
-    await image.decode();
-    const previewSize = 230;
-    const coverScale = Math.max(previewSize / image.naturalWidth, previewSize / image.naturalHeight);
-    const totalScale = coverScale * zoom;
-    const sourceSize = previewSize / totalScale;
-    const sourceX = Math.max(0, Math.min(image.naturalWidth - sourceSize, image.naturalWidth / 2 - cropX / totalScale - sourceSize / 2));
-    const sourceY = Math.max(0, Math.min(image.naturalHeight - sourceSize, image.naturalHeight / 2 - cropY / totalScale - sourceSize / 2));
-    const canvas = document.createElement("canvas");
-    canvas.width = 512; canvas.height = 512;
-    canvas.getContext("2d")?.drawImage(image, sourceX, sourceY, sourceSize, sourceSize, 0, 0, 512, 512);
+    const canvas = cropCanvas.current;
+    const image = cropImage.current;
+    if (!canvas || !image) { setError("La foto todavía se está preparando."); setPending(false); return; }
+    drawCrop(canvas, image);
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.88));
     if (!blob) { setError("No pudimos recortar la foto."); setPending(false); return; }
     const path = `${user.id}/profile-${Date.now()}.jpg`;
@@ -171,17 +193,7 @@ export function PersonalDataPage() {
           onPointerCancel={endCropGesture}
           onWheel={zoomCropWithWheel}
         >
-          <img
-            src={cropSource}
-            alt="Vista previa"
-            draggable={false}
-            onLoad={(event) => setCropImageSize({ width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight })}
-            style={{
-              width: cropImageSize.width >= cropImageSize.height ? `${230 * cropImageSize.width / cropImageSize.height}px` : "230px",
-              height: cropImageSize.height >= cropImageSize.width ? `${230 * cropImageSize.height / cropImageSize.width}px` : "230px",
-              transform: `translate(${cropX}px, ${cropY}px) scale(${zoom})`,
-            }}
-          />
+          <canvas ref={cropCanvas} width="512" height="512" aria-label="Vista previa del recorte" />
         </div>
         <p className="avatar-crop-hint">Arrastrá para centrar · Pellizcá con dos dedos para ajustar</p>
         <div className="confirm-actions">
