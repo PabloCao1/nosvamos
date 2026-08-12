@@ -15,7 +15,7 @@ export function HomePage() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const futureTrips = (trips ?? [])
-    .filter((trip) => new Date(`${trip.startDate}T00:00:00`) >= today && trip.status !== "archived")
+    .filter((trip) => new Date(`${trip.endDate || trip.startDate}T23:59:59`) >= today && trip.status !== "archived")
     .sort((a, b) => a.startDate.localeCompare(b.startDate));
 
   return (
