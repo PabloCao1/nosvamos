@@ -46,7 +46,9 @@ const reservationSchema = z.object({
   type: z.enum(["flight", "train", "bus", "ferry", "hotel", "apartment", "restaurant", "activity", "car", "insurance", "other"]),
   providerName: z.string().trim().optional(),
   providerReference: z.string().trim().optional(),
-  startAt: z.string().min(1, "Ingresá fecha y hora"),
+  startAt: z.string().optional(),
+  excursionDate: z.string().optional(),
+  excursionTime: z.string().optional(),
   endAt: z.string().optional(),
   city: z.string().optional(),
   country: z.string().optional(),
@@ -62,7 +64,6 @@ const reservationSchema = z.object({
   status: z.enum(["draft", "pending", "confirmed", "completed", "cancelled"]),
   confirmationCode: z.string().optional(),
   externalUrl: z.string().optional(),
-  paymentMethodLast4: z.string().max(4).optional(),
   paid: z.boolean().optional(),
   paidBy: z.string().optional(),
   payOnArrival: z.boolean().optional(),
@@ -391,6 +392,7 @@ export function ReservationForm({
     defaultValues: entity ? {
       title: entity.title, type: entity.type, providerName: entity.providerName,
       providerReference: entity.providerReference, startAt: entity.startAt.slice(0, 16),
+      excursionDate: entity.startAt.slice(0, 10), excursionTime: entity.startAt.slice(11, 16),
       endAt: entity.endAt?.slice(0, 16), city: entity.city,
       country: trip?.destinations.find((destination) => destination.city.localeCompare(entity.city, "es", { sensitivity: "base" }) === 0)?.country,
       originCity: entity.originCity, destinationCity: entity.destinationCity,
@@ -399,7 +401,7 @@ export function ReservationForm({
       totalAmount: entity.totalAmount, paymentStatus: entity.paymentStatus,
       currency: entity.originalCurrency ?? entity.currency,
       status: entity.status, confirmationCode: entity.confirmationCode,
-      externalUrl: entity.externalUrl, paymentMethodLast4: entity.paymentMethodLast4,
+      externalUrl: entity.externalUrl,
       paid: entity.paymentStatus === "paid", paidBy: entity.paidBy,
       payOnArrival: entity.payOnArrival, confirmed: entity.status === "confirmed",
       differentDropoffCity: entity.type === "car" && Boolean(entity.destinationCity && entity.destinationCity !== entity.originCity),
@@ -408,6 +410,7 @@ export function ReservationForm({
       type: carRental ? "car" : excursion ? "activity" : importDraft && importDraft.kind !== "expense" && importDraft.kind !== "other" ? importDraft.kind : lodging ? "hotel" : "flight",
       providerName: importDraft?.providerName ?? "", providerReference: importDraft?.providerReference ?? "",
       confirmationCode: importDraft?.confirmationCode ?? "", startAt: importDraft?.startAt ?? "", endAt: importDraft?.endAt ?? "",
+      excursionDate: importDraft?.startAt?.slice(0, 10) ?? "", excursionTime: importDraft?.startAt?.slice(11, 16) ?? "",
       city: importDraft?.city ?? "", country: importDraft?.country ?? "", originCity: importDraft?.originCity ?? "",
       destinationCity: importDraft?.destinationCity ?? "", originPlace: importDraft?.originPlace ?? "",
       destinationPlace: importDraft?.destinationPlace ?? "", serviceNumber: importDraft?.serviceNumber ?? "", address: importDraft?.address ?? "",
@@ -440,10 +443,14 @@ export function ReservationForm({
   const isLodging = ["hotel", "apartment"].includes(reservationType);
 
   const submit = async (values: ReservationValues) => {
+    if (!excursion && !values.startAt) { setError("startAt", { message: "Ingresá fecha y hora" }); return; }
     if (isLodging && !values.city?.trim()) { setError("city", { message: "Ingresá la ciudad" }); return; }
     if (isLodging && !values.country?.trim()) { setError("country", { message: "Ingresá el país" }); return; }
     if (isLodging && !values.endAt) { setError("endAt", { message: "Ingresá la fecha de check-out" }); return; }
     if (isLodging && values.paid && !values.paidBy) { setError("paidBy", { message: "Seleccioná quién pagó" }); return; }
+    if (excursion && !values.excursionDate) { setError("excursionDate", { message: "Ingresá la fecha" }); return; }
+    if (excursion && !values.excursionTime) { setError("excursionTime", { message: "Ingresá la hora" }); return; }
+    if (excursion && values.paid && !values.paidBy) { setError("paidBy", { message: "Seleccioná quién pagó" }); return; }
     if (carRental && !values.originCity?.trim()) { setError("originCity", { message: "Ingresá la ciudad de retiro" }); return; }
     if (carRental && values.differentDropoffCity && !values.destinationCity?.trim()) { setError("destinationCity", { message: "Ingresá la ciudad de entrega" }); return; }
     if (carRental && !values.endAt) { setError("endAt", { message: "Ingresá la fecha de entrega" }); return; }
@@ -470,10 +477,10 @@ export function ReservationForm({
       providerReference: values.providerReference?.trim() || "Sin código",
       confirmationCode: values.confirmationCode?.trim() || values.providerReference?.trim() || undefined,
       externalUrl: values.externalUrl?.trim() || undefined,
-      paymentMethodLast4: values.paymentMethodLast4?.trim() || undefined,
+      paymentMethodLast4: undefined,
       // Reservation schedules are wall-clock times at the origin/destination.
       // Keep the entered value instead of converting it to the device timezone.
-      startAt: values.startAt,
+      startAt: excursion ? `${values.excursionDate}T${values.excursionTime}` : values.startAt!,
       endAt: values.endAt || undefined,
       city: values.city?.trim() || values.destinationCity?.trim() || values.originCity?.trim() || "",
       originCity: values.originCity?.trim() || undefined,
@@ -487,10 +494,10 @@ export function ReservationForm({
       originalTotalAmount: values.totalAmount,
       originalCurrency: values.currency,
       exchangeRate: conversion.rate,
-      paymentStatus: isLodging ? values.paid ? "paid" : "unpaid" : values.paymentStatus,
-      paidBy: carRental ? values.paidBy || undefined : isLodging && values.paid ? values.paidBy || undefined : undefined,
-      payOnArrival: isLodging ? Boolean(values.payOnArrival) : undefined,
-      status: isLodging ? values.confirmed ? "confirmed" : "pending" : values.status,
+      paymentStatus: isLodging || excursion ? values.paid ? "paid" : "unpaid" : values.paymentStatus,
+      paidBy: carRental ? values.paidBy || undefined : (isLodging || excursion) && values.paid ? values.paidBy || undefined : undefined,
+      payOnArrival: isLodging || excursion ? Boolean(values.payOnArrival) : undefined,
+      status: isLodging || excursion ? values.confirmed ? "confirmed" : "pending" : values.status,
       participantIds: Object.entries(travelerDetails).filter(([, detail]) => detail.included).map(([participantId]) => participantId),
       travelerConfirmations: isTransport
         ? Object.entries(travelerDetails)
@@ -503,7 +510,7 @@ export function ReservationForm({
               baggage: detail.baggage.trim() || undefined,
             }))
         : undefined,
-      nextAction: isLodging && values.payOnArrival ? "Pagar al llegar" : undefined,
+      nextAction: (isLodging || excursion) && values.payOnArrival ? "Pagar al llegar" : undefined,
     };
     await mutation.mutateAsync(async () => {
       if (entity) await tripRepository.updateReservation(reservation);
@@ -552,7 +559,7 @@ export function ReservationForm({
       {!carRental && <Field label={transport ? "Nombre del viaje" : lodging ? "Nombre del alojamiento" : "Nombre"} required error={errors.title?.message}>
         <input autoFocus {...register("title")} placeholder={transport ? "Ej. Vuelo de ida" : lodging ? "Ej. Hotel Central" : "Ej. Reserva"} />
       </Field>}
-      {!carRental && <div className={lodging ? "" : "form-row"}>
+      {!carRental && !excursion && <div className={lodging ? "" : "form-row"}>
         <Field label="Tipo" required><select {...register("type")}>
           {lodging ? (
             <><option value="hotel">Hotel</option><option value="apartment">Casa o departamento</option></>
@@ -566,19 +573,27 @@ export function ReservationForm({
         </select></Field>
         {!lodging && <Field label="Estado de pago" required><select {...register("paymentStatus")}><option value="unpaid">Sin pagar</option><option value="partially_paid">Pago parcial</option><option value="paid">Pagada</option></select></Field>}
       </div>}
-      {!carRental && <div className="form-row">
+      {!carRental && !excursion && <div className="form-row">
         <Field label={reservationType === "flight" ? "Aerolínea" : reservationType === "car" ? "Empresa de alquiler" : lodging ? "Plataforma" : "Empresa"} required={!lodging} error={errors.providerName?.message}>
           <input {...register("providerName")} placeholder={reservationType === "flight" ? "Ej. Aerolíneas Argentinas" : lodging ? "Ej. Airbnb o nombre del hotel" : "Nombre de la empresa"} />
         </Field>
         <Field label="Código de reserva" required={!lodging} error={errors.providerReference?.message}><input autoCapitalize="characters" {...register("providerReference")} /></Field>
       </div>}
-      {!carRental && <div className="form-row">
+      {!carRental && !excursion && <div className="form-row">
         <Field label="Código de confirmación"><input autoCapitalize="characters" {...register("confirmationCode")} /></Field>
         {!lodging && <Field label="Estado" required><select {...register("status")}><option value="draft">Borrador</option><option value="pending">Pendiente</option><option value="confirmed">Confirmada</option><option value="completed">Completada</option><option value="cancelled">Anulada</option></select></Field>}
       </div>}
       {carRental && <Field label="Código de reserva" required error={errors.providerReference?.message}><input autoFocus autoCapitalize="characters" {...register("providerReference")} /></Field>}
       {isTransport && !carRental && <Field label={reservationType === "flight" ? "Número de vuelo" : "Número de servicio"}><input {...register("serviceNumber")} placeholder={reservationType === "flight" ? "Ej. AR1132" : ""} /></Field>}
-      <Field label={isLodging ? "Check-in" : reservationType === "car" ? "Retiro" : isTransport ? "Salida" : "Fecha y hora"} required error={errors.startAt?.message}><input type="datetime-local" {...register("startAt")} /></Field>
+      {excursion ? <div className="form-row">
+        <Field label="Fecha" required error={errors.excursionDate?.message}><input type="date" {...register("excursionDate")} /></Field>
+        <Field label="Hora" required error={errors.excursionTime?.message}><input type="time" {...register("excursionTime")} /></Field>
+        <input type="hidden" {...register("startAt")} />
+      </div> : <Field label={isLodging ? "Check-in" : reservationType === "car" ? "Retiro" : isTransport ? "Salida" : "Fecha y hora"} required error={errors.startAt?.message}><input type="datetime-local" {...register("startAt")} /></Field>}
+      {excursion && <div className="form-row">
+        <Field label="Empresa" required error={errors.providerName?.message}><input {...register("providerName")} placeholder="Nombre de la empresa" /></Field>
+        <Field label="Código de reserva" required error={errors.providerReference?.message}><input autoCapitalize="characters" {...register("providerReference")} /></Field>
+      </div>}
       {(isLodging || isTransport) && <Field label={isLodging ? "Check-out" : reservationType === "car" ? "Devolución" : "Llegada"} required={isLodging || carRental} error={errors.endAt?.message}><input type="datetime-local" {...register("endAt")} /></Field>}
       {isTransport && !carRental && (
         <>
@@ -606,14 +621,14 @@ export function ReservationForm({
           <Field label="Dirección"><input {...register("address")} placeholder="Calle, número o indicaciones" /></Field>
         </>
       )}
-      {!lodging && !carRental && <Field label="Enlace del proveedor"><input type="url" inputMode="url" autoCapitalize="none" {...register("externalUrl")} placeholder="https://…" /></Field>}
+      {excursion && <Field label="Dirección de encuentro"><input {...register("address")} placeholder="Calle, número o indicaciones" /></Field>}
+      {!lodging && !carRental && !excursion && <Field label="Enlace del proveedor"><input type="url" inputMode="url" autoCapitalize="none" {...register("externalUrl")} placeholder="https://…" /></Field>}
       <div className="form-row">
         <Field label={carRental ? "Precio" : "Total"}><input type="number" inputMode="decimal" step="0.01" {...register("totalAmount")} /></Field>
         <Field label="Moneda"><select {...register("currency")}>{SUPPORTED_CURRENCIES.map(([code, name]) => <option key={code} value={code}>{code} · {name}</option>)}</select></Field>
       </div>
       {carRental && <Field label="Pagado por" required error={errors.paidBy?.message}><select {...register("paidBy")}><option value="">Seleccionar integrante</option>{trip.participants.filter((person) => person.status !== "removed").map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select></Field>}
-      {!lodging && !carRental && <Field label="Últimos 4 dígitos de la tarjeta"><input inputMode="numeric" maxLength={4} pattern="[0-9]{4}" {...register("paymentMethodLast4")} placeholder="Ej. 9620" /></Field>}
-      {lodging && <section className="form-subsection">
+      {(lodging || excursion) && <section className="form-subsection">
         <label className="traveler-toggle"><input type="checkbox" {...register("paid")} /><strong>Pagado</strong></label>
         {watch("paid") && <Field label="Pagado por" required error={errors.paidBy?.message}><select {...register("paidBy")}><option value="">Seleccionar integrante</option>{trip.participants.filter((person) => person.status !== "removed").map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select></Field>}
         <label className="traveler-toggle"><input type="checkbox" {...register("payOnArrival")} /><strong>Se paga al llegar</strong></label>
