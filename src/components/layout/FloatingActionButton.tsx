@@ -16,11 +16,11 @@ interface FabAction {
 const tripDetailActions: FabAction[] = [
   { label: "Escanear documento", icon: "receipt", mode: "import" },
   { label: "Invitar integrante", icon: "users", mode: "invite" },
-  { label: "Agregar transporte", icon: "airplane", mode: "transport", tone: "transport" },
+  { label: "Transporte", icon: "airplane", mode: "transport", tone: "transport" },
   { label: "Alquiler de auto", icon: "car", mode: "car", tone: "auto" },
-  { label: "Agregar alojamiento", icon: "bed", mode: "lodging", tone: "lodging" },
-  { label: "Agregar actividad", icon: "calendar", mode: "activity", tone: "activity" },
-  { label: "Agregar gasto", icon: "wallet", mode: "expense" },
+  { label: "Alojamiento", icon: "bed", mode: "lodging", tone: "lodging" },
+  { label: "Actividad", icon: "calendar", mode: "activity", tone: "activity" },
+  { label: "Gasto", icon: "wallet", mode: "expense" },
 ];
 
 function actionForPath(pathname: string): FabAction | null {
