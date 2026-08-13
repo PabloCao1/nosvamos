@@ -19,8 +19,12 @@ export function TodayPage() {
   if (isError) return <ErrorState onRetry={() => void refetch()} />;
 
   const today = localCalendarDate();
-  const currentDestination = (trips ?? []).flatMap((trip) => trip.destinations)
-    .find((destination) => destination.arrivalDate <= today && destination.departureDate >= today);
+  const destinations = (trips ?? []).flatMap((trip) => trip.destinations)
+    .filter((destination) => destination.arrivalDate && destination.departureDate)
+    .sort((first, second) => first.arrivalDate.localeCompare(second.arrivalDate));
+  const weatherDestination = destinations.find((destination) =>
+    destination.arrivalDate <= today && destination.departureDate >= today
+  ) ?? destinations.find((destination) => destination.arrivalDate > today) ?? destinations.at(-1);
   const items: TodayItem[] = (trips ?? []).flatMap((trip) => {
     const reservations = trip.reservations.flatMap((reservation) => {
       const result: TodayItem[] = [];
@@ -47,7 +51,7 @@ export function TodayPage() {
 
   return <>
     <PageHeader eyebrow="Tu agenda" title="Hoy" />
-    {currentDestination && <WeatherBanner city={currentDestination.city} country={currentDestination.country} />}
+    {weatherDestination && <WeatherBanner city={weatherDestination.city} country={weatherDestination.country} />}
     {items.length === 0 ? <EmptyState title="Nada para hoy" message="No hay vuelos, traslados, reservas ni actividades programadas para hoy." /> :
       <section className="today-list">
         {items.map((item) => <Link className={`today-item ${item.cancelled ? "cancelled" : ""}`} to={item.href} key={`${item.tripId}-${item.id}`}>

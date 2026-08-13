@@ -191,8 +191,14 @@ export class SupabaseTripRepository extends LocalTripRepository {
         else if (item.entityType === "expense") await this.persistExpense(item.payload as Expense);
         else {
           const trip = item.payload as Trip;
-          const { data: auth } = await supabase.auth.getUser();
-          const { error } = await supabase.from("trips").upsert(tripRow(trip, item.action === "create" ? auth.user?.id : undefined));
+          let error;
+          if (item.action === "create") {
+            const { data: auth } = await supabase.auth.getUser();
+            if (!auth.user) throw new Error("La sesión venció. Volvé a iniciar sesión para sincronizar.");
+            ({ error } = await supabase.from("trips").upsert(tripRow(trip, auth.user.id)));
+          } else {
+            ({ error } = await supabase.from("trips").update(tripRow(trip)).eq("id", trip.id));
+          }
           if (error) throw error;
           await this.persistDestinations(trip);
           await this.persistTravelers(trip);
