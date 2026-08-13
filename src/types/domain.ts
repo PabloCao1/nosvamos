@@ -61,6 +61,14 @@ export interface Activity extends SyncableEntity {
   status: "planned" | "confirmed" | "done";
   participantIds: string[];
   reservationId?: string;
+  totalAmount?: number;
+  currency?: string;
+  originalTotalAmount?: number;
+  originalCurrency?: string;
+  exchangeRate?: number;
+  paymentStatus?: "unpaid" | "paid";
+  paidBy?: string;
+  payOnArrival?: boolean;
 }
 
 export interface ItineraryDay {

@@ -64,6 +64,10 @@ const activityRow = (activity: Activity) => ({
   id: activity.id, client_id: activity.clientId, itinerary_day_id: activity.dayId,
   reservation_id: activity.reservationId ?? null, title: activity.title, description: activity.description ?? null,
   location: activity.location, category: activity.category, status: activity.status,
+  total_amount: activity.totalAmount ?? 0, currency: activity.currency ?? "USD",
+  original_total_amount: activity.originalTotalAmount ?? null, original_currency: activity.originalCurrency ?? null,
+  exchange_rate: activity.exchangeRate ?? null, payment_status: activity.paymentStatus ?? "unpaid",
+  paid_by: activity.paidBy ?? null, pay_on_arrival: activity.payOnArrival ?? false,
   updated_at: new Date().toISOString(), deleted_at: activity.deletedAt ?? null, version: activity.version,
 });
 
@@ -292,6 +296,12 @@ export class SupabaseTripRepository extends LocalTripRepository {
         startTime: row.local_start_at?.slice(11, 16) || timeInZone(row.start_at, timezone),
         endTime: row.local_end_at?.slice(11, 16) || (row.end_at ? timeInZone(row.end_at, timezone) : undefined),
         location: row.location || "", category: row.category, status: row.status,
+        totalAmount: Number(row.total_amount ?? 0), currency: row.currency || "USD",
+        originalTotalAmount: row.original_total_amount == null ? undefined : Number(row.original_total_amount),
+        originalCurrency: row.original_currency || undefined,
+        exchangeRate: row.exchange_rate == null ? undefined : Number(row.exchange_rate),
+        paymentStatus: row.payment_status || "unpaid", paidBy: row.paid_by || undefined,
+        payOnArrival: Boolean(row.pay_on_arrival),
         participantIds: activityParticipants.filter((link) => link.activity_id === row.id).map((link) => link.traveler_id),
         reservationId: row.reservation_id || undefined,
       }));

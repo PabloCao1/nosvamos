@@ -27,6 +27,11 @@ const activitySchema = z.object({
   status: z.enum(["planned", "confirmed", "done"]),
   reservationId: z.string().optional(),
   participantIds: z.array(z.string()).min(1, "Elegí al menos un integrante"),
+  totalAmount: z.coerce.number().min(0),
+  currency: z.string().length(3),
+  paid: z.boolean().optional(),
+  paidBy: z.string().optional(),
+  payOnArrival: z.boolean().optional(),
 });
 
 const expenseSchema = z.object({
@@ -83,6 +88,7 @@ const tripSchema = z.object({
 });
 
 type ActivityValues = z.infer<typeof activitySchema>;
+type ActivityInput = z.input<typeof activitySchema>;
 type ExpenseValues = z.infer<typeof expenseSchema>;
 type ReservationValues = z.infer<typeof reservationSchema>;
 type ExpenseInput = z.input<typeof expenseSchema>;
@@ -182,26 +188,44 @@ export function ActivityForm({ close, entity, trip: tripOverride }: { close: () 
   const { data: activeTrip } = useActiveTrip();
   const trip = tripOverride ?? activeTrip;
   const mutation = useSaveEntity(close, "calendar");
-  const { register, handleSubmit, formState: { errors } } = useForm<ActivityValues>({
+  const { register, handleSubmit, setError, watch, formState: { errors } } = useForm<ActivityInput, unknown, ActivityValues>({
     resolver: zodResolver(activitySchema),
     defaultValues: entity ? {
       title: entity.title, dayId: entity.dayId, startTime: entity.startTime,
       endTime: entity.endTime, description: entity.description,
       location: entity.location, category: entity.category, status: entity.status,
       reservationId: entity.reservationId, participantIds: entity.participantIds,
+      totalAmount: entity.originalTotalAmount ?? entity.totalAmount ?? 0,
+      currency: entity.originalCurrency ?? entity.currency ?? BASE_CURRENCY,
+      paid: entity.paymentStatus === "paid", paidBy: entity.paidBy, payOnArrival: entity.payOnArrival,
     } : {
       dayId: trip?.itinerary[0]?.id, category: "visit", startTime: "10:00",
       status: "planned", participantIds: trip?.participants.filter((person) => person.status !== "removed").map((person) => person.id) ?? [],
+      totalAmount: 0, currency: BASE_CURRENCY, paid: false, payOnArrival: false,
     },
   });
   if (!trip) return null;
 
-  const submit = (values: ActivityValues) => {
+  const submit = async (values: ActivityValues) => {
+    if (values.paid && !values.paidBy) { setError("paidBy", { message: "Seleccioná quién pagó" }); return; }
+    const conversion = await convertToUsd(values.totalAmount, values.currency).catch((reason: unknown) => {
+      setError("root", { message: reason instanceof Error ? reason.message : "No pudimos convertir el total a USD." });
+      return null;
+    });
+    if (!conversion) return;
     const activity: Activity = {
       ...(entity ?? { ...createSyncableFields(), id: crypto.randomUUID(), status: "planned" as const, participantIds: trip.participants.map((person) => person.id) }),
       ...values,
+      totalAmount: conversion.amount,
+      currency: BASE_CURRENCY,
+      originalTotalAmount: values.totalAmount,
+      originalCurrency: values.currency,
+      exchangeRate: conversion.rate,
+      paymentStatus: values.paid ? "paid" : "unpaid",
+      paidBy: values.paid ? values.paidBy : undefined,
+      payOnArrival: Boolean(values.payOnArrival),
     };
-    mutation.mutate(() => entity ? tripRepository.updateActivity(activity) : tripRepository.addActivity(activity));
+    await mutation.mutateAsync(() => entity ? tripRepository.updateActivity(activity) : tripRepository.addActivity(activity));
   };
 
   return (
@@ -217,7 +241,17 @@ export function ActivityForm({ close, entity, trip: tripOverride }: { close: () 
       <Field label="Categoría" required><select {...register("category")}><option value="visit">Visita</option><option value="food">Comida</option><option value="transport">Transporte</option><option value="lodging">Alojamiento</option><option value="free_time">Tiempo libre</option><option value="other">Otro</option></select></Field>
       <Field label="Estado" required><select {...register("status")}><option value="planned">Planificada</option><option value="confirmed">Confirmada</option><option value="done">Realizada</option></select></Field>
       <Field label="Reserva asociada"><select {...register("reservationId")}><option value="">Ninguna</option>{trip.reservations.filter((item) => item.status !== "cancelled").map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select></Field>
+      <div className="form-row">
+        <Field label="Total"><input type="number" inputMode="decimal" step="0.01" {...register("totalAmount")} /></Field>
+        <Field label="Moneda"><select {...register("currency")}>{SUPPORTED_CURRENCIES.map(([code, name]) => <option key={code} value={code}>{code} · {name}</option>)}</select></Field>
+      </div>
+      <section className="form-subsection">
+        <label className="traveler-toggle"><input type="checkbox" {...register("paid")} /><strong>Pagado</strong></label>
+        {watch("paid") && <Field label="Pagado por" required error={errors.paidBy?.message}><select {...register("paidBy")}><option value="">Seleccionar integrante</option>{trip.participants.filter((person) => person.status !== "removed").map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select></Field>}
+        <label className="traveler-toggle"><input type="checkbox" {...register("payOnArrival")} /><strong>Se paga al llegar</strong></label>
+      </section>
       <div className="form-field"><span>Participan<b className="required-mark" aria-hidden="true"> *</b></span><div className="form-check-grid">{trip.participants.filter((person) => person.status !== "removed").map((person) => <label key={person.id}><input type="checkbox" value={person.id} {...register("participantIds")} /> {person.name}</label>)}</div>{errors.participantIds?.message && <small role="alert">{errors.participantIds.message}</small>}</div>
+      {errors.root?.message && <p className="form-error" role="alert">{errors.root.message}</p>}
       <FormActions pending={mutation.isPending} editing={Boolean(entity)} entityLabel="actividad" onDelete={() => entity && mutation.mutate(() => tripRepository.deleteActivity(entity))} />
     </form>
   );
