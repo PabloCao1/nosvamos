@@ -295,7 +295,6 @@ export function ActivityForm({ close, entity, trip: tripOverride }: { close: () 
       <Field label="Ubicación" required error={errors.location?.message}><input {...register("location")} placeholder="Dirección o punto de encuentro" /></Field>
       <Field label="Descripción"><textarea {...register("description")} placeholder="Información útil, punto de encuentro o indicaciones" /></Field>
       <Field label="Tipo" required><select {...register("category")}><option value="other">Actividad general</option><option value="excursion">Excursión o tour</option><option value="visit">Visita</option><option value="food">Gastronomía</option><option value="event">Evento o espectáculo</option><option value="outdoor">Aire libre o deporte</option><option value="free_time">Tiempo libre</option><option value="shopping">Compras</option><option value="transport">Transporte</option><option value="lodging">Alojamiento</option></select></Field>
-      <Field label="Estado" required><select {...register("status")}><option value="planned">Planificada</option><option value="confirmed">Confirmada</option><option value="done">Realizada</option></select></Field>
       <section className="form-subsection">
         <label className="traveler-toggle"><input type="checkbox" {...register("hasReservation")} /><strong>Tiene reserva</strong></label>
         {watch("hasReservation") && <>
