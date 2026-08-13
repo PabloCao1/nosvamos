@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { PageHeader } from "../components/layout/PageHeader";
 import { EmptyState, ErrorState, LoadingState } from "../components/ui/PageState";
 import { Icon } from "../components/ui/Icon";
+import { WeatherBanner } from "../components/weather/WeatherBanner";
 import { useTrips } from "../hooks/useTrips";
 import { dateInTripZone, formatClockTime, localCalendarDate, timeInTripZone } from "../lib/dates/tripDateTime";
 import { activityIcon, reservationIcon, reservationTone, type EntityTone } from "../lib/icons/entityIcons";
@@ -18,6 +19,8 @@ export function TodayPage() {
   if (isError) return <ErrorState onRetry={() => void refetch()} />;
 
   const today = localCalendarDate();
+  const currentDestination = (trips ?? []).flatMap((trip) => trip.destinations)
+    .find((destination) => destination.arrivalDate <= today && destination.departureDate >= today);
   const items: TodayItem[] = (trips ?? []).flatMap((trip) => {
     const reservations = trip.reservations.flatMap((reservation) => {
       const result: TodayItem[] = [];
@@ -44,6 +47,7 @@ export function TodayPage() {
 
   return <>
     <PageHeader eyebrow="Tu agenda" title="Hoy" />
+    {currentDestination && <WeatherBanner city={currentDestination.city} country={currentDestination.country} />}
     {items.length === 0 ? <EmptyState title="Nada para hoy" message="No hay vuelos, traslados, reservas ni actividades programadas para hoy." /> :
       <section className="today-list">
         {items.map((item) => <Link className={`today-item ${item.cancelled ? "cancelled" : ""}`} to={item.href} key={`${item.tripId}-${item.id}`}>
