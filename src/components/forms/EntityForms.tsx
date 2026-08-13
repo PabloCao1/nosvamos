@@ -454,9 +454,9 @@ export function ReservationForm({
     if (carRental && !values.originCity?.trim()) { setError("originCity", { message: "Ingresá la ciudad de retiro" }); return; }
     if (carRental && values.differentDropoffCity && !values.destinationCity?.trim()) { setError("destinationCity", { message: "Ingresá la ciudad de entrega" }); return; }
     if (carRental && !values.endAt) { setError("endAt", { message: "Ingresá la fecha de entrega" }); return; }
-    if (carRental && !values.paidBy) { setError("paidBy", { message: "Seleccioná quién pagó" }); return; }
-    if (!isLodging && !carRental && !values.providerName?.trim()) { setError("providerName", { message: "Ingresá el proveedor" }); return; }
-    if (!isLodging && !values.providerReference?.trim()) { setError("providerReference", { message: "Ingresá el código" }); return; }
+    if (values.paid && !values.paidBy) { setError("paidBy", { message: "Seleccioná quién pagó" }); return; }
+    if (!isLodging && !carRental && !excursion && !values.providerName?.trim()) { setError("providerName", { message: "Ingresá el proveedor" }); return; }
+    if (!isLodging && !excursion && !values.providerReference?.trim()) { setError("providerReference", { message: "Ingresá el código" }); return; }
     const conversion = await convertToUsd(values.totalAmount, values.currency).catch((reason: unknown) => {
       setError("root", {
         message: reason instanceof Error ? reason.message : "No pudimos convertir el total a USD.",
@@ -494,9 +494,9 @@ export function ReservationForm({
       originalTotalAmount: values.totalAmount,
       originalCurrency: values.currency,
       exchangeRate: conversion.rate,
-      paymentStatus: isLodging || excursion ? values.paid ? "paid" : "unpaid" : values.paymentStatus,
-      paidBy: carRental ? values.paidBy || undefined : (isLodging || excursion) && values.paid ? values.paidBy || undefined : undefined,
-      payOnArrival: isLodging || excursion ? Boolean(values.payOnArrival) : undefined,
+      paymentStatus: values.paid ? "paid" : "unpaid",
+      paidBy: values.paid ? values.paidBy || undefined : undefined,
+      payOnArrival: Boolean(values.payOnArrival),
       status: isLodging || excursion ? values.confirmed ? "confirmed" : "pending" : values.status,
       participantIds: Object.entries(travelerDetails).filter(([, detail]) => detail.included).map(([participantId]) => participantId),
       travelerConfirmations: isTransport
@@ -510,7 +510,7 @@ export function ReservationForm({
               baggage: detail.baggage.trim() || undefined,
             }))
         : undefined,
-      nextAction: (isLodging || excursion) && values.payOnArrival ? "Pagar al llegar" : undefined,
+      nextAction: values.payOnArrival ? "Pagar al llegar" : undefined,
     };
     await mutation.mutateAsync(async () => {
       if (entity) await tripRepository.updateReservation(reservation);
@@ -571,7 +571,6 @@ export function ReservationForm({
             <><option value="flight">Vuelo</option><option value="hotel">Hotel</option><option value="apartment">Casa o departamento</option><option value="train">Tren</option><option value="bus">Autobús</option><option value="ferry">Ferry</option><option value="restaurant">Restaurante</option><option value="activity">Actividad</option><option value="car">Auto</option><option value="insurance">Seguro</option><option value="other">Otro</option></>
           )}
         </select></Field>
-        {!lodging && <Field label="Estado de pago" required><select {...register("paymentStatus")}><option value="unpaid">Sin pagar</option><option value="partially_paid">Pago parcial</option><option value="paid">Pagada</option></select></Field>}
       </div>}
       {!carRental && !excursion && <div className="form-row">
         <Field label={reservationType === "flight" ? "Aerolínea" : reservationType === "car" ? "Empresa de alquiler" : lodging ? "Plataforma" : "Empresa"} required={!lodging} error={errors.providerName?.message}>
@@ -591,8 +590,8 @@ export function ReservationForm({
         <input type="hidden" {...register("startAt")} />
       </div> : <Field label={isLodging ? "Check-in" : reservationType === "car" ? "Retiro" : isTransport ? "Salida" : "Fecha y hora"} required error={errors.startAt?.message}><input type="datetime-local" {...register("startAt")} /></Field>}
       {excursion && <div className="form-row">
-        <Field label="Empresa" required error={errors.providerName?.message}><input {...register("providerName")} placeholder="Nombre de la empresa" /></Field>
-        <Field label="Código de reserva" required error={errors.providerReference?.message}><input autoCapitalize="characters" {...register("providerReference")} /></Field>
+        <Field label="Empresa" error={errors.providerName?.message}><input {...register("providerName")} placeholder="Nombre de la empresa" /></Field>
+        <Field label="Código de reserva" error={errors.providerReference?.message}><input autoCapitalize="characters" {...register("providerReference")} /></Field>
       </div>}
       {(isLodging || isTransport) && <Field label={isLodging ? "Check-out" : reservationType === "car" ? "Devolución" : "Llegada"} required={isLodging || carRental} error={errors.endAt?.message}><input type="datetime-local" {...register("endAt")} /></Field>}
       {isTransport && !carRental && (
@@ -627,13 +626,12 @@ export function ReservationForm({
         <Field label={carRental ? "Precio" : "Total"}><input type="number" inputMode="decimal" step="0.01" {...register("totalAmount")} /></Field>
         <Field label="Moneda"><select {...register("currency")}>{SUPPORTED_CURRENCIES.map(([code, name]) => <option key={code} value={code}>{code} · {name}</option>)}</select></Field>
       </div>
-      {carRental && <Field label="Pagado por" required error={errors.paidBy?.message}><select {...register("paidBy")}><option value="">Seleccionar integrante</option>{trip.participants.filter((person) => person.status !== "removed").map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select></Field>}
-      {(lodging || excursion) && <section className="form-subsection">
+      <section className="form-subsection">
         <label className="traveler-toggle"><input type="checkbox" {...register("paid")} /><strong>Pagado</strong></label>
         {watch("paid") && <Field label="Pagado por" required error={errors.paidBy?.message}><select {...register("paidBy")}><option value="">Seleccionar integrante</option>{trip.participants.filter((person) => person.status !== "removed").map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select></Field>}
         <label className="traveler-toggle"><input type="checkbox" {...register("payOnArrival")} /><strong>Se paga al llegar</strong></label>
-        <label className="traveler-toggle"><input type="checkbox" {...register("confirmed")} /><strong>Reserva confirmada</strong></label>
-      </section>}
+        {(lodging || excursion) && <label className="traveler-toggle"><input type="checkbox" {...register("confirmed")} /><strong>Reserva confirmada</strong></label>}
+      </section>
       {isTransport && !carRental && (
         <section className="form-subsection">
           <div><strong>Pasajeros</strong><p>Códigos, asientos y equipaje por integrante.</p></div>
