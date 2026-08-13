@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { PageHeader } from "../components/layout/PageHeader";
 import { Button } from "../components/ui/Button";
 import { ErrorState, LoadingState } from "../components/ui/PageState";
+import { useSaveFeedback } from "../components/ui/SaveFeedback";
 import { useTrip } from "../hooks/useTrips";
 import { tripRepository } from "../repositories";
 
@@ -13,6 +14,7 @@ export function MemberFormPage() {
   const { tripId, memberId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { runSave } = useSaveFeedback();
   const { data: trip, isLoading, isError, refetch } = useTrip(tripId);
   const member = trip?.participants.find((person) => person.id === memberId);
   const [name, setName] = useState(member?.name ?? "");
@@ -25,7 +27,7 @@ export function MemberFormPage() {
   }, [member]);
 
   const mutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async () => runSave(async () => {
       if (!trip) return;
       const words = name.trim().split(/\s+/);
       const initials = words.slice(0, 2).map((word) => word[0]?.toUpperCase()).join("");
@@ -44,7 +46,7 @@ export function MemberFormPage() {
             joinedAt: new Date().toISOString(),
           }];
       await tripRepository.updateTrip({ ...trip, participants });
-    },
+    }, "users"),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["trips"] });
       navigate(`/viaje/${tripId}/integrantes`, { replace: true });

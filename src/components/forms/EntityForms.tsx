@@ -13,6 +13,8 @@ import { supabase } from "../../lib/supabase";
 import type { Activity, Expense, Reservation, Trip } from "../../types/domain";
 import type { DocumentImportDraft } from "../../types/documentImport";
 import { Button } from "../ui/Button";
+import { useSaveFeedback } from "../ui/SaveFeedback";
+import type { IconName } from "../ui/Icon";
 
 const activitySchema = z.object({
   title: z.string().trim().min(2, "Ingresá un título"),
@@ -103,10 +105,11 @@ function Field(props: {
   );
 }
 
-function useSaveEntity(close: () => void) {
+function useSaveEntity(close: () => void, icon: IconName) {
   const queryClient = useQueryClient();
+  const { runSave } = useSaveFeedback();
   return useMutation({
-    mutationFn: async (operation: () => Promise<void>) => operation(),
+    mutationFn: async (operation: () => Promise<void>) => runSave(operation, icon),
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["trips"] }),
@@ -119,7 +122,7 @@ function useSaveEntity(close: () => void) {
 
 export function TripForm({ close, entity }: { close: () => void; entity?: Trip }) {
   const { data: activeTrip } = useActiveTrip();
-  const mutation = useSaveEntity(close);
+  const mutation = useSaveEntity(close, "suitcase");
   const automaticRange = entity ? deriveTripDateRange(entity) : null;
   const { register, handleSubmit, formState: { errors } } = useForm<TripValues>({
     resolver: zodResolver(tripSchema),
@@ -177,7 +180,7 @@ export function TripForm({ close, entity }: { close: () => void; entity?: Trip }
 export function ActivityForm({ close, entity, trip: tripOverride }: { close: () => void; entity?: Activity; trip?: Trip }) {
   const { data: activeTrip } = useActiveTrip();
   const trip = tripOverride ?? activeTrip;
-  const mutation = useSaveEntity(close);
+  const mutation = useSaveEntity(close, "calendar");
   const { register, handleSubmit, formState: { errors } } = useForm<ActivityValues>({
     resolver: zodResolver(activitySchema),
     defaultValues: entity ? {
@@ -222,7 +225,7 @@ export function ActivityForm({ close, entity, trip: tripOverride }: { close: () 
 export function ExpenseForm({ close, entity, trip: tripOverride, importDraft }: { close: () => void; entity?: Expense; trip?: Trip; importDraft?: DocumentImportDraft }) {
   const { data: activeTrip } = useActiveTrip();
   const trip = tripOverride ?? activeTrip;
-  const mutation = useSaveEntity(close);
+  const mutation = useSaveEntity(close, "wallet");
   const [receiptImage, setReceiptImage] = useState(entity?.receiptImageDataUrl);
   const { register, handleSubmit, setError, watch, formState: { errors } } = useForm<ExpenseInput, unknown, ExpenseValues>({
     resolver: zodResolver(expenseSchema),
@@ -375,7 +378,7 @@ export function ReservationForm({
   const carRental = variant === "car";
   const excursion = variant === "excursion";
   const transport = variant === "transport" || carRental;
-  const mutation = useSaveEntity(close);
+  const mutation = useSaveEntity(close, carRental ? "car" : lodging ? "hotel" : "airplane");
   const [travelerDetails, setTravelerDetails] = useState<Record<string, {
     included: boolean;
     passengerName: string;
@@ -719,13 +722,14 @@ export function InviteForm({ close, trip: tripOverride }: { close: () => void; t
   const { data: activeTrip } = useActiveTrip();
   const trip = tripOverride ?? activeTrip;
   const queryClient = useQueryClient();
+  const { runSave } = useSaveFeedback();
   const [email, setEmail] = useState("");
   const [registered, setRegistered] = useState(false);
   const [linked, setLinked] = useState(false);
   const [error, setError] = useState("");
 
   const mutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async () => runSave(async () => {
       if (!trip) return false;
       const normalizedEmail = email.trim().toLowerCase();
       const alreadyExists = trip.participants.some((participant) => participant.email?.toLowerCase() === normalizedEmail);
@@ -746,7 +750,7 @@ export function InviteForm({ close, trip: tripOverride }: { close: () => void; t
       });
       if (inviteError) throw inviteError;
       return Boolean(data);
-    },
+    }, "users"),
     onSuccess: async (isLinked) => {
       setLinked(isLinked);
       setRegistered(true);

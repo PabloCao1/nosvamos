@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { PageHeader } from "../components/layout/PageHeader";
 import { Button } from "../components/ui/Button";
+import { useSaveFeedback } from "../components/ui/SaveFeedback";
 import { supabase } from "../lib/supabase";
 
 export function PersonalDataPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { runSave } = useSaveFeedback();
   const metadata = user?.user_metadata ?? {};
   const existingName = typeof metadata.full_name === "string" ? metadata.full_name : "";
   const [firstName, setFirstName] = useState(typeof metadata.first_name === "string" ? metadata.first_name : existingName.split(/\s+/)[0] ?? "");
@@ -167,12 +169,20 @@ export function PersonalDataPage() {
     event.preventDefault();
     if (!user) return;
     setPending(true); setMessage(""); setError("");
-    const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
-    const { error: profileError } = await supabase.from("profiles").update({ first_name: firstName.trim(), last_name: lastName.trim(), full_name: fullName, birth_date: birthDate || null }).eq("id", user.id);
-    const { error: authError } = await supabase.auth.updateUser({ data: { full_name: fullName, first_name: firstName.trim(), last_name: lastName.trim(), birth_date: birthDate || null } });
-    setPending(false);
-    if (profileError || authError) setError((profileError || authError)?.message ?? "No pudimos guardar tus datos.");
-    else setMessage("Tus datos se guardaron correctamente.");
+    try {
+      await runSave(async () => {
+        const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+        const { error: profileError } = await supabase.from("profiles").update({ first_name: firstName.trim(), last_name: lastName.trim(), full_name: fullName, birth_date: birthDate || null }).eq("id", user.id);
+        const { error: authError } = await supabase.auth.updateUser({ data: { full_name: fullName, first_name: firstName.trim(), last_name: lastName.trim(), birth_date: birthDate || null } });
+        const saveError = profileError || authError;
+        if (saveError) throw new Error(saveError.message);
+      }, "user");
+      setMessage("Tus datos se guardaron correctamente.");
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "No pudimos guardar tus datos.");
+    } finally {
+      setPending(false);
+    }
   };
 
   const initials = `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase() || "NV";
