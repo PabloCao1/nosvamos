@@ -19,7 +19,6 @@ const tripDetailActions: FabAction[] = [
   { label: "Agregar transporte", icon: "airplane", mode: "transport", tone: "transport" },
   { label: "Alquiler de auto", icon: "car", mode: "car", tone: "auto" },
   { label: "Agregar alojamiento", icon: "bed", mode: "lodging", tone: "lodging" },
-  { label: "Agregar excursión", icon: "ticket", mode: "excursion", tone: "excursion" },
   { label: "Agregar actividad", icon: "calendar", mode: "activity", tone: "activity" },
   { label: "Agregar gasto", icon: "wallet", mode: "expense" },
 ];

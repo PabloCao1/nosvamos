@@ -33,12 +33,14 @@ export const reservationTone: Record<ReservationType, EntityTone> = {
 };
 
 export const activityIcon: Record<ActivityCategory, IconName> = {
+  excursion: "ticket",
   visit: "location",
   food: "food",
   transport: "airplane",
   lodging: "bed",
   shopping: "shopping",
   event: "ticket",
+  outdoor: "location",
   free_time: "clock",
   other: "calendar",
 };

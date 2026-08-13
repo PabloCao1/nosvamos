@@ -23,7 +23,7 @@ const activitySchema = z.object({
   startTime: z.string().min(1, "Ingresá una hora"),
   endTime: z.string().optional(),
   location: z.string().trim().min(2, "Ingresá una ubicación"),
-  category: z.enum(["visit", "food", "transport", "lodging", "shopping", "event", "free_time", "other"]),
+  category: z.enum(["excursion", "visit", "food", "transport", "lodging", "shopping", "event", "outdoor", "free_time", "other"]),
   status: z.enum(["planned", "confirmed", "done"]),
   reservationId: z.string().optional(),
   participantIds: z.array(z.string()).min(1, "Elegí al menos un integrante"),
@@ -32,6 +32,11 @@ const activitySchema = z.object({
   paid: z.boolean().optional(),
   paidBy: z.string().optional(),
   payOnArrival: z.boolean().optional(),
+  hasReservation: z.boolean().optional(),
+  providerName: z.string().trim().optional(),
+  confirmationCode: z.string().trim().optional(),
+  externalUrl: z.string().trim().optional(),
+  reservationConfirmed: z.boolean().optional(),
 });
 
 const expenseSchema = z.object({
@@ -187,6 +192,7 @@ export function TripForm({ close, entity }: { close: () => void; entity?: Trip }
 export function ActivityForm({ close, entity, trip: tripOverride }: { close: () => void; entity?: Activity; trip?: Trip }) {
   const { data: activeTrip } = useActiveTrip();
   const trip = tripOverride ?? activeTrip;
+  const linkedReservation = trip?.reservations.find((item) => item.id === entity?.reservationId);
   const mutation = useSaveEntity(close, "calendar");
   const { register, handleSubmit, setError, watch, formState: { errors } } = useForm<ActivityInput, unknown, ActivityValues>({
     resolver: zodResolver(activitySchema),
@@ -198,10 +204,14 @@ export function ActivityForm({ close, entity, trip: tripOverride }: { close: () 
       totalAmount: entity.originalTotalAmount ?? entity.totalAmount ?? 0,
       currency: entity.originalCurrency ?? entity.currency ?? BASE_CURRENCY,
       paid: entity.paymentStatus === "paid", paidBy: entity.paidBy, payOnArrival: entity.payOnArrival,
+      hasReservation: Boolean(entity.reservationId), providerName: linkedReservation?.providerName ?? "",
+      confirmationCode: linkedReservation?.confirmationCode ?? linkedReservation?.providerReference ?? "",
+      externalUrl: linkedReservation?.externalUrl ?? "", reservationConfirmed: linkedReservation?.status === "confirmed",
     } : {
-      dayId: trip?.itinerary[0]?.id, category: "visit", startTime: "10:00",
+      dayId: trip?.itinerary[0]?.id, category: "other", startTime: "10:00",
       status: "planned", participantIds: trip?.participants.filter((person) => person.status !== "removed").map((person) => person.id) ?? [],
       totalAmount: 0, currency: BASE_CURRENCY, paid: false, payOnArrival: false,
+      hasReservation: false, providerName: "", confirmationCode: "", externalUrl: "", reservationConfirmed: false,
     },
   });
   if (!trip) return null;
@@ -213,9 +223,18 @@ export function ActivityForm({ close, entity, trip: tripOverride }: { close: () 
       return null;
     });
     if (!conversion) return;
+    const reservationId = values.hasReservation ? linkedReservation?.id ?? entity?.reservationId ?? crypto.randomUUID() : undefined;
     const activity: Activity = {
       ...(entity ?? { ...createSyncableFields(), id: crypto.randomUUID(), status: "planned" as const, participantIds: trip.participants.map((person) => person.id) }),
-      ...values,
+      title: values.title,
+      description: values.description,
+      dayId: values.dayId,
+      startTime: values.startTime,
+      endTime: values.endTime,
+      location: values.location,
+      category: values.category,
+      status: values.status,
+      participantIds: values.participantIds,
       totalAmount: conversion.amount,
       currency: BASE_CURRENCY,
       originalTotalAmount: values.totalAmount,
@@ -224,8 +243,45 @@ export function ActivityForm({ close, entity, trip: tripOverride }: { close: () 
       paymentStatus: values.paid ? "paid" : "unpaid",
       paidBy: values.paid ? values.paidBy : undefined,
       payOnArrival: Boolean(values.payOnArrival),
+      reservationId,
     };
-    await mutation.mutateAsync(() => entity ? tripRepository.updateActivity(activity) : tripRepository.addActivity(activity));
+    await mutation.mutateAsync(async () => {
+      if (values.hasReservation && reservationId) {
+        const day = trip.itinerary.find((item) => item.id === values.dayId);
+        const confirmationCode = values.confirmationCode?.trim();
+        const reservation: Reservation = {
+          ...(linkedReservation ?? {
+            ...createSyncableFields(), id: reservationId, tripId: trip.id, provider: "generic" as const,
+            participantIds: values.participantIds, availableOffline: true, importSource: "manual" as const,
+          }),
+          type: "activity",
+          title: values.title,
+          providerName: values.providerName?.trim() || "Sin plataforma",
+          providerReference: confirmationCode || "Sin código",
+          confirmationCode: confirmationCode || undefined,
+          externalUrl: values.externalUrl?.trim() || undefined,
+          startAt: `${day?.date ?? ""}T${values.startTime}`,
+          endAt: values.endTime ? `${day?.date ?? ""}T${values.endTime}` : undefined,
+          city: day?.city ?? "",
+          address: values.location,
+          totalAmount: conversion.amount,
+          currency: BASE_CURRENCY,
+          originalTotalAmount: values.totalAmount,
+          originalCurrency: values.currency,
+          exchangeRate: conversion.rate,
+          paymentStatus: values.paid ? "paid" : "unpaid",
+          paidBy: values.paid ? values.paidBy : undefined,
+          payOnArrival: Boolean(values.payOnArrival),
+          status: values.reservationConfirmed ? "confirmed" : "pending",
+          participantIds: values.participantIds,
+          nextAction: values.payOnArrival ? "Pagar al llegar" : undefined,
+        };
+        if (linkedReservation) await tripRepository.updateReservation(reservation);
+        else await tripRepository.addReservation(reservation);
+      }
+      if (entity) await tripRepository.updateActivity(activity);
+      else await tripRepository.addActivity(activity);
+    });
   };
 
   return (
@@ -238,9 +294,19 @@ export function ActivityForm({ close, entity, trip: tripOverride }: { close: () 
       <Field label="Hora de finalización"><input type="time" {...register("endTime")} /></Field>
       <Field label="Ubicación" required error={errors.location?.message}><input {...register("location")} placeholder="Dirección o punto de encuentro" /></Field>
       <Field label="Descripción"><textarea {...register("description")} placeholder="Información útil, punto de encuentro o indicaciones" /></Field>
-      <Field label="Categoría" required><select {...register("category")}><option value="visit">Visita</option><option value="food">Comida</option><option value="transport">Transporte</option><option value="lodging">Alojamiento</option><option value="free_time">Tiempo libre</option><option value="other">Otro</option></select></Field>
+      <Field label="Tipo" required><select {...register("category")}><option value="other">Actividad general</option><option value="excursion">Excursión o tour</option><option value="visit">Visita</option><option value="food">Gastronomía</option><option value="event">Evento o espectáculo</option><option value="outdoor">Aire libre o deporte</option><option value="free_time">Tiempo libre</option><option value="shopping">Compras</option><option value="transport">Transporte</option><option value="lodging">Alojamiento</option></select></Field>
       <Field label="Estado" required><select {...register("status")}><option value="planned">Planificada</option><option value="confirmed">Confirmada</option><option value="done">Realizada</option></select></Field>
-      <Field label="Reserva asociada"><select {...register("reservationId")}><option value="">Ninguna</option>{trip.reservations.filter((item) => item.status !== "cancelled").map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select></Field>
+      <section className="form-subsection">
+        <label className="traveler-toggle"><input type="checkbox" {...register("hasReservation")} /><strong>Tiene reserva</strong></label>
+        {watch("hasReservation") && <>
+          <div className="form-row">
+            <Field label="Empresa o plataforma"><input {...register("providerName")} placeholder="Ej. Civitatis" /></Field>
+            <Field label="Código de reserva"><input autoCapitalize="characters" {...register("confirmationCode")} /></Field>
+          </div>
+          <Field label="Enlace del proveedor"><input type="url" inputMode="url" autoCapitalize="none" {...register("externalUrl")} placeholder="https://…" /></Field>
+          <label className="traveler-toggle"><input type="checkbox" {...register("reservationConfirmed")} /><strong>Reserva confirmada</strong></label>
+        </>}
+      </section>
       <div className="form-row">
         <Field label="Total"><input type="number" inputMode="decimal" step="0.01" {...register("totalAmount")} /></Field>
         <Field label="Moneda"><select {...register("currency")}>{SUPPORTED_CURRENCIES.map(([code, name]) => <option key={code} value={code}>{code} · {name}</option>)}</select></Field>

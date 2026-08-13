@@ -41,12 +41,14 @@ export interface Destination {
 }
 
 export type ActivityCategory =
+  | "excursion"
   | "visit"
   | "food"
   | "transport"
   | "lodging"
   | "shopping"
   | "event"
+  | "outdoor"
   | "free_time"
   | "other";
 
