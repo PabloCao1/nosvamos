@@ -17,6 +17,7 @@ export interface TripRepository {
   deleteActivity(activity: Activity): Promise<void>;
   deleteExpense(expense: Expense): Promise<void>;
   deleteReservation(reservation: Reservation): Promise<void>;
+  syncPending(): Promise<boolean>;
   getPendingCount(): Promise<number>;
   getSyncQueue(): Promise<SyncQueueItem[]>;
   retryQueueItem(id: string): Promise<void>;

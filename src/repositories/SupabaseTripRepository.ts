@@ -86,6 +86,8 @@ const tripRow = (trip: Trip, ownerId?: string) => ({
 const wallClockToIso = (value: string, timezone: string) => new Date(wallClockToInstant(value, timezone)).toISOString();
 
 export class SupabaseTripRepository extends LocalTripRepository {
+  private activeFlush: Promise<boolean> | null = null;
+
   private async persistDestinations(trip: Trip) {
     const { data: remote, error: readError } = await supabase.from("destinations").select("id").eq("trip_id", trip.id).is("deleted_at", null);
     if (readError) throw readError;
@@ -172,9 +174,12 @@ export class SupabaseTripRepository extends LocalTripRepository {
     }
   }
 
-  private async flushPending() {
-    if (!navigator.onLine) return;
-    const pending = await db.syncQueue.where("status").equals("pending").toArray();
+  private async flushPendingQueue() {
+    if (!navigator.onLine) return false;
+    const now = new Date().toISOString();
+    const pending = (await db.syncQueue.where("status").equals("pending").toArray())
+      .filter((item) => item.nextAttemptAt <= now);
+    let changed = false;
     for (const item of pending) {
       try {
         if (item.action === "delete") {
@@ -197,15 +202,23 @@ export class SupabaseTripRepository extends LocalTripRepository {
         else if (item.entityType === "expense") await db.expenses.update(item.localId, { syncStatus: "synced", lastSyncedAt: new Date().toISOString() });
         else await db.trips.update(item.localId, { syncStatus: "synced", lastSyncedAt: new Date().toISOString() });
         await db.syncQueue.delete(item.id);
+        changed = true;
       } catch (error) {
         console.error("No se pudo sincronizar el cambio pendiente", error);
         await db.syncQueue.update(item.id, {
           attempts: item.attempts + 1,
           lastError: error instanceof Error ? error.message : "Error de sincronización",
-          nextAttemptAt: new Date(Date.now() + 10_000).toISOString(),
+          nextAttemptAt: new Date(Date.now() + Math.min(60_000, 5_000 * 2 ** Math.min(item.attempts, 4))).toISOString(),
         });
       }
     }
+    return changed;
+  }
+
+  override async syncPending() {
+    if (this.activeFlush) return this.activeFlush;
+    this.activeFlush = this.flushPendingQueue().finally(() => { this.activeFlush = null; });
+    return this.activeFlush;
   }
 
   private async fetchRemote(): Promise<Trip[]> {
@@ -309,7 +322,7 @@ export class SupabaseTripRepository extends LocalTripRepository {
 
   override async getAll() {
     try {
-      await this.flushPending();
+      await this.syncPending();
       if (await db.syncQueue.where("status").equals("pending").count()) return super.getAll();
       const local = await super.getAll();
       const remote = await this.fetchRemote();
@@ -334,43 +347,42 @@ export class SupabaseTripRepository extends LocalTripRepository {
 
   override async deleteReservation(reservation: Reservation) {
     await super.deleteReservationPermanently(reservation);
-    await this.flushPending();
+    await this.syncPending();
   }
 
   override async deleteActivity(activity: Activity) {
     await super.deleteActivityPermanently(activity);
-    await this.flushPending();
+    await this.syncPending();
   }
 
   override async addReservation(reservation: Reservation) {
-    await super.addReservation(reservation); await this.flushPending();
+    await super.addReservation(reservation); await this.syncPending();
   }
   override async updateReservation(reservation: Reservation) {
-    await super.updateReservation(reservation); await this.flushPending();
+    await super.updateReservation(reservation); await this.syncPending();
   }
   override async addActivity(activity: Activity) {
-    await super.addActivity(activity); await this.flushPending();
+    await super.addActivity(activity); await this.syncPending();
   }
   override async updateActivity(activity: Activity) {
-    await super.updateActivity(activity); await this.flushPending();
+    await super.updateActivity(activity); await this.syncPending();
   }
   override async addExpense(expense: Expense) {
-    await super.addExpense(expense); await this.flushPending();
+    await super.addExpense(expense); await this.syncPending();
   }
   override async updateExpense(expense: Expense) {
-    await super.updateExpense(expense); await this.flushPending();
+    await super.updateExpense(expense); await this.syncPending();
   }
 
   override async addTrip(trip: Trip) {
-    await super.addTrip(trip); await this.flushPending();
+    await super.addTrip(trip); await this.syncPending();
   }
 
   override async updateTrip(trip: Trip) {
-    await super.updateTrip(trip); await this.flushPending();
+    await super.updateTrip(trip); await this.syncPending();
   }
 
   override async getPendingCount() {
-    await this.flushPending();
     return super.getPendingCount();
   }
 }

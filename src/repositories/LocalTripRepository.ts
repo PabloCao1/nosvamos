@@ -173,6 +173,10 @@ export class LocalTripRepository implements TripRepository {
     return db.syncQueue.where("status").equals("pending").count();
   }
 
+  async syncPending() {
+    return false;
+  }
+
   async getSyncQueue() {
     await seedDemoData();
     return db.syncQueue.orderBy("createdAt").reverse().toArray();

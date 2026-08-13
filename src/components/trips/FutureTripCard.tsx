@@ -25,7 +25,7 @@ export function FutureTripCard({ trip }: { trip: Trip }) {
         <div className="future-trip-overlay" />
         <div className="future-trip-badges">
           <StatusPill tone="mint">{timingLabel}</StatusPill>
-          {trip.syncStatus !== "synced" && <StatusPill>Solo local</StatusPill>}
+          {trip.syncStatus !== "synced" && <StatusPill>Sin sincronizar</StatusPill>}
         </div>
       </div>
       <div className="future-trip-body">

@@ -4,6 +4,7 @@ import type { TripRepository } from "./TripRepository";
 const wait = (milliseconds = 180) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
 export class MockTripRepository implements TripRepository {
+  async syncPending() { return false; }
   async getAll() {
     await wait();
     return structuredClone(mockTrips);

@@ -44,7 +44,7 @@ export function SyncQueuePage() {
                 <strong>{actionLabels[operation.action]} {entityLabels[operation.entityType].toLowerCase()}</strong>
                 <p>{operation.lastError ? `Pendiente de sincronizar: ${operation.lastError}` : "Pendiente de sincronizar"} · {new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(new Date(operation.createdAt))}</p>
               </div>
-              {operation.status === "failed" && (
+              {operation.lastError && (
                 <div className="queue-actions">
                   <Button variant="secondary" size="small" onClick={() => retry.mutate(operation.id)}>Reintentar</Button>
                   <Button variant="danger" size="small" onClick={() => discard.mutate(operation.id)}>Descartar</Button>
