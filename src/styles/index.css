@@ -711,6 +711,16 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .receipt-upload > img { object-fit: cover; }
 .receipt-upload strong { display: block; font-size: .78rem; }
 .receipt-upload p { margin-top: 4px; color: var(--muted); font-size: .66rem; }
+.receipt-preview { display: grid; grid-template-columns: 72px minmax(0,1fr); align-items: center; width: 100%; gap: 12px; padding: 10px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--text); text-align: left; cursor: pointer; }
+.receipt-preview img { width: 72px; height: 72px; border-radius: 10px; object-fit: cover; }
+.receipt-preview span { min-width: 0; }
+.receipt-preview strong, .receipt-preview small { display: block; }
+.receipt-preview strong { font-size: .78rem; }
+.receipt-preview small { margin-top: 4px; color: var(--muted); font-size: .66rem; }
+.receipt-lightbox { position: fixed; z-index: 450; inset: 0; display: grid; place-items: center; padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom)); }
+.receipt-lightbox-backdrop { position: absolute; inset: 0; width: 100%; border: 0; background: rgba(5,6,7,.9); backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px); }
+.receipt-lightbox-content { position: relative; z-index: 1; display: grid; width: min(100%, 540px); max-height: 100%; gap: 14px; }
+.receipt-lightbox-content img { width: 100%; max-height: calc(100vh - 110px); border-radius: 12px; object-fit: contain; }
 .document-source-picker { display: grid; gap: 10px; }
 .document-source-picker > input { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
 .document-selected-file { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid rgba(184,247,228,.18); border-radius: 14px; background: rgba(184,247,228,.06); overflow-wrap: anywhere; }

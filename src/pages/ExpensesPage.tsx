@@ -47,8 +47,8 @@ export function ExpensesPage() {
         ? expense.status === "cancelled"
         : expenseFilterKey(expense) === selectedFilter))
     .sort((first, second) =>
-      second.date.localeCompare(first.date)
-      || second.createdAt.localeCompare(first.createdAt),
+      second.createdAt.localeCompare(first.createdAt)
+      || second.date.localeCompare(first.date),
     );
   const activeFilterLabel = selectedFilter === "all"
     ? undefined

@@ -13,7 +13,7 @@ export function EntitySyncStatus({ entity }: { entity: SyncableEntity }) {
     mutationFn: async () => {
       if (!operation) return;
       await tripRepository.retryQueueItem(operation.id);
-      await tripRepository.getPendingCount();
+      await tripRepository.syncPending();
     },
     onSuccess: async () => Promise.all([
       queryClient.invalidateQueries({ queryKey: ["sync"] }),

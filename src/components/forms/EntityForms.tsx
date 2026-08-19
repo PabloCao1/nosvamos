@@ -328,6 +328,7 @@ export function ExpenseForm({ close, entity, trip: tripOverride, importDraft }: 
   const trip = tripOverride ?? activeTrip;
   const mutation = useSaveEntity(close, "wallet");
   const [receiptImage, setReceiptImage] = useState(entity?.receiptImageDataUrl);
+  const [receiptPreviewOpen, setReceiptPreviewOpen] = useState(false);
   const { register, handleSubmit, setError, watch, formState: { errors } } = useForm<ExpenseInput, unknown, ExpenseValues>({
     resolver: zodResolver(expenseSchema),
     defaultValues: entity ? {
@@ -449,6 +450,12 @@ export function ExpenseForm({ close, entity, trip: tripOverride, importDraft }: 
           </>
         )}
       </label>
+      {receiptImage && (
+        <button type="button" className="receipt-preview" onClick={() => setReceiptPreviewOpen(true)} aria-label="Ver comprobante en tamaÃ±o completo">
+          <img src={receiptImage} alt="Vista previa del comprobante" />
+          <span><strong>Ver comprobante</strong><small>TocÃ¡ la imagen para ampliarla</small></span>
+        </button>
+      )}
       {receiptImage && <Button variant="ghost" size="small" onClick={() => setReceiptImage(undefined)}>Quitar comprobante</Button>}
       <p className="form-note">Convertiremos el importe a USD con la cotización de referencia más reciente y lo dividiremos entre {trip.participants.length} personas.</p>
       {errors.root?.message && <p className="form-error" role="alert">{errors.root.message}</p>}
@@ -461,6 +468,15 @@ export function ExpenseForm({ close, entity, trip: tripOverride, importDraft }: 
         confirmDescription="El movimiento seguirá visible en el historial, pero no afectará los balances."
         onDelete={() => entity && mutation.mutate(() => tripRepository.deleteExpense(entity))}
       />
+      {receiptPreviewOpen && receiptImage && (
+        <div className="receipt-lightbox" role="dialog" aria-modal="true" aria-label="Comprobante del gasto">
+          <button type="button" className="receipt-lightbox-backdrop" onClick={() => setReceiptPreviewOpen(false)} aria-label="Cerrar comprobante" />
+          <div className="receipt-lightbox-content">
+            <img src={receiptImage} alt="Comprobante del gasto ampliado" />
+            <Button variant="secondary" fullWidth onClick={() => setReceiptPreviewOpen(false)}>Cerrar</Button>
+          </div>
+        </div>
+      )}
     </form>
   );
 }
