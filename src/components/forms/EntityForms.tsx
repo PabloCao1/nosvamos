@@ -462,6 +462,7 @@ export function ExpenseForm({ close, entity, trip: tripOverride, importDraft }: 
       <FormActions
         pending={mutation.isPending}
         editing={Boolean(entity)}
+        showDelete={false}
         entityLabel="gasto"
         destructiveLabel="Anular gasto"
         confirmTitle="¿Anular gasto?"
@@ -798,6 +799,7 @@ export function ReservationForm({
 function FormActions({
   pending,
   editing,
+  showDelete = true,
   entityLabel,
   destructiveLabel = "Eliminar",
   confirmTitle,
@@ -806,6 +808,7 @@ function FormActions({
 }: {
   pending: boolean;
   editing: boolean;
+  showDelete?: boolean;
   entityLabel: string;
   destructiveLabel?: string;
   confirmTitle?: string;
@@ -819,7 +822,7 @@ function FormActions({
         <Button type="submit" variant="primary" icon="save" fullWidth className="form-submit form-action-important" disabled={pending}>
           {pending ? "Guardando…" : "Guardar"}
         </Button>
-        {editing && (
+        {editing && showDelete && (
           <Button
             variant="danger"
             icon="trash"

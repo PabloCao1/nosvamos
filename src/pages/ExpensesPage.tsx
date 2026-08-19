@@ -133,7 +133,7 @@ export function ExpensesPage() {
         )}
         <div className="card-stack">
           {visibleExpenses.map((expense) => (
-            <ExpenseCard key={expense.id} expense={expense} payer={byId.get(expense.paidBy)} onEdit={() => navigate(`/viaje/${trip.id}/editar/expense/${expense.id}`)} />
+            <ExpenseCard key={expense.id} expense={expense} payer={byId.get(expense.paidBy)} onEdit={() => navigate(`/viaje/${trip.id}/gasto/${expense.id}`)} />
           ))}
           {visibleExpenses.length === 0 && <p className="no-results">No hay gastos que coincidan con este filtro.</p>}
         </div>

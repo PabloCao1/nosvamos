@@ -78,6 +78,7 @@ function Participants({ ids, trip }: { ids: string[]; trip: Trip }) {
 }
 
 function ReservationDetail({ reservation, trip, moment }: { reservation: Reservation; trip: Trip; moment?: string }) {
+  const navigate = useNavigate();
   const isTransport = transportTypes.has(reservation.type);
   const isLodging = lodgingTypes.has(reservation.type);
   const icon: IconName = reservationIcon[reservation.type];
@@ -159,11 +160,11 @@ function ReservationDetail({ reservation, trip, moment }: { reservation: Reserva
           <h2>Gastos asociados</h2>
           <div className="event-linked-expenses">
             {linkedExpenses.map((expense) => (
-              <article key={expense.id}>
+              <button type="button" key={expense.id} onClick={() => navigate(`/viaje/${trip.id}/gasto/${expense.id}`)}>
                 <span><Icon name="receipt" size={20} /></span>
                 <div><strong>{expense.description}</strong><small>Pagó {trip.participants.find((person) => person.id === expense.paidBy)?.name ?? "Integrante"}</small></div>
                 <strong>{formatUsd(expense.convertedAmount)}</strong>
-              </article>
+              </button>
             ))}
           </div>
         </section>

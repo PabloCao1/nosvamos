@@ -9,6 +9,7 @@ import { AuthCallbackPage } from "../pages/AuthCallbackPage";
 const HomePage = lazy(() => import("../pages/HomePage").then((module) => ({ default: module.HomePage })));
 const ItineraryPage = lazy(() => import("../pages/ItineraryPage").then((module) => ({ default: module.ItineraryPage })));
 const ExpensesPage = lazy(() => import("../pages/ExpensesPage").then((module) => ({ default: module.ExpensesPage })));
+const ExpenseDetailPage = lazy(() => import("../pages/ExpenseDetailPage").then((module) => ({ default: module.ExpenseDetailPage })));
 const TripPage = lazy(() => import("../pages/TripPage").then((module) => ({ default: module.TripPage })));
 const ReservationsPage = lazy(() => import("../pages/ReservationsPage").then((module) => ({ default: module.ReservationsPage })));
 const SyncQueuePage = lazy(() => import("../pages/SyncQueuePage").then((module) => ({ default: module.SyncQueuePage })));
@@ -71,6 +72,7 @@ export const router = createBrowserRouter([
       { path: "/viaje/:tripId/editar/:formType/:entityId", element: page(<EntityFormPage />) },
       { path: "/viaje/:tripId/itinerario", element: page(<ItineraryPage />) },
       { path: "/viaje/:tripId/gastos", element: page(<ExpensesPage />) },
+      { path: "/viaje/:tripId/gasto/:expenseId", element: page(<ExpenseDetailPage />) },
       { path: "/viaje/:tripId/reservas", element: page(<ReservationsPage />) },
       { path: "/viaje/:tripId/documentos", element: page(<DocumentsPage />) },
       { path: "/viaje/:tripId/importar", element: page(<DocumentImportPage />) },

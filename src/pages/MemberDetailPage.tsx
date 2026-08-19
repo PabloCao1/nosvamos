@@ -171,7 +171,7 @@ export function MemberDetailPage() {
               {expandedCategory === `expense:${category.label}` && (
                 <div className="member-category-items">
                   {[...category.expenses].sort((first, second) => second.date.localeCompare(first.date)).map((expense) => (
-                    <button type="button" key={expense.id} onClick={() => navigate(`/viaje/${trip.id}/editar/expense/${expense.id}`)}>
+                    <button type="button" key={expense.id} onClick={() => navigate(`/viaje/${trip.id}/gasto/${expense.id}`)}>
                       <span><strong>{expense.description}</strong><small>{new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(`${expense.date}T12:00:00`))}</small></span>
                       <b>{formatUsd(expense.convertedAmount)}</b>
                     </button>
