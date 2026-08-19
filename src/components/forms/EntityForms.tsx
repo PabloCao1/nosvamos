@@ -379,6 +379,7 @@ export function ExpenseForm({ close, entity, trip: tripOverride, importDraft }: 
       date: values.date,
       reservationId: values.reservationId || undefined,
       status: entity?.status ?? "active",
+      receiptPath: entity?.receiptPath,
       receiptImageDataUrl: receiptImage,
       splits: selectedParticipants.map((participantId, index) => ({
         participantId,

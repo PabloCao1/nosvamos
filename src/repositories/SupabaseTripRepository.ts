@@ -76,6 +76,7 @@ const expenseRow = (expense: Expense) => ({
   description: expense.description, category: expense.category, category_label: expense.categoryLabel ?? null,
   original_amount: expense.originalAmount, original_currency: expense.originalCurrency, exchange_rate: expense.exchangeRate,
   converted_amount: expense.convertedAmount, paid_by: expense.paidBy, expense_date: expense.date,
+  receipt_path: expense.receiptPath ?? null,
   status: expense.status ?? "active", updated_at: new Date().toISOString(), deleted_at: expense.deletedAt ?? null,
   version: expense.version,
 });
@@ -168,7 +169,21 @@ export class SupabaseTripRepository extends LocalTripRepository {
   }
 
   private async persistExpense(expense: Expense) {
-    const { error } = await supabase.from("expenses").upsert(expenseRow(expense));
+    let receiptPath = expense.receiptPath;
+    if (expense.receiptImageDataUrl?.startsWith("data:")) {
+      receiptPath = `${expense.tripId}/expenses/${expense.id}.jpg`;
+      const image = await fetch(expense.receiptImageDataUrl).then((response) => response.blob());
+      const { error: uploadError } = await supabase.storage.from("trip-documents").upload(receiptPath, image, {
+        contentType: "image/jpeg",
+        upsert: true,
+      });
+      if (uploadError) throw uploadError;
+    } else if (!expense.receiptImageDataUrl && receiptPath) {
+      const { error: removeError } = await supabase.storage.from("trip-documents").remove([receiptPath]);
+      if (removeError) throw removeError;
+      receiptPath = undefined;
+    }
+    const { error } = await supabase.from("expenses").upsert(expenseRow({ ...expense, receiptPath }));
     if (error) throw error;
     const { error: deleteError } = await supabase.from("expense_splits").delete().eq("expense_id", expense.id);
     if (deleteError) throw deleteError;
@@ -251,6 +266,15 @@ export class SupabaseTripRepository extends LocalTripRepository {
     const reservationIds = reservationRows.map((row) => row.id as string);
     const activityIds = activityRows.map((row) => row.id as string);
     const expenseIds = expenseRows.map((row) => row.id as string);
+    const receiptPaths = expenseRows.map((row) => row.receipt_path as string | undefined).filter((path): path is string => Boolean(path));
+    const receiptUrls = new Map<string, string>();
+    if (receiptPaths.length) {
+      const { data: signedReceipts, error: receiptError } = await supabase.storage.from("trip-documents").createSignedUrls(receiptPaths, 60 * 60);
+      if (receiptError) console.error("No se pudieron cargar los comprobantes", receiptError);
+      else signedReceipts?.forEach((item) => {
+          if (item.path && item.signedUrl) receiptUrls.set(item.path, item.signedUrl);
+        });
+    }
     const [{ data: reservationParticipantRows }, { data: activityParticipantRows }, { data: splitRows }] = await Promise.all([
       reservationIds.length ? supabase.from("reservation_participants").select("*").in("reservation_id", reservationIds) : Promise.resolve({ data: [] }),
       activityIds.length ? supabase.from("activity_participants").select("*").in("activity_id", activityIds) : Promise.resolve({ data: [] }),
@@ -315,6 +339,8 @@ export class SupabaseTripRepository extends LocalTripRepository {
         category: row.category, categoryLabel: row.category_label || undefined, originalAmount: Number(row.original_amount),
         originalCurrency: row.original_currency, exchangeRate: Number(row.exchange_rate), convertedAmount: Number(row.converted_amount),
         paidBy: row.paid_by, date: row.expense_date, status: row.status,
+        receiptPath: row.receipt_path || undefined,
+        receiptImageDataUrl: row.receipt_path ? receiptUrls.get(row.receipt_path) : undefined,
         splits: splits.filter((split) => split.expense_id === row.id).map((split) => ({ participantId: split.traveler_id, amount: Number(split.amount) })),
       }));
       return {

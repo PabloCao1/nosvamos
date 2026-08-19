@@ -30,10 +30,12 @@ export function SaveFeedbackProvider({ children }: { children: ReactNode }) {
       const startedAt = Date.now();
       setFeedback({ phase: "saving", icon });
       try {
+        const queueBefore = await tripRepository.getSyncQueue();
+        const previousErrors = new Set(queueBefore.filter((item) => item.lastError).map((item) => item.id));
         const result = await operation();
         await wait(Math.max(0, 450 - (Date.now() - startedAt)));
         const queue = await tripRepository.getSyncQueue();
-        const pendingError = queue.find((item) => item.lastError);
+        const pendingError = queue.find((item) => item.lastError && !previousErrors.has(item.id));
         if (!navigator.onLine || pendingError) {
           setFeedback({
             phase: "error",

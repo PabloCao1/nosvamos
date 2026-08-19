@@ -174,6 +174,7 @@ export interface Expense extends SyncableEntity {
   date: string;
   reservationId?: string;
   status?: "active" | "cancelled";
+  receiptPath?: string;
   receiptImageDataUrl?: string;
 }
 
