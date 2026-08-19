@@ -14,8 +14,8 @@ const showUpdatePrompt = (installUpdate: () => Promise<void>) => {
   layer.innerHTML = `
     <section class="app-update-dialog" role="alertdialog" aria-modal="true" aria-labelledby="app-update-title" aria-describedby="app-update-description">
       <span class="app-update-icon" aria-hidden="true">\u2191</span>
-      <h2 id="app-update-title">Hay una nueva versiÃ³n</h2>
-      <p id="app-update-description">ActualizÃ¡ NosVamos para usar las Ãºltimas mejoras.</p>
+      <h2 id="app-update-title">Hay una nueva versi\u00f3n</h2>
+      <p id="app-update-description">Actualiz\u00e1 NosVamos para usar las \u00faltimas mejoras.</p>
       <button type="button" class="ui-button ui-button-primary ui-button-medium ui-button-full">Actualizar ahora</button>
       <small class="app-update-status" role="status" aria-live="polite"></small>
     </section>
@@ -24,11 +24,11 @@ const showUpdatePrompt = (installUpdate: () => Promise<void>) => {
   const status = layer.querySelector<HTMLElement>(".app-update-status")!;
   button.addEventListener("click", () => {
     button.disabled = true;
-    button.innerHTML = '<span class="app-update-spinner" aria-hidden="true"></span><span class="ui-button-label">Actualizandoâ€¦</span>';
+    button.innerHTML = '<span class="app-update-spinner" aria-hidden="true"></span><span class="ui-button-label">Actualizando\u2026</span>';
     void installUpdate().catch(() => {
       button.disabled = false;
       button.innerHTML = '<span class="ui-button-label">Intentar de nuevo</span>';
-      status.textContent = "No pudimos actualizar. RevisÃ¡ tu conexiÃ³n e intentÃ¡ nuevamente.";
+      status.textContent = "No pudimos actualizar. Revis\u00e1 tu conexi\u00f3n e intent\u00e1 nuevamente.";
     });
   });
   document.body.appendChild(layer);
