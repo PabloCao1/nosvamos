@@ -113,6 +113,14 @@ describe("LocalTripRepository", () => {
     })).resolves.toBeUndefined();
   });
 
+  it("impide editar un gasto que ya fue anulado", async () => {
+    const expense = { ...expenseFixture(), status: "cancelled" as const };
+    await repository.addExpense(expense);
+
+    await expect(repository.updateExpense({ ...expense, description: "Cambio tardÃ­o" }))
+      .rejects.toThrow("Un gasto anulado no se puede editar");
+  });
+
   it("cancela una alta local eliminada antes de sincronizar", async () => {
     await repository.addTrip(tripFixture());
     const reservation = {

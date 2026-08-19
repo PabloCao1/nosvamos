@@ -115,6 +115,8 @@ export class LocalTripRepository implements TripRepository {
   }
 
   async updateExpense(expense: Expense) {
+    const current = await db.expenses.get(expense.id);
+    if (current?.status === "cancelled") throw new Error("Un gasto anulado no se puede editar.");
     const value = { ...expense, updatedAt: new Date().toISOString(), version: expense.version + 1, syncStatus: expense.syncStatus === "pending_create" ? "pending_create" as const : "pending_update" as const };
     await db.transaction("rw", [db.expenses, db.syncQueue], async () => {
       await db.expenses.put(value);
@@ -123,6 +125,8 @@ export class LocalTripRepository implements TripRepository {
   }
 
   async updateReservation(reservation: Reservation) {
+    const current = await db.reservations.get(reservation.id);
+    if (current?.status === "cancelled") throw new Error("Una reserva anulada no se puede editar.");
     const value = { ...reservation, updatedAt: new Date().toISOString(), version: reservation.version + 1, syncStatus: reservation.syncStatus === "pending_create" ? "pending_create" as const : "pending_update" as const };
     await db.transaction("rw", [db.reservations, db.syncQueue], async () => {
       await db.reservations.put(value);

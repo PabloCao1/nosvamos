@@ -80,7 +80,7 @@ export function ExpenseDetailPage() {
     <EntitySyncStatus entity={expense} />
 
     <section className="section-block expense-detail-actions">
-      <Button variant="primary" icon="edit" fullWidth onClick={() => navigate(`/viaje/${trip.id}/editar/expense/${expense.id}`)}>Editar</Button>
+      {expense.status !== "cancelled" && <Button variant="primary" icon="edit" fullWidth onClick={() => navigate(`/viaje/${trip.id}/editar/expense/${expense.id}`)}>Editar</Button>}
       {expense.status !== "cancelled" && <Button variant="danger" icon="trash" fullWidth onClick={() => setConfirming(true)}>Anular</Button>}
     </section>
 

@@ -237,7 +237,7 @@ export function EventDetailPage() {
       <PageHeader
         eyebrow={trip.name}
         title="Detalle del evento"
-        action={
+        action={reservation?.status === "cancelled" ? undefined : (
           <IconButton
             icon="edit"
             label="Editar evento"
@@ -245,7 +245,7 @@ export function EventDetailPage() {
               ? navigate(`/viaje/${trip.id}/editar/reservation/${reservation.id}`)
               : activityEntry && navigate(`/viaje/${trip.id}/editar/activity/${activityEntry.activity.id}`)}
           />
-        }
+        )}
       />
       {reservation && <ReservationDetail reservation={reservation} trip={trip} moment={searchParams.get("momento") ?? undefined} />}
       {activityEntry && <ActivityDetail activity={activityEntry.activity} date={activityEntry.date} trip={trip} />}

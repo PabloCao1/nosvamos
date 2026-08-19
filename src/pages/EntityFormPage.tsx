@@ -1,4 +1,4 @@
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   ActivityForm,
   ExpenseForm,
@@ -40,6 +40,12 @@ export function EntityFormPage() {
 
   if (editing && !activity && !expense && !reservation) {
     return <ErrorState onRetry={() => void refetch()} />;
+  }
+  if (expense?.status === "cancelled") {
+    return <Navigate to={`/viaje/${trip.id}/gasto/${expense.id}`} replace />;
+  }
+  if (reservation?.status === "cancelled") {
+    return <Navigate to={`/viaje/${trip.id}/evento/reservation/${reservation.id}`} replace />;
   }
 
   const title = editing
