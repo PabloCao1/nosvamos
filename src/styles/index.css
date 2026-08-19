@@ -1791,41 +1791,33 @@ body .member-category-items > button strong { overflow: hidden; text-overflow: e
   body .page-content { padding-right: 24px; padding-left: 24px; }
 }
 
-.app-update-indicator {
+.app-update-layer {
   position: fixed;
-  z-index: 200;
-  top: calc(14px + env(safe-area-inset-top));
-  left: 50%;
-  display: flex;
-  align-items: center;
-  width: min(calc(100% - 28px), 440px);
-  gap: 12px;
-  padding: 13px 15px;
-  border: 1px solid rgba(184,247,228,.22);
-  border-radius: 15px;
-  background: rgba(43,46,51,.94);
-  box-shadow: 0 16px 42px rgba(0,0,0,.4);
-  color: var(--text);
-  transform: translateX(-50%);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  animation: app-update-in .22s ease-out;
+  z-index: 400;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(8,9,11,.82);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  animation: fade-in .18s ease-out both;
 }
-.app-update-indicator > span:last-child { min-width: 0; }
-.app-update-indicator strong,
-.app-update-indicator small { display: block; }
-.app-update-indicator strong { font-size: .78rem; }
-.app-update-indicator small { margin-top: 3px; color: var(--muted); font-size: .63rem; }
+.app-update-dialog { width: min(100%, 340px); padding: 25px 20px 19px; border: 1px solid rgba(255,255,255,.1); border-radius: 18px; background: var(--surface); box-shadow: 0 24px 70px rgba(0,0,0,.55); text-align: center; animation: confirm-in .2s cubic-bezier(.2,.8,.2,1); }
+.app-update-icon { display: grid; place-items: center; width: 48px; height: 48px; margin: 0 auto 14px; border-radius: 50%; background: rgba(184,247,228,.13); color: var(--mint); font-size: 1.45rem; font-weight: 800; }
+.app-update-dialog h2 { font-size: 1.18rem; }
+.app-update-dialog p { margin: 7px 0 21px; color: var(--muted); font-size: .78rem; }
+.app-update-status { display: block; min-height: 1em; margin-top: 10px; color: #ff9b91; font-size: .67rem; line-height: 1.4; }
+.app-update-dialog button:disabled { cursor: wait; opacity: .78; }
 .app-update-spinner {
-  width: 25px;
-  height: 25px;
-  flex: 0 0 25px;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
   border: 3px solid rgba(184,247,228,.18);
   border-top-color: var(--mint);
   border-radius: 50%;
   animation: city-spin .75s linear infinite;
 }
-@keyframes app-update-in { from { opacity: 0; transform: translate(-50%, -12px); } }
 
 .save-feedback-layer {
   position: fixed;
