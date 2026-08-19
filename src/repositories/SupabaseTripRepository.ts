@@ -19,6 +19,9 @@ const synced = (row: Row) => ({
   lastSyncedAt: new Date().toISOString(),
 });
 
+const remoteClientId = (entity: { id: string; clientId?: string }) =>
+  !entity.clientId || entity.clientId === "local-device" ? entity.id : entity.clientId;
+
 const timeInZone = (iso: string, timezone: string) => new Intl.DateTimeFormat("en-GB", {
   timeZone: timezone,
   hour: "2-digit",
@@ -42,7 +45,7 @@ async function selectRows(table: string, tripIds: string[]) {
 }
 
 const reservationRow = (reservation: Reservation) => ({
-  id: reservation.id, client_id: reservation.clientId, trip_id: reservation.tripId,
+  id: reservation.id, client_id: remoteClientId(reservation), trip_id: reservation.tripId,
   destination_id: reservation.destinationId ?? null, type: reservation.type, title: reservation.title,
   provider: reservation.provider, provider_name: reservation.providerName, provider_reference: reservation.providerReference,
   confirmation_code: reservation.confirmationCode ?? null, external_url: reservation.externalUrl ?? null,
@@ -61,7 +64,7 @@ const reservationRow = (reservation: Reservation) => ({
 });
 
 const activityRow = (activity: Activity) => ({
-  id: activity.id, client_id: activity.clientId, itinerary_day_id: activity.dayId,
+  id: activity.id, client_id: remoteClientId(activity), itinerary_day_id: activity.dayId,
   reservation_id: activity.reservationId ?? null, title: activity.title, description: activity.description ?? null,
   location: activity.location, category: activity.category, status: activity.status,
   total_amount: activity.totalAmount ?? 0, currency: activity.currency ?? "USD",
@@ -72,7 +75,7 @@ const activityRow = (activity: Activity) => ({
 });
 
 const expenseRow = (expense: Expense) => ({
-  id: expense.id, client_id: expense.clientId, trip_id: expense.tripId, reservation_id: expense.reservationId ?? null,
+  id: expense.id, client_id: remoteClientId(expense), trip_id: expense.tripId, reservation_id: expense.reservationId ?? null,
   description: expense.description, category: expense.category, category_label: expense.categoryLabel ?? null,
   original_amount: expense.originalAmount, original_currency: expense.originalCurrency, exchange_rate: expense.exchangeRate,
   converted_amount: expense.convertedAmount, paid_by: expense.paidBy, expense_date: expense.date,
@@ -82,7 +85,7 @@ const expenseRow = (expense: Expense) => ({
 });
 
 const tripRow = (trip: Trip, ownerId?: string) => ({
-  id: trip.id, client_id: trip.clientId, ...(ownerId ? { owner_id: ownerId } : {}), name: trip.name,
+  id: trip.id, client_id: remoteClientId(trip), ...(ownerId ? { owner_id: ownerId } : {}), name: trip.name,
   description: trip.description, cover_path: trip.coverUrl || null, start_date: trip.startDate || null,
   end_date: trip.endDate || null, base_currency: trip.baseCurrency, timezone: trip.timezone,
   status: trip.status, updated_at: new Date().toISOString(), deleted_at: trip.deletedAt ?? null, version: trip.version,

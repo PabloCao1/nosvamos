@@ -123,7 +123,7 @@ export async function seedDemoNotifications() {
 export function createSyncableFields(status: "pending_create" | "pending_update" = "pending_create") {
   const now = new Date().toISOString();
   return {
-    clientId: "local-device",
+    clientId: crypto.randomUUID(),
     createdAt: now,
     updatedAt: now,
     version: 1,

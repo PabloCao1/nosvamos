@@ -44,6 +44,10 @@ describe("LocalTripRepository", () => {
     await db.open();
   });
 
+  it("genera un identificador de cliente distinto para cada alta", () => {
+    expect(createSyncableFields().clientId).not.toBe(createSyncableFields().clientId);
+  });
+
   afterEach(async () => {
     await db.delete();
   });
