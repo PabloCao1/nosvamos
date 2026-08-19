@@ -1,4 +1,10 @@
 export interface DocumentImportDraft {
+  attachment?: {
+    dataUrl: string;
+    fileName: string;
+    mimeType: string;
+    size: number;
+  };
   kind: "flight" | "hotel" | "apartment" | "car" | "train" | "bus" | "ferry" | "expense" | "other";
   title: string | null;
   providerName: string | null;

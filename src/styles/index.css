@@ -725,6 +725,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .document-source-picker > input { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
 .document-selected-file { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid rgba(184,247,228,.18); border-radius: 14px; background: rgba(184,247,228,.06); overflow-wrap: anywhere; }
 .document-selected-file small { color: var(--muted); }
+.imported-document-field { display: grid; grid-template-columns: 58px minmax(0,1fr); align-items: center; width: 100%; gap: 11px; padding: 10px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--text); text-align: left; cursor: pointer; }
+.imported-document-field > img, .imported-document-field > span { width: 58px; height: 58px; border-radius: 10px; }
+.imported-document-field > img { object-fit: cover; }
+.imported-document-field > span { display: grid; place-items: center; background: rgba(184,247,228,.1); color: var(--mint); font-size: .7rem; font-weight: 800; }
+.imported-document-field strong, .imported-document-field small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.imported-document-field strong { font-size: .75rem; }
+.imported-document-field small { margin-top: 4px; color: var(--muted); font-size: .63rem; }
 .sync-entity-wrap { display: grid; gap: 6px; }
 .entity-sync { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 12px; font-size: .7rem; }
 .entity-sync.syncing { color: var(--muted); background: rgba(255,255,255,.04); }

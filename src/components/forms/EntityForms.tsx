@@ -9,6 +9,7 @@ import { BASE_CURRENCY, convertToUsd, SUPPORTED_CURRENCIES } from "../../lib/cur
 import { prepareReceiptImage } from "../../lib/images/receiptImage";
 import { findRecentDuplicateExpense } from "../../lib/expenses/duplicateExpense";
 import { deriveTripDateRange } from "../../lib/trips/deriveTripDateRange";
+import { loadEntityDocument, saveImportedDocument, type EntityDocument } from "../../lib/documents/entityDocument";
 import { tripRepository } from "../../repositories";
 import { supabase } from "../../lib/supabase";
 import type { Activity, Expense, Reservation, Trip } from "../../types/domain";
@@ -116,6 +117,15 @@ function Field(props: {
       {error && <small role="alert">{error}</small>}
     </label>
   );
+}
+
+function ImportedDocumentField({ document }: { document?: EntityDocument }) {
+  if (!document) return null;
+  const image = document.mimeType.startsWith("image/");
+  return <button type="button" className="imported-document-field" onClick={() => window.open(document.url, "_blank", "noopener,noreferrer")}>
+    {image ? <img src={document.url} alt="Documento importado" /> : <span>PDF</span>}
+    <div><strong>{document.fileName}</strong><small>{image ? "Imagen guardada" : "Documento guardado"} Â· Tocar para abrir</small></div>
+  </button>;
 }
 
 function useSaveEntity(close: () => void, icon: IconName) {
@@ -327,8 +337,12 @@ export function ExpenseForm({ close, entity, trip: tripOverride, importDraft }: 
   const { data: activeTrip } = useActiveTrip();
   const trip = tripOverride ?? activeTrip;
   const mutation = useSaveEntity(close, "wallet");
-  const [receiptImage, setReceiptImage] = useState(entity?.receiptImageDataUrl);
+  const [receiptImage, setReceiptImage] = useState(entity?.receiptImageDataUrl ?? (importDraft?.attachment?.mimeType.startsWith("image/") ? importDraft.attachment.dataUrl : undefined));
   const [receiptPreviewOpen, setReceiptPreviewOpen] = useState(false);
+  const [sourceDocument, setSourceDocument] = useState<EntityDocument | undefined>(importDraft?.attachment ? {
+    fileName: importDraft.attachment.fileName, mimeType: importDraft.attachment.mimeType,
+    size: importDraft.attachment.size, url: importDraft.attachment.dataUrl,
+  } : undefined);
   const { register, handleSubmit, setError, watch, formState: { errors } } = useForm<ExpenseInput, unknown, ExpenseValues>({
     resolver: zodResolver(expenseSchema),
     defaultValues: entity ? {
@@ -343,6 +357,10 @@ export function ExpenseForm({ close, entity, trip: tripOverride, importDraft }: 
       participantIds: trip?.participants.filter((person) => person.status !== "removed").map((person) => person.id) ?? [],
     },
   });
+  useEffect(() => {
+    if (!entity) return;
+    void loadEntityDocument({ expenseId: entity.id }).then(setSourceDocument).catch(() => undefined);
+  }, [entity]);
   if (!trip) return null;
   const selectedExpenseCategory = watch("category");
 
@@ -397,6 +415,7 @@ export function ExpenseForm({ close, entity, trip: tripOverride, importDraft }: 
     await mutation.mutateAsync(async () => {
       if (entity) await tripRepository.updateExpense(expense);
       else await tripRepository.addExpense(expense);
+      if (!entity && importDraft?.attachment) await saveImportedDocument(trip.id, importDraft.attachment, { expenseId: expense.id });
       if (customCategory && !(trip.customExpenseCategories ?? []).some((item) => item.localeCompare(customCategory, "es", { sensitivity: "base" }) === 0)) {
         await tripRepository.updateTrip({
           ...trip,
@@ -427,6 +446,7 @@ export function ExpenseForm({ close, entity, trip: tripOverride, importDraft }: 
           <input {...register("customCategory")} placeholder="Ej. Excursiones" />
         </Field>
       )}
+      <ImportedDocumentField document={sourceDocument} />
       <label className="receipt-upload">
         <input
           type="file"
@@ -502,6 +522,10 @@ export function ReservationForm({
   const excursion = variant === "excursion";
   const transport = variant === "transport" || carRental;
   const mutation = useSaveEntity(close, carRental ? "car" : lodging ? "hotel" : "airplane");
+  const [sourceDocument, setSourceDocument] = useState<EntityDocument | undefined>(importDraft?.attachment ? {
+    fileName: importDraft.attachment.fileName, mimeType: importDraft.attachment.mimeType,
+    size: importDraft.attachment.size, url: importDraft.attachment.dataUrl,
+  } : undefined);
   const [travelerDetails, setTravelerDetails] = useState<Record<string, {
     included: boolean;
     passengerName: string;
@@ -559,6 +583,10 @@ export function ReservationForm({
         }),
     ));
   }, [entity, trip]);
+  useEffect(() => {
+    if (!entity) return;
+    void loadEntityDocument({ reservationId: entity.id }).then(setSourceDocument).catch(() => undefined);
+  }, [entity]);
   if (!trip) return null;
   const reservationType = watch("type");
   const isTransport = ["flight", "train", "bus", "ferry", "car"].includes(reservationType);
@@ -637,6 +665,7 @@ export function ReservationForm({
     await mutation.mutateAsync(async () => {
       if (entity) await tripRepository.updateReservation(reservation);
       else await tripRepository.addReservation(reservation);
+      if (!entity && importDraft?.attachment) await saveImportedDocument(trip.id, importDraft.attachment, { reservationId: reservation.id });
 
       const destinationName = isLodging ? reservation.city : undefined;
       const existingDestination = trip.destinations.find(
@@ -678,6 +707,7 @@ export function ReservationForm({
 
   return (
     <form className="entity-form" onSubmit={handleSubmit(submit)}>
+      <ImportedDocumentField document={sourceDocument} />
       {!carRental && <Field label={transport ? "Nombre del viaje" : lodging ? "Nombre del alojamiento" : "Nombre"} required error={errors.title?.message}>
         <input autoFocus {...register("title")} placeholder={transport ? "Ej. Vuelo de ida" : lodging ? "Ej. Hotel Central" : "Ej. Reserva"} />
       </Field>}

@@ -45,7 +45,15 @@ export function DocumentImportPage() {
         body: { filename: file.name, mimeType: isImage ? "image/jpeg" : file.type, dataUrl },
       });
       if (invokeError) throw new Error("No pudimos analizar el archivo. Verificá que el servicio de análisis esté configurado.");
-      setDraft(data as DocumentImportDraft);
+      setDraft({
+        ...(data as DocumentImportDraft),
+        attachment: {
+          dataUrl,
+          fileName: file.name,
+          mimeType: isImage ? "image/jpeg" : file.type,
+          size: file.size,
+        },
+      });
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "No pudimos analizar el documento.");
     } finally { setAnalyzing(false); }
