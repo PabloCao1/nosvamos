@@ -83,6 +83,32 @@ describe("LocalTripRepository", () => {
     expect(operations[0]).toMatchObject({ action: "create", payload: { description: "Cambio final" } });
   });
 
+  it("rechaza un gasto idÃ©ntico creado pocos minutos despuÃ©s", async () => {
+    const expense = expenseFixture();
+    await repository.addExpense(expense);
+
+    await expect(repository.addExpense({
+      ...expense,
+      id: "duplicate-expense",
+      createdAt: new Date(new Date(expense.createdAt).getTime() + 60_000).toISOString(),
+    })).rejects.toThrow("Este gasto ya fue agregado");
+
+    expect(await db.expenses.where("tripId").equals(expense.tripId).count()).toBe(1);
+    expect(await db.syncQueue.where("entityType").equals("expense").count()).toBe(1);
+  });
+
+  it("permite gastos parecidos que no son duplicados exactos", async () => {
+    const expense = expenseFixture();
+    await repository.addExpense(expense);
+
+    await expect(repository.addExpense({
+      ...expense,
+      id: "different-expense",
+      originalAmount: expense.originalAmount + 1,
+      convertedAmount: expense.convertedAmount + 1,
+    })).resolves.toBeUndefined();
+  });
+
   it("cancela una alta local eliminada antes de sincronizar", async () => {
     await repository.addTrip(tripFixture());
     const reservation = {

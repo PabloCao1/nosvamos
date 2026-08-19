@@ -7,6 +7,7 @@ import { useActiveTrip } from "../../hooks/useActiveTrip";
 import { createSyncableFields } from "../../lib/indexed-db/database";
 import { BASE_CURRENCY, convertToUsd, SUPPORTED_CURRENCIES } from "../../lib/currency/exchangeRates";
 import { prepareReceiptImage } from "../../lib/images/receiptImage";
+import { findRecentDuplicateExpense } from "../../lib/expenses/duplicateExpense";
 import { deriveTripDateRange } from "../../lib/trips/deriveTripDateRange";
 import { tripRepository } from "../../repositories";
 import { supabase } from "../../lib/supabase";
@@ -388,6 +389,10 @@ export function ExpenseForm({ close, entity, trip: tripOverride, importDraft }: 
           : share,
       })),
     };
+    if (!entity && findRecentDuplicateExpense(expense, trip.expenses)) {
+      setError("root", { message: "Este gasto ya fue agregado hace unos minutos. RevisÃ¡ el historial antes de volver a guardarlo." });
+      return;
+    }
     await mutation.mutateAsync(async () => {
       if (entity) await tripRepository.updateExpense(expense);
       else await tripRepository.addExpense(expense);

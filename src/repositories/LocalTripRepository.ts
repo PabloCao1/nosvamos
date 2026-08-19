@@ -1,5 +1,6 @@
 import { createQueueItem, db, enqueueCompacted, seedDemoData } from "../lib/indexed-db/database";
 import { deriveTripDateRange } from "../lib/trips/deriveTripDateRange";
+import { findRecentDuplicateExpense } from "../lib/expenses/duplicateExpense";
 import type { Activity, Expense, Reservation, Trip } from "../types/domain";
 import type { TripRepository } from "./TripRepository";
 
@@ -89,6 +90,10 @@ export class LocalTripRepository implements TripRepository {
 
   async addExpense(expense: Expense) {
     await db.transaction("rw", [db.expenses, db.syncQueue], async () => {
+      const tripExpenses = await db.expenses.where("tripId").equals(expense.tripId).toArray();
+      if (findRecentDuplicateExpense(expense, tripExpenses)) {
+        throw new Error("Este gasto ya fue agregado hace unos minutos.");
+      }
       await db.expenses.add(expense);
       await db.syncQueue.add(createQueueItem("expense", expense.id, expense));
     });
